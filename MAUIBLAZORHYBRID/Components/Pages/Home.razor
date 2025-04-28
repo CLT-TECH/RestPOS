@@ -1,0 +1,43 @@
+﻿@page "/home"
+@inject LoginService LoginService
+@inject NavigationManager NavigationManager
+@inject SessionService SessionService
+
+@* <h3>Welcome, @(LoginService.Username ?? "Guest")!</h3> *@
+<p>This is the home page of My App.</p>
+@* <button class="btn btn-secondary" @onclick="HandleLogout">Logout</button> *@
+
+@if (SessionService.IsAuthenticated)
+{
+    <MudText Typo="Typo.h5">Welcome, @SessionService.CurrentUser!</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Logout">Logout</MudButton>
+}
+else
+{
+
+    <MudText>Please log in to access the dashboard.
+        <MudLink Underline="Underline.Always" Href="/mudlogin">Login</MudLink>
+    </MudText>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        // if (!LoginService.IsLoggedIn)
+        // {
+        //     NavigationManager.NavigateTo("/");
+        // }
+    }
+
+    private void HandleLogout()
+    {
+        // LoginService.Logout();
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void Logout()
+    {
+        SessionService.Logout();
+        NavigationManager.NavigateTo("/");
+    }
+}

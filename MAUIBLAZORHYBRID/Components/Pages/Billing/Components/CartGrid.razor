@@ -1,0 +1,55 @@
+@using MudBlazor
+
+<MudPaper Class="p-2 mb-2" Elevation="0">
+
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Cart</MudText>
+
+    <MudTable Items="_cartItems" Dense="true" Bordered="true" Hover="true">
+
+        <HeaderContent>
+            <MudTh>Item</MudTh>
+            <MudTh style="width: 100px;">Qty</MudTh>
+            <MudTh style="width: 100px;">Price</MudTh>
+            <MudTh style="width: 100px;">Discount</MudTh>
+            <MudTh style="width: 120px;">Total</MudTh>
+            <MudTh style="width: 50px;"></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>
+                <MudNumericField T="int" @bind-Value="context.Quantity" Min="1" Style="width: 80px;" />
+            </MudTd>
+            <MudTd>@context.Price.ToString("C")</MudTd>
+            <MudTd>@context.Discount.ToString("C")</MudTd>
+            <MudTd>@(CalculateItemTotal(context).ToString("C"))</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveItem(context))" />
+            </MudTd>
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code {
+    private List<CartItem> _cartItems = new()
+    {
+        new CartItem { Name = "Cheeseburger", Quantity = 2, Price = 5.99m, Discount = 0 },
+        new CartItem { Name = "Fries", Quantity = 1, Price = 2.49m, Discount = 0.5m },
+    };
+
+    private decimal CalculateItemTotal(CartItem item)
+        => (item.Price - item.Discount) * item.Quantity;
+
+    private void RemoveItem(CartItem item)
+        => _cartItems.Remove(item);
+
+    public class CartItem
+    {
+        public string Name { get; set; } = "";
+        public int Quantity { get; set; } = 1;
+        public decimal Price { get; set; }
+        public decimal Discount { get; set; }
+    }
+}

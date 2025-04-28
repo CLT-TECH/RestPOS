@@ -1,0 +1,56 @@
+﻿@page "/billing"
+@using MAUIBLAZORHYBRID.Components.Pages.Billing.Components
+@using MudBlazor
+
+
+
+<MudContainer MaxWidth="MaxWidth.False" Class="p-3">
+
+    <!-- Header -->
+    <HeaderBar />
+
+    <MudGrid GutterSize="3">
+
+        <!-- Left: Item Search + Customer -->
+        
+        <MudItem xs="12" md="8" class="order-sm-1 order-md-0 order-1">
+            <ItemSearch />
+        </MudItem>
+        <MudItem xs="12" md="4" class="order-sm-0 order-md-1 order-0">
+            <CustomerPanel />
+        </MudItem>
+
+        <!-- Center: Cart -->
+        <MudItem xs="12" md="8" Class="order-2">
+            <CartGrid />
+        </MudItem>
+
+        <!-- Right: Billing Summary + Payment -->
+        <MudItem xs="12" md="4" Class="order-3">
+            <BillingSummary />
+            <PaymentPanel />
+        </MudItem>
+
+    </MudGrid>
+
+@*     <MudGrid>
+        <MudItem md="4" xs="12" Class="order-xs-3">
+            <MudPaper Class="pa-4">Item 1 (Third on XS)</MudPaper>
+        </MudItem>
+        <MudItem md="4" xs="12" Class="order-xs-1">
+            <MudPaper Class="pa-4">Item 2 (First on XS)</MudPaper>
+        </MudItem>
+        <MudItem md="4" xs="12" Class="order-xs-2">
+            <MudPaper Class="pa-4">Item 3 (Second on XS)</MudPaper>
+        </MudItem>
+    </MudGrid> *@
+
+
+    
+
+
+
+    <!-- Footer -->
+    <OfflineStatus />
+
+</MudContainer>

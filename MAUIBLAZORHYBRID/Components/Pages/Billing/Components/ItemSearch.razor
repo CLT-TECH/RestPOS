@@ -1,0 +1,46 @@
+@using MudBlazor
+
+<MudPaper Class="p-2 mb-2" Elevation="0">
+
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Add Item</MudText>
+
+    <MudTextField @bind-Value="_itemQuery"
+                  Label="Search or Enter Product Code"
+                  Variant="Variant.Outlined"
+                  Dense="true"
+                  Immediate="true"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  OnKeyDown="HandleKeyDown"
+                  Class="w-100" />
+
+    @if (!string.IsNullOrWhiteSpace(_lastAddedItem))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+            Added: @_lastAddedItem
+        </MudText>
+    }
+
+</MudPaper>
+
+@code {
+    private string _itemQuery = string.Empty;
+    private string _lastAddedItem = string.Empty;
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddItemToCart(_itemQuery.Trim());
+            _itemQuery = string.Empty;
+        }
+    }
+
+    private void AddItemToCart(string query)
+    {
+        // Placeholder logic – in real use, query backend/local list
+        _lastAddedItem = $"Item: {query}";
+        // Raise event to CartGrid in future steps
+    }
+}
+

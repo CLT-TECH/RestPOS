@@ -1,0 +1,18 @@
+@using MudBlazor
+
+<MudPaper Class="p-3 mb-3" Elevation="2" Square="true">
+    <MudGrid>
+        <MudItem xs="6">
+            <MudText Typo="Typo.h6">Business Name</MudText>
+        </MudItem>
+        <MudItem xs="6" Class="text-right">
+            <MudText Typo="Typo.body2">Cashier: @CashierName</MudText>
+            <MudText Typo="Typo.body2">Time: @DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss")</MudText>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    // Example - you can dynamically set this if needed
+    private string CashierName = "John Doe"; // Replace with dynamic value or user info
+}

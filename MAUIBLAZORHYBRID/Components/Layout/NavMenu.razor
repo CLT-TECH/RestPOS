@@ -1,0 +1,70 @@
+﻿@inject SessionService SessionService
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">MAUIBLAZORHYBRID</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="home" Match="NavLinkMatch.All">
+                <MudIcon Icon="@Icons.Material.Filled.Home" /> Home
+            </NavLink>
+        </div>
+
+        @if (SessionService.IsAuthenticated)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="counter">
+                    <MudIcon Icon="@Icons.Material.Filled.WbSunny" /> Counter
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="dashboard">
+                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" /> Dashboard
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="weather">
+                    <MudIcon Icon="@Icons.Material.Filled.AddBox" /> Weather
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="billing">
+                    <MudIcon Icon="@Icons.Material.Filled.Receipt" /> Billing
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="error">
+                    <MudIcon Icon="@Icons.Material.Filled.Dangerous" /> Error
+                </NavLink>
+            </div>
+        }
+        else
+        {
+            
+            
+        
+        }
+    </nav>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Subscribe to the event and trigger re-render on state change
+        SessionService.OnAuthenticationStateChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe to prevent memory leaks
+        SessionService.OnAuthenticationStateChanged -= StateHasChanged;
+    }
+}

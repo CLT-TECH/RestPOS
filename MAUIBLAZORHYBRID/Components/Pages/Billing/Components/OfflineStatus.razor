@@ -1,0 +1,23 @@
+@using MudBlazor
+
+<MudPaper Class="px-2 py-1 mt-2 d-flex justify-end align-center" Elevation="0" Style="border-top: 1px solid #ccc;">
+
+    @if (_isOnline)
+    {
+        <MudText Color="Color.Success" Typo="Typo.caption">
+            <MudIcon Icon="@Icons.Material.Filled.CloudDone" Class="mr-1" /> Online
+        </MudText>
+    }
+    else
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption">
+            <MudIcon Icon="@Icons.Material.Filled.CloudOff" Class="mr-1" /> Offline Mode
+        </MudText>
+    }
+
+</MudPaper>
+
+@code {
+    // Placeholder for now. Will be tied to real network check later.
+    private bool _isOnline = true;
+}

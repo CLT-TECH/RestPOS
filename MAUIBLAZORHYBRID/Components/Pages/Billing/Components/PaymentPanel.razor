@@ -1,0 +1,27 @@
+@using MudBlazor
+@inject ISnackbar Snackbar
+
+<MudPaper Class="p-2 mb-2" Elevation="0">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Payment</MudText>
+
+    <MudSelect T="string" Label="Payment Method" Dense="true" @bind-Value="_paymentMethod">
+        @foreach (var method in _paymentMethods)
+        {
+            <MudSelectItem Value="@method">@method</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudGrid Class="mt-3" GutterSize="2">
+        <!-- buttons omitted for brevity -->
+    </MudGrid>
+</MudPaper>
+
+@code {
+    private string _paymentMethod = "Cash";
+    private List<string> _paymentMethods = new() { "Cash", "Card", "UPI", "Wallet" };
+
+    private void FinalizeOrder() => Snackbar.Add("Order finalized.", Severity.Success);
+    private void PrintReceipt() => Snackbar.Add("Printing...", Severity.Info);
+    private void EmailReceipt() => Snackbar.Add("Email sent (mock).", Severity.Info);
+    private void ClearOrder() => Snackbar.Add("Cart cleared (mock).", Severity.Warning);
+}

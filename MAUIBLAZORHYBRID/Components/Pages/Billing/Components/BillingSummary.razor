@@ -1,0 +1,49 @@
+@using MudBlazor
+
+<MudPaper Class="p-2 mb-2" Elevation="0">
+
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Summary</MudText>
+
+    <MudGrid>
+        <MudItem xs="6">
+            <MudText Typo="Typo.body1">Subtotal:</MudText>
+        </MudItem>
+        <MudItem xs="6" Class="text-right">
+            <MudText Typo="Typo.body1">@_subtotal.ToString("C")</MudText>
+        </MudItem>
+
+        <MudItem xs="6">
+            <MudText Typo="Typo.body1">Tax (10%):</MudText>
+        </MudItem>
+        <MudItem xs="6" Class="text-right">
+            <MudText Typo="Typo.body1">@_tax.ToString("C")</MudText>
+        </MudItem>
+
+        <MudItem xs="6">
+            <MudText Typo="Typo.body1">Discounts:</MudText>
+        </MudItem>
+        <MudItem xs="6" Class="text-right">
+            <MudText Typo="Typo.body1">@_discount.ToString("C")</MudText>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudDivider Class="my-1" />
+        </MudItem>
+
+        <MudItem xs="6">
+            <MudText Typo="Typo.h6">Total:</MudText>
+        </MudItem>
+        <MudItem xs="6" Class="text-right">
+            <MudText Typo="Typo.h6" Color="Color.Primary">@_total.ToString("C")</MudText>
+        </MudItem>
+    </MudGrid>
+
+</MudPaper>
+
+@code {
+    // Simulated/mock totals for now
+    private decimal _subtotal = 14.47m;
+    private decimal _tax => _subtotal * 0.10m;
+    private decimal _discount = 0.50m;
+    private decimal _total => _subtotal + _tax - _discount;
+}

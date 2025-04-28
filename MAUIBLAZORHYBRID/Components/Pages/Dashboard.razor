@@ -1,0 +1,28 @@
+﻿@page "/dashboard"
+@using MAUIBLAZORHYBRID.Services
+@inject SessionService SessionService
+@inject NavigationManager NavigationManager
+
+@if (SessionService.IsAuthenticated)
+{
+    <MudText Typo="Typo.h5">Welcome, @SessionService.CurrentUser!</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Logout">Logout</MudButton>
+}
+else
+{
+    <MudText>Please log in to access the dashboard.</MudText>
+    @* @code {
+    protected override void OnInitialized()
+    {
+        NavigationManager.NavigateTo("/login");
+    }
+    } *@
+}
+
+@code {
+    private void Logout()
+    {
+        SessionService.Logout();
+        NavigationManager.NavigateTo("/mudlogin");
+    }
+}

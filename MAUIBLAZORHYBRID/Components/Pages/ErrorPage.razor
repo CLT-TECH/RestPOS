@@ -1,0 +1,30 @@
+@inject NavigationManager Navigation
+@inject SessionService SessionService
+
+@page "/error"
+
+<PageTitle>Error</PageTitle>
+
+<div class="error-container">
+    <h1>Error Details</h1>
+
+    @if (SessionService.LastError != null)
+    {
+        <div class="error-details">
+            <p>@SessionService.LastError.Message</p>
+            <pre>@SessionService.LastError.ToString()</pre>
+        </div>
+    }
+
+    <button class="btn btn-primary" @onclick="ReturnHome">
+        Return to Home
+    </button>
+</div>
+
+@code {
+    private void ReturnHome()
+    {
+        SessionService.ClearLastError();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

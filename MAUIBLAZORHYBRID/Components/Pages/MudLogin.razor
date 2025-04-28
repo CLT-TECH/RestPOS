@@ -1,0 +1,130 @@
+@page "/"
+@page "/mudlogin"
+
+
+@inject LoginService LoginService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject SessionService SessionService
+
+<MudThemeProvider IsDarkMode="@isDarkMode" />
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="my-5">
+    <MudPaper Elevation="2" Class="pa-6">
+        <MudText Typo="Typo.h5" GutterBottom="true">Login to My App</MudText>
+        <MudText Class="mb-4">@welcomeMessage</MudText>
+        <MudForm @ref="form" @bind-IsValid="isFormValid" ValidationDelay="0">
+            <MudTextField @bind-Value="username"
+            Label="Username"
+            Variant="Variant.Outlined"
+            Placeholder="Enter username"
+            Class="mb-4"
+            Required="true"
+            RequiredError="Username is required" />
+            <MudTextField @bind-Value="password"
+            Label="Password"
+            Variant="Variant.Outlined"
+            Placeholder="Enter password"
+            InputType="InputType.Password"
+            Required="true"
+            Immediate="true"
+            DebounceInterval="0"  
+            RequiredError="Password is required" />
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">@errorMessage</MudAlert>
+            }
+            <MudButton Variant="Variant.Filled"
+            Color="Color.Primary"
+            Class="mt-4"
+            Disabled="!isFormValid"
+            OnClick="HandleLogin">
+                Login
+            </MudButton>
+
+            <button @onclick="ThrowError">Throw Error</button>
+            <button @onclick="ThrowAsyncError">Throw Async Error</button>
+
+            @*  @if (isDarkMode)
+            {
+                if (data == null)
+                {
+                    @data.Length;
+                }
+
+            } *@
+
+                        <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="mt-4"
+                       OnClick="HandleRegister">
+                Register
+            </MudButton>
+
+            <MudSwitch @bind-Value="isDarkMode" Label="Dark Mode"  Color="Color.Primary" Class="mr-n2 mb-6" />
+
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    // private string[] data = null;
+    private MudForm? form;
+    private bool isFormValid;
+    private string username = string.Empty;
+    private string password = string.Empty;
+    private string errorMessage = string.Empty;
+    private string welcomeMessage = "Loading...";
+    public bool isDarkMode { get; set; } = true;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        welcomeMessage = await LoginService.GetWelcomeMessageAsync();
+    }
+
+    private async Task HandleLogin()
+    {
+        var user = await LoginService.LoginAsync(username, password);
+        if (user != false)
+        {
+            Snackbar.Add("Login successful!", Severity.Success);
+            SessionService.Login(username);
+            NavigationManager.NavigateTo("/home");
+        }
+        else
+        {
+            Snackbar.Add("Invalid username or password.", Severity.Error);
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        bool success = await LoginService.RegisterAsync(username, password);
+        if (success)
+        {
+            Snackbar.Add("Registration successful! You can now log in.", Severity.Success);
+            // Clear form
+            username = string.Empty;
+            password = string.Empty;
+            await form.ResetAsync();
+        }
+        else
+        {
+            Snackbar.Add("Username already taken.", Severity.Error);
+        }
+    }
+    private async Task ThrowError()
+    {
+        await Task.Delay(100); // Simulate async work
+        throw new InvalidOperationException("This is an async test error!");
+    }
+
+    private async Task ThrowAsyncError()
+    {
+        await Task.Delay(100); // Simulate async work
+        throw new InvalidOperationException("This is an async test error!");
+    }
+
+
+}

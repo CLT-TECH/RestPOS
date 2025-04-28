@@ -1,0 +1,53 @@
+﻿@using MudBlazor
+
+<MudPaper Class="p-2 mb-2" Elevation="0">
+
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Customer</MudText>
+
+    <MudGrid>
+        <MudItem xs="12" sm="8">
+            <MudTextField @bind-Value="_customerSearch"
+                          Label="Search or Enter Customer"
+                          Variant="Variant.Outlined"
+                          Dense="true"
+                          Immediate="true"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.PersonSearch"
+                          OnKeyDown="HandleKeyDown"
+                          Class="w-100" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddCustomer" Class="w-100">
+                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Class="mr-1" />
+                Add Customer
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    @if (!string.IsNullOrWhiteSpace(_selectedCustomer))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+            Selected: @_selectedCustomer
+        </MudText>
+    }
+
+</MudPaper>
+
+@code {
+    private string _customerSearch = string.Empty;
+    private string _selectedCustomer = string.Empty;
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            _selectedCustomer = _customerSearch.Trim();
+        }
+    }
+
+    private void AddCustomer()
+    {
+        _selectedCustomer = _customerSearch.Trim();
+        // You could later show a dialog here for new customer creation.
+    }
+}

@@ -1,0 +1,2 @@
+SQLite DB Path: C:\Users\admin\AppData\Local\app.db
+SQLite DB Path: C:\Users\admin\AppData\Local\app.db
