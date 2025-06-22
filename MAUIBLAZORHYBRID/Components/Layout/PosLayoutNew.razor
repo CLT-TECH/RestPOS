@@ -1,0 +1,125 @@
+@using MudBlazor
+<MudThemeProvider Theme="_posTheme" />
+    <MudLayout>
+        <MudDrawer @bind-Open="_drawerOpen"
+                   Anchor="Anchor.Start"
+                   Variant="DrawerVariant.Responsive"
+                   Elevation="1"
+                   Class="mud-height-full pos-drawer"
+                   ClipMode="DrawerClipMode.Never"
+                   DisableOverlay="true">
+            <MudNavMenu Dense="true">
+                <MudNavLink Icon="@Icons.Material.Filled.Store" Match="NavLinkMatch.All">POS</MudNavLink>
+                <MudNavLink Icon="@Icons.Material.Filled.Inventory">Inventory</MudNavLink>
+                <MudNavLink Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
+        <MudMainContent Class="main-content-container">
+            <MudContainer MaxWidth="MaxWidth.False" Class="px-2 pt-2">
+                <MudPaper Class="d-flex justify-between align-center p-2 mb-2" Elevation="1">
+                    <MudTextField T="string" Placeholder="Search Items..." Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="me-4" />
+                    <MudText Typo="Typo.subtitle2">Counter: 1 | Cashier: John | Dining: Hall A</MudText>
+                </MudPaper>
+                <MudGrid>
+                    <MudItem xs="12" md="8">
+                        <MudPaper Class="p-2 mb-2" Elevation="1">
+                            <MudTextField T="string" Placeholder="Search Categories..." Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-2" />
+                            <MudTabs>
+                                <MudTabPanel Text="All"></MudTabPanel>
+                                <MudTabPanel Text="Beverages"></MudTabPanel>
+                                <MudTabPanel Text="Snacks"></MudTabPanel>
+                                <MudTabPanel Text="Meals"></MudTabPanel>
+                            </MudTabs>
+                        </MudPaper>
+                        <MudGrid Class="pos-items-grid mb-2">
+                            @for (int i = 1; i <= 20; i++)
+                            {
+                                <MudItem xs="6" sm="4" md="3">
+                                    <MudCard Hover="true" Class="pos-item-card">
+                                        <MudCardMedia Image="https://via.placeholder.com/150" Height="100" />
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.subtitle2">Item @i</MudText>
+                                            <MudText Typo="Typo.caption">@((i * 10).ToString())</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                        <MudPaper Class="d-flex justify-between align-center p-2" Elevation="1">
+                            <MudText>Open: 5</MudText>
+                            <MudText>Running: 3</MudText>
+                            <MudText>Billed: 12</MudText>
+                            <MudText>Vacant: 8</MudText>
+                            <MudText>@DateTime.Now.ToString("HH:mm")</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudPaper Class="p-2" Elevation="1">
+                            <MudText Typo="Typo.h6" Class="mb-2">Selected Items</MudText>
+                            <MudList T="string">
+                                @for (int i = 1; i <= 3; i++)
+                                {
+                                    <MudListItem>
+                                        <MudText>Item @i - @((i * 10).ToString())</MudText>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    private MudTheme _posTheme = new MudTheme()
+        {
+            PaletteLight = new PaletteLight()
+            {
+                Primary = "#ACFDBB",
+                Secondary = "#82E0AA",
+                Tertiary = "#D4EFDF",
+                AppbarBackground = "#8FD19A",
+                DrawerBackground = "#F0FFF4",
+                Success = "#4CAF50",
+                Background = "#FAFFFA",
+                Surface = "#FFFFFF",
+                TextPrimary = "#1B4332",
+                TextSecondary = "#4F7053"
+            },
+            LayoutProperties = new LayoutProperties()
+            {
+                AppbarHeight = "64px",
+                DrawerWidthLeft = "70px",
+                DefaultBorderRadius = "6px"
+            }
+        };
+}
+
+<style>
+    .pos-drawer .mud-nav-link {
+        padding: 8px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .main-content-container {
+        overflow-y: auto;
+        height: 100vh;
+    }
+
+    .pos-items-grid {
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+
+    .pos-item-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .pos-item-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+</style>

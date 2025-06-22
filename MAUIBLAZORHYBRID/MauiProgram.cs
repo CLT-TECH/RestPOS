@@ -1,5 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using MAUIBLAZORHYBRID.Data;
+using MAUIBLAZORHYBRID.Data.Seed;
 using MAUIBLAZORHYBRID.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,8 @@ namespace MAUIBLAZORHYBRID
 
             builder.Services.AddSingleton<LoginService>();
 
+            builder.Services.AddScoped<PosPageService>();
+
             builder.Services.AddBlazoredLocalStorage();
 
             builder.Services.AddMudExtensions();
@@ -47,7 +50,13 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddSingleton<LoginService>();
             builder.Services.AddSingleton<SessionService>();
             builder.Services.AddSingleton<LoadingService>();
-            //return builder.Build();
+
+
+            builder.Services.AddScoped(sp =>
+            new HttpClient
+            {
+                BaseAddress = new Uri("http://hotelerp.azurewebsites.net") // Your API base URL
+            });
 
             var app = builder.Build();
 
@@ -60,6 +69,10 @@ namespace MAUIBLAZORHYBRID
                 // Create a context instance and migrate
                 using var db = factory.CreateDbContext();
                 db.Database.Migrate();
+
+                //#if DEBUG
+                MainSeeder.Seed(db); // Only during development/testing
+                //#endif
             }
 
             return app;

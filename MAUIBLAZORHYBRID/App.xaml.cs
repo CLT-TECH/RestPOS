@@ -1,4 +1,10 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.UI.Windowing;
+using System.Diagnostics;
+
+#if WINDOWS
+using Microsoft.Maui.Platform;
+using MAUIBLAZORHYBRID.Platforms.Windows;
+#endif
 
 namespace MAUIBLAZORHYBRID
 {
@@ -29,5 +35,14 @@ namespace MAUIBLAZORHYBRID
             Debug.WriteLine($"Global exception handler: {ex}");
             // Consider writing to a separate crash log file here
         }
+
+        public void ToggleFullScreen()
+        {
+            #if WINDOWS
+                        var window = Application.Current.Windows[0].Handler.PlatformView as MauiWinUIWindow;
+                        window?.ToggleFullScreen();
+            #endif
+        }
+
     }
 }

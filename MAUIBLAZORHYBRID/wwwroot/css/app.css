@@ -155,3 +155,20 @@ h1:focus {
     }
 }
 
+.content-container {
+    padding-top: 64px !important; /* AppBar height */
+    padding-bottom: 56px !important; /* Footer height */
+    height: calc(100vh - 120px) !important;
+    overflow-y: auto;
+}
+
+.mud-appbar {
+    z-index: 100 !important;
+}
+
+* {
+    user-select: none;
+    -webkit-user-select: none; /* For Safari */
+    -moz-user-select: none; /* For Firefox */
+    -ms-user-select: none; /* For Edge */
+}

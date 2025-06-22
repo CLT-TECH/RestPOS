@@ -1,0 +1,862 @@
+﻿@page "/posedpages"
+@using MudBlazor
+@using System.Globalization
+@inject ISnackbar Snackbar
+@layout Components.Layout.FullScreenLayout
+
+
+
+
+<MudPaper Class="vertical-navbar" Elevation="4" @onmouseenter="() => ShowNav()" @onmouseleave="() => HideNav()"
+          Style="@NavBarWidthStyle">
+    <nav aria-label="Main Navigation" class="nav-content">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Primary"
+                       Style="margin-bottom:1rem;"
+                       OnClick="ToggleNav"
+                       AriaLabel="Toggle navigation" />
+        <ul class="nav-list">
+            <li><MudIcon Icon="@Icons.Material.Filled.Home" /><span class="nav-text">Home</span></li>
+            <li><MudIcon Icon="@Icons.Material.Filled.Dashboard" /><span class="nav-text">Dashboard</span></li>
+            <li><MudIcon Icon="@Icons.Material.Filled.ShoppingCart" /><span class="nav-text">Orders</span></li>
+            <li><MudIcon Icon="@Icons.Material.Filled.Settings" /><span class="nav-text">Settings</span></li>
+            <li><MudIcon Icon="@Icons.Material.Filled.HelpOutline" /><span class="nav-text">Help</span></li>
+        </ul>
+    </nav>
+</MudPaper>
+
+<MudPaper Class="pos-screen">
+
+
+
+    <div class="main-layout">
+
+        <!-- First part: 75-80% width -->
+        <div class="left-panel">
+
+            <!-- Header part of first part -->
+            <div class="header-part">
+               @*  <MudTextField @bind-Value="_searchText"
+                              Placeholder="Search items..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Class="search-box"
+                              Immediate="true"
+                              OnImmediateValueChanged="OnSearchChanged"
+                              /> *@
+                <div class="header-details">
+                    <div class="header-detail-item">
+                        <MudIcon Icon="@Icons.Material.Filled.Countertops" Size="Size.Small" Style="color:#3eb489;" /> 
+                        <span>Counter: 5</span>
+                    </div>
+                    <div class="header-detail-item">
+                        <MudIcon Icon="@Icons.Material.Filled.TableRestaurant" Size="Size.Small" Style="color:#3eb489;" />
+                        <span>Dining Space: 12</span>
+                    </div>
+                    <div class="header-detail-item">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Style="color:#3eb489;" />
+                        <span>Cashier: John Doe</span>
+                    </div>
+                </div>
+               <MudAutocomplete T="Product"
+                 Label="Select Product"
+                 @bind-Value="selectedProduct"
+                 ToStringFunc="(product) => product?.Name"
+                 Clearable="true"
+                 Dense="true"
+                 MinCharacters="1"
+                 MaxItems="5">
+                </MudAutocomplete>
+            </div>
+
+            <!-- Body: category list left and item cards right -->
+            <div class="body-part">
+
+                <!-- Category list with search box on top -->
+                <div class="category-list">
+                    <MudTextField @bind-Value="_categorySearchText" Placeholder="Search categories..." 
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                                  Class="category-search" Immediate="true" OnImmediateValueChanged="OnCategorySearchChanged" />
+                    <MudNavMenu Class="category-navmenu">
+                        @foreach (var category in FilteredCategories)
+                        {
+                            <MudNavLink Href="#" Class="@($"category-link {(category == SelectedCategory ? "selected" : "")}")"
+                                        OnClick="(() => SelectCategory(category))">
+                                <MudPaper Class="category-card" Elevation="2" Hover="true" >
+                                    <MudText Typo="Typo.subtitle1" Class="category-text">@category</MudText>
+                                </MudPaper>
+                            </MudNavLink>
+                        }
+                    </MudNavMenu>
+                </div>
+
+                <!-- Items container -->
+                <div class="items-container">
+                  @*   <MudGrid GutterSize="16px">
+                        @foreach(var item in FilteredItems)
+                        {
+                            <MudItem xs="12" sm="6" md="3" lg="3">
+                                <MudCard Class="item-card" Elevation="6" Hover="true" @onclick="() => AddToOrder(item)">
+                                    <div class="item-image-container">
+                                        <MudImage Src="@item.ImageUrl" Alt="@item.Name" Class="item-image" />
+                                    </div>
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.subtitle1" GutterBottom="false">@item.Name</MudText>
+                                        <MudText Typo="Typo.body2" Class="item-description">@item.Description</MudText>
+                                        <MudText Typo="Typo.subtitle2" Class="item-price">$@item.Price.ToString("F2")</MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+ *@
+
+                    <MudGrid >
+                        @foreach(var item in FilteredItems)
+                        {
+                                                <MudItem xs="12" sm="6" md="4" lg="3" Style="padding-top:0;padding-bottom:5!important;padding-left:4px!important">
+                                <MudCard Class="item-card" Elevation="6" Hover="true" @onclick="() => AddToOrder(item)">
+                                    <div class="item-header">
+                                        <div class="item-image-container">
+                                            <MudImage Src="@item.ImageUrl" Alt="@item.Name" Class="item-image" />
+                                        </div>
+                                                            <MudText Typo="Typo.subtitle2" Class="item-price item-header-price">&#8377;@item.Price.ToString("F2")</MudText>
+                                    </div>
+                                    <MudCardContent Style="padding:8px 0px 2px 8px">
+                                                            <MudText Typo="Typo.subtitle2" GutterBottom="false" Class="item-title" Style="">@ToTitleCase(item.Name)</MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </div>
+            </div>
+
+            <!-- Footer with status and time -->
+            <div class="footer-part">
+                <div class="footer-left">
+                    <MudChip T="string" Class="status-chip">Open Orders: 3</MudChip>
+                    <MudChip T="string" Class="status-chip">Running: 5</MudChip>
+                    <MudChip T="string" Class="status-chip">Billed: 10</MudChip>
+                    <MudChip T="string" Class="status-chip">Vacant Tables: 8</MudChip>
+                </div>
+                <div class="footer-right">
+                    <MudText Typo="Typo.subtitle2">@DateTime.Now.ToString("hh:mm tt")</MudText>
+                </div>
+            </div>
+        </div>
+
+        <!-- Second part: ordered items list -->
+        <div class="right-panel">
+        @*     <MudPaper Class="order-list" Elevation="6">
+                <MudText Typo="Typo.h5" Class="order-list-header">Ordered Items</MudText>
+                <MudList T="object" Class="ordered-items-list">
+                    @if (OrderedItems == null || !OrderedItems.Any())
+                    {
+                        <MudText Typo="Typo.body1" Align="Align.Center" Class="empty-order-text">No items ordered yet.</MudText>
+                    }
+                    else
+                    {
+                        @foreach (var orderItem in OrderedItems)
+                        {
+                            <MudListItem Class="ordered-list-item">
+                                <MudText Typo="Typo.subtitle1">@orderItem.Name</MudText>
+                                <MudSpacer />
+                                <MudText Typo="Typo.subtitle1" >$@orderItem.Price.ToString("F2") x @orderItem.Quantity = $@(orderItem.Price * orderItem.Quantity)</MudText>
+                            </MudListItem>
+                        }
+                    }
+                </MudList>
+            </MudPaper> *@
+
+            <MudPaper Class="custom-order-list" Elevation="6">
+                <MudText Typo="Typo.h5" Class="custom-order-header">Ordered Items</MudText>
+
+                <MudList T="object" Class="custom-ordered-items-list">
+                    @if (OrderedItems == null || !OrderedItems.Any())
+                    {
+                        <MudText Typo="Typo.body1" Align="Align.Center" Class="custom-empty-order-text">
+                            No items ordered yet.
+                        </MudText>
+                    }
+                    else
+                    {
+                        @foreach (var orderItem in OrderedItems)
+                        {
+                            <MudListItem Class="custom-ordered-list-item">
+                                <MudText Class="custom-order-line1" Align="Align.Left">@ToTitleCase(orderItem.Name)</MudText>
+                                <div class="custom-order-line2">
+                                    ₹@orderItem.Price.ToString("F2") x @orderItem.Quantity
+                                    <span class="custom-order-total">= <span>₹@((orderItem.Price * orderItem.Quantity).ToString("F2"))</span></span>
+                                </div>
+                            </MudListItem>
+                        }
+                    }
+                </MudList>
+            </MudPaper>
+        </div>
+    </div>
+</MudPaper>
+
+@code {
+    private bool IsNavVisible = false;
+    private string NavBarWidthStyle => $"width: {(IsNavVisible ? "240px" : "40px")};";
+
+    private void ShowNav() => IsNavVisible = true;
+    private void HideNav() => IsNavVisible = false;
+    private void ToggleNav() => IsNavVisible = !IsNavVisible;
+
+    private string _searchText = string.Empty;
+    private string _categorySearchText = string.Empty;
+    private string SelectedCategory = "All";
+
+    private List<string> Categories = new List<string>
+    {
+        "All",
+        "Beverages",
+        "Starters",
+        "Main Course",
+        "Desserts",
+        "Sides",
+        "Specials",
+    };
+
+    private List<Item> Items = new List<Item>
+    {
+        new Item { Id = 1, Name = "Cappuccino", Description = "Creamy coffee", Price = 3.50m, Category="Beverages", ImageUrl="https://cdn-icons-png.flaticon.com/512/2913/2913463.png" },
+        new Item { Id = 18, Name = "100 PIPERS EXQUISIT SCOTCH WHISKY", Description = "Creamy coffee", Price = 3.50m, Category="Beverages", ImageUrl="images/imagestemper.png" },
+        new Item { Id = 2, Name = "Caesar Salad", Description = "Fresh salad with lettuce and cheese", Price = 5.00m, Category="Starters", ImageUrl="https://cdn-icons-png.flaticon.com/512/135/135694.png" },
+        new Item { Id = 3, Name = "Grilled Chicken", Description = "Tender grilled chicken", Price = 12.00m, Category="Main Course", ImageUrl="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" },
+        new Item { Id = 16, Name = "100 PIPERS EXQUISIT SCOTCH WHISKY", Description = "Creamy coffee", Price = 3.50m, Category="Beverages", ImageUrl="images/imagestemper.png" },
+        new Item { Id = 4, Name = "Chocolate Cake", Description = "Rich chocolate dessert", Price = 4.25m, Category="Desserts", ImageUrl="https://cdn-icons-png.flaticon.com/512/415/415733.png" },
+        new Item { Id = 5, Name = "French Fries", Description = "Crispy potato fries", Price = 2.50m, Category="Sides", ImageUrl="https://cdn-icons-png.flaticon.com/512/1046/1046787.png" },
+        new Item { Id = 6, Name = "Daily Special Roast", Description = "Chef's special meal", Price = 15.00m, Category="Specials", ImageUrl="https://cdn-icons-png.flaticon.com/512/616/616408.png" },
+        new Item { Id = 15, Name = "100 PIPERS EXQUISIT SCOTCH WHISKY", Description = "Creamy coffee", Price = 3.50m, Category="Beverages", ImageUrl="images/imagestemper.png" },
+        new Item { Id = 7, Name = "Grilled Chicken", Description = "Tender grilled chicken", Price = 12.00m, Category="Main Course", ImageUrl="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" },
+        new Item { Id = 8, Name = "Caesar Salad", Description = "Fresh salad with lettuce and cheese", Price = 5.00m, Category="Starters", ImageUrl="https://cdn-icons-png.flaticon.com/512/135/135694.png" },
+        new Item { Id = 19, Name = "100 PIPERS EXQUISIT SCOTCH WHISKY", Description = "Creamy coffee", Price = 3.50m, Category="Beverages", ImageUrl="images/imagestemper.png" },
+        new Item { Id = 9, Name = "Chocolate Cake", Description = "Rich chocolate dessert", Price = 4.25m, Category="Desserts", ImageUrl="https://cdn-icons-png.flaticon.com/512/415/415733.png" },
+        new Item { Id = 10, Name = "Daily Special Roast", Description = "Chef's special meal", Price = 15.00m, Category="Specials", ImageUrl="https://cdn-icons-png.flaticon.com/512/616/616408.png" },
+        new Item { Id = 11, Name = "French Fries", Description = "Crispy potato fries", Price = 2.50m, Category="Sides", ImageUrl="https://cdn-icons-png.flaticon.com/512/1046/1046787.png" },
+        new Item { Id = 17, Name = "100 PIPERS EXQUISIT SCOTCH WHISKY", Description = "Creamy coffee", Price = 3.50m, Category="Beverages", ImageUrl="images/imagestemper.png" },
+        new Item { Id = 12, Name = "Caesar Salad", Description = "Fresh salad with lettuce and cheese", Price = 5.00m, Category="Starters", ImageUrl="https://cdn-icons-png.flaticon.com/512/135/135694.png" },
+        new Item { Id = 13, Name = "Cappuccino", Description = "Creamy coffee", Price = 3.50m, Category="Beverages", ImageUrl="https://cdn-icons-png.flaticon.com/512/2913/2913463.png" },
+        new Item { Id = 14, Name = "100 PIPERS EXQUISIT SCOTCH WHISKY", Description = "Creamy coffee", Price = 3.50m, Category="Beverages", ImageUrl="images/imagestemper.png" },
+    };
+
+    private List<ItemOrder> OrderedItems = new List<ItemOrder>();
+
+    private IEnumerable<string> FilteredCategories =>
+        string.IsNullOrWhiteSpace(_categorySearchText)
+        ? Categories
+        : Categories.Where(c => c.Contains(_categorySearchText, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<Item> FilteredItems =>
+        Items.Where(i =>
+            (SelectedCategory == "All" || i.Category == SelectedCategory)
+            && (string.IsNullOrWhiteSpace(_searchText) || i.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+        );
+
+    private void OnSearchChanged(string value)
+    {
+        _searchText = value;
+    }
+
+    private void OnCategorySearchChanged(string value)
+    {
+        _categorySearchText = value;
+    }
+
+    private void SelectCategory(string category)
+    {
+        SelectedCategory = category;
+    }
+
+    private void AddToOrder(Item item)
+    {
+        var existingOrder = OrderedItems.FirstOrDefault(o => o.Id == item.Id);
+        if(existingOrder == null)
+        {
+            OrderedItems.Add(new ItemOrder { Id = item.Id, Name = item.Name, Price = item.Price, Quantity = 1 });
+        }
+        else
+        {
+            existingOrder.Quantity++;
+        }
+        Snackbar.Add($"{item.Name} added to order.", Severity.Success);
+    }
+
+    private class Item
+    {
+        public int Id {get; set;}
+        public string Name {get; set;} = string.Empty;
+        public string Description {get; set;} = string.Empty;
+        public decimal Price {get; set;}
+        public string Category {get; set;} = string.Empty;
+        public string ImageUrl {get; set;} = string.Empty;
+    }
+
+    private class ItemOrder
+    {
+        public int Id {get; set;}
+        public string Name {get; set;} = string.Empty;
+        public decimal Price {get; set;}
+        public int Quantity {get; set;}
+    }
+
+    private string ToTitleCase(string input)
+    {
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
+    }
+
+    private Product selectedProduct;
+
+    private List<Product> products = new()
+    {
+        new Product { Id = 1, Name = "Laptop" },
+        new Product { Id = 2, Name = "Mouse" },
+        new Product { Id = 3, Name = "Keyboard" },
+        new Product { Id = 4, Name = "Monitor" },
+        new Product { Id = 5, Name = "Printer" },
+        new Product { Id = 6, Name = "Scanner" },
+        new Product { Id = 7, Name = "Router" },
+        new Product { Id = 8, Name = "Webcam" }
+    };
+
+    public Task<IEnumerable<Product>> SearchProducts(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<Product>>(products);
+
+        var result = products
+            .Where(p => p.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+
+        return Task.FromResult(result);
+    }
+
+    public class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        // Optional: Override ToString (not needed if using ToStringFunc)
+        public override string ToString() => Name;
+    }
+}
+
+<style>
+/* Updated Category List Colors and Text */
+/* Mint Green Theme Variables */
+:root {
+    --mint-green-light: #d1f2eb;
+    --mint-green: #3eb489;
+    --mint-green-dark: #2e7e77;
+    --mint-green-text: #065a52;
+    --background-color: #eaf6f4;
+    --card-background: #ffffff;
+    --text-color: #04675e;
+    --text-muted: #4a6a63;
+    --box-shadow: 0 4px 8px rgba(62, 180, 137, 0.15);
+}
+
+.pos-screen {
+    background-color: var(--background-color);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-color);
+    padding: 16px;
+}
+
+.main-layout {
+    display: flex;
+    width: 100%;
+    max-width: 1600px;
+    gap: 16px;
+    height: 100%;
+    padding-left:32px;
+}
+
+.left-panel {
+    flex: 3 1 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-background);
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+    padding: 16px;
+    overflow: hidden;
+}
+
+.right-panel {
+    flex: 1 1 0;
+    background-color: var(--card-background);
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.header-part {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--mint-green-light);
+    }
+
+.search-box .mud-input-root {
+    background-color: var(--mint-green-light);
+    border: none;
+    padding-left: 40px;
+    transition: box-shadow 0.3s ease;
+    color: var(--mint-green-text);
+    font-weight: 600;
+}
+
+.search-box .mud-input-root:hover,
+.search-box .mud-input-root:focus-within {
+    box-shadow: 0 5px 12px rgb(62 180 137 / 0.7);
+}
+
+.search-box input {
+    color: var(--mint-green-text);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.header-details {
+    display: flex;
+    gap: 6px;
+    color: var(--mint-green-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.header-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.body-part {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 16px;
+}
+
+.category-list {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+}
+
+.category-search .mud-input-root {
+    border-radius: 8px;
+    background-color: var(--mint-green-light);
+    border: none;
+    padding-left: 40px;
+    margin-bottom: 12px;
+    color: var(--mint-green-text);
+    font-weight: 600;
+}
+
+.category-search .mud-input-root:hover,
+.category-search .mud-input-root:focus-within {
+    box-shadow: 0 5px 12px rgb(62 180 137 / 0.7);
+}
+
+/* Updated category nav and category cards */
+.category-navmenu {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 4px;
+}
+
+    .category-link .mud-nav-link:hover {
+        background-color: transparent !important;
+        color: inherit !important;
+        box-shadow: none !important;
+    }
+
+/* Changed from gradient green to light neutral background and crisp border */
+.category-card {
+    padding: 14px 18px;
+    border-radius: 12px;
+    background-color: #f9f9f9;
+    color: #3a3a3a;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
+    user-select: none;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.category-card:hover {
+    background-color: #e1f0eb;
+    box-shadow: 0 4px 8px rgba(62, 180, 137, 0.15);
+    transform: translateY(-3px);
+    border-color: #3eb489;
+    color: #3eb489;
+}
+
+.category-link.selected .category-card {
+    background-color: #3eb489;
+    color: white;
+    box-shadow: 0 6px 12px rgba(62, 180, 137, 0.4);
+    font-weight: 700;
+    border-color: #2e7e77;
+    transform: translateY(-2px);
+}
+
+.category-text {
+    width: 100%;
+}
+
+/* Items container */
+.items-container {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+    padding-top: 24px;
+    padding-left: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-content: flex-start;
+    box-shadow: inset 0 0 10px var(--mint-green-light);
+    border-radius:8px;
+}
+
+/* Modified item card for uniform size and margins/padding adjustments */
+.item-card {
+    border-radius: 16px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    flex-direction: column;
+    min-height: 110px; /* uniform height */
+    margin-top: 12px;
+    margin-left: 6px;
+        width: 100%;
+}
+
+.item-card .mud-card-media {
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+    background-color: white; /* Optional to make background clean */
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+
+.item-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgb(62 180 137 / 0.75);
+}
+
+.item-card:first-child {
+    margin-left: 0;
+}
+
+.item-description {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    height: 36px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+    .item-card .item-title {
+        font-weight: bold;
+        word-wrap: break-word; /* Optional: breaks long words */
+        overflow-wrap: break-word; /* Standard version of the above */
+        white-space: normal; /* Allows normal wrapping */
+    }
+
+
+
+.item-price {
+    font-weight: 700;
+    margin-top: 8px;
+    color: #3eb489;
+}
+
+.footer-part {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--mint-green-light);
+        box-shadow: inset 0 0 10px var(--mint-green-light);
+        border-radius:8px;
+        padding:8px;
+}
+
+.footer-left {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.status-chip {
+    border: 1px solid #3eb489;
+    color: #2e7e77;
+    background-color: #e6f2ef;
+    font-weight: 600;
+}
+
+.footer-right {
+    font-weight: 600;
+    color: var(--mint-green-dark);
+}
+
+.order-list {
+    padding: 16px;
+    border-radius: 16px;
+    /* background-color: var(--mint-green-light); */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+        border: 1px solid #3eb489;
+}
+
+.order-list-header {
+    margin-bottom: 12px;
+    color: var(--mint-green-dark);
+    font-weight: 700;
+}
+
+.ordered-items-list {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.ordered-list-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.ordered-list-item:hover {
+    background-color: var(--mint-green);
+    color: white;
+}
+
+.empty-order-text {
+    color: var(--mint-green-dark);
+    font-style: italic;
+    opacity: 0.7;
+    margin-top: 48px;
+}
+
+    .item-image-container {
+        width: 100%;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        background-color: #fff; /* fallback if image is transparent */
+        margin-left:8px;
+    }
+
+    .item-image {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain !important
+    }
+
+    .vertical-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    overflow-x: hidden;
+    transition: width 0.3s ease;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1rem;
+}
+
+.nav-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 0;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.nav-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #6b7280; /* neutral gray */
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-list li:hover {
+    background-color: #f3f4f6;
+    color: #111827; /* darker text on hover */
+}
+
+.nav-list li .mud-icon-root {
+    color: #6b7280;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+.vertical-navbar:not(:hover) .nav-text {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.vertical-navbar:hover .nav-text {
+    opacity: 1;
+    transition: opacity 0.3s 0.1s ease;
+}
+
+    .item-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding:2px 4px;
+        background-color: #fff; /* Matches your image container background */
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+
+        .item-header .item-image-container {
+            width: 50px; /* Fixed width to keep image compact */
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .item-header .item-image {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain !important;
+        }
+
+    .item-header-price {
+        font-weight: 700;
+        color: #3eb489; /* Matches your mint-green theme for price */
+        text-align: right;
+        flex-shrink: 0; /* Prevents price from shrinking too much */
+        margin-left: 8px;
+    }
+
+    .custom-order-list {
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid #3eb489;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .custom-order-header {
+        margin-bottom: 12px;
+        color: var(--mint-green-dark);
+        font-weight: 700;
+    }
+
+    .custom-ordered-items-list {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .custom-ordered-list-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        border-radius: 12px;
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease;
+    }
+
+        .custom-ordered-list-item:hover {
+            background-color: var(--mint-green);
+            color: white;
+        }
+
+    .custom-order-line1 {
+        font-weight: bold;
+        font-size: 1rem;
+        white-space: normal;
+        word-wrap: break-word;
+        text-align: left; /* ← Add this */
+    }
+
+    .custom-order-line2 {
+        font-size: 0.875rem;
+        color: #555;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
+        text-align: left; /* ← Add this */
+    }
+
+
+    .custom-order-total {
+        font-weight: 600;
+        color: #222;
+    }
+
+    .custom-empty-order-text {
+        color: var(--mint-green-dark);
+        font-style: italic;
+        opacity: 0.7;
+        margin-top: 48px;
+    }
+
+    
+
+</style>

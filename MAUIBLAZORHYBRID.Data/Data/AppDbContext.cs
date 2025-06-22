@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MAUIBLAZORHYBRID.Data.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,6 +12,15 @@ namespace MAUIBLAZORHYBRID.Data
     public class AppDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<Item> Items { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<SubCategory> SubCategories { get; set; }
+        public DbSet<MainItem> MainItems { get; set; }
+        public DbSet<Unit> Units { get; set; }
+
+        public DbSet<BranchMaster> BranchMasters { get; set; }
+        public DbSet<BillStation> BillStations { get; set; }
+        public DbSet<DiningSpace> DiningSpaces { get; set; }
 
         static AppDbContext()
         {

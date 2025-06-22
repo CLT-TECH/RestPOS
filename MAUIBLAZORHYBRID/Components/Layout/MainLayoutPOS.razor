@@ -1,0 +1,67 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_posTheme" />  <!-- Keep this line -->
+<MudLayout>
+    <!-- Top AppBar -->
+    <MudAppBar Elevation="1" Color="Color.Primary" Fixed="true">
+        <MudToolBar>
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" OnClick="@ToggleDrawer" />
+            <Header />
+        </MudToolBar>
+    </MudAppBar>
+
+    <!-- Drawer -->
+    <MudDrawer @bind-Open="_drawerOpen"
+               Anchor="Anchor.Start"
+               Variant="DrawerVariant.Responsive"
+               Elevation="1"
+               Class="mud-height-full"
+               ClipMode="DrawerClipMode.Never"
+               DisableOverlay="true">
+        <NavMenu />
+    </MudDrawer>
+
+    <!-- Main Content Area -->
+    <MudMainContent Class="pt-10 pb-16 px-2">
+        <MudContainer MaxWidth="MaxWidth.False" Class="content-container">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+
+    <!-- Bottom AppBar (Footer) -->
+    <MudAppBar Elevation="1" Fixed="true" Bottom="true" Color="Color.Primary">
+        <MudToolBar>
+            <Footer />
+        </MudToolBar>
+    </MudAppBar>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    
+    // Your theme definition (same as before)
+    private MudTheme _posTheme = new MudTheme()
+    {
+            PaletteLight = new PaletteLight()
+            {
+                Primary = "#A5D6A7",        // Soft Leaf Green — good for branding & buttons
+                Secondary = "#81C784",      // Medium Mint — complementary to primary
+                Tertiary = "#C8E6C9",       // Light Mint — great for accents/highlights
+                AppbarBackground = "#66BB6A", // Darker Green — good contrast for top bar
+                DrawerBackground = "#E8F5E9", // Pale Green — subtle drawer background
+                Success = "#43A047",        // Strong Green — for success messages
+                Background = "#F9FFF9",     // Almost-white green tint — body background
+                Surface = "#FFFFFF",        // Panels/cards stay white
+                TextPrimary = "#1B5E20",    // Dark Green — ensures readability
+                TextSecondary = "#4E704F",  // Muted Green-Gray — for subtle text
+            },
+            LayoutProperties = new LayoutProperties()
+            {
+                AppbarHeight = "64px",
+                DrawerWidthLeft = "70px", // Only left drawer width specified
+                DefaultBorderRadius = "4px"
+            }
+    };
+    
+    void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+}

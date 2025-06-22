@@ -1,0 +1,48 @@
+@page "/"
+@inject HttpClient Http
+
+<h3>API Connection Test</h3>
+
+<button @onclick="TestApiConnection" class="btn btn-primary">
+    Test API Connection
+</button>
+
+@if (testResult != null)
+{
+    <div class="alert @alertClass mt-3">
+        @testResult
+    </div>
+}
+
+@code {
+    private string testResult;
+    private string alertClass = "alert-info";
+
+    private async Task TestApiConnection()
+    {
+        try
+        {
+            // Replace with your actual API endpoint
+            var response = await Http.GetAsync("api/baritem");
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                testResult = json;
+                // testResult = $"API is available! Status: {response.StatusCode}";
+                alertClass = "alert-success";
+            }
+            else
+            {
+                testResult = $"API responded with error: {response.StatusCode}";
+                alertClass = "alert-warning";
+            }
+        }
+        catch (Exception ex)
+        {
+            testResult = $"Failed to connect to API: {ex.Message}";
+            alertClass = "alert-danger";
+        }
+    }
+}
