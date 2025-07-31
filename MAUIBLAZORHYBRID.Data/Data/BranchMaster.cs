@@ -13,7 +13,6 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public  int branchId { get; set; }
         public  string branchName { get; set; }
 
-        public ICollection<DiningSpace> DiningSpaces { get; set; }
         public ICollection<BillStation> BillStations { get; set; }
 
     }

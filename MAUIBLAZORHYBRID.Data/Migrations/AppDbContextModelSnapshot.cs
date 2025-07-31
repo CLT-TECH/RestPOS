@@ -17,6 +17,53 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
+                {
+                    b.Property<int>("itemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("categorycatId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("itemName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("itemType")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("itemId");
+
+                    b.HasIndex("categorycatId");
+
+                    b.ToTable("BillItems");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItemUnit", b =>
+                {
+                    b.Property<int>("itemUnitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("itemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("unitId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("itemUnitId");
+
+                    b.HasIndex("itemId");
+
+                    b.HasIndex("unitId");
+
+                    b.ToTable("BillItemUnits");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillStation", b =>
                 {
                     b.Property<int>("billStationId")
@@ -55,7 +102,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Category", b =>
                 {
                     b.Property<int>("catId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("catName")
@@ -72,10 +118,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.DiningSpace", b =>
                 {
                     b.Property<int>("diningSpaceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("branchId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("diningSpaceName")
@@ -84,9 +126,31 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 
                     b.HasKey("diningSpaceId");
 
-                    b.HasIndex("branchId");
-
                     b.ToTable("DiningSpaces");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.DiningSpaceItemRate", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("diningSpaceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("itemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("itemRate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("diningSpaceId");
+
+                    b.HasIndex("itemId");
+
+                    b.ToTable("DiningSpaceItemRates");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Item", b =>
@@ -146,7 +210,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.SubCategory", b =>
                 {
                     b.Property<int>("subCatId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("catId")
@@ -163,10 +226,42 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.ToTable("SubCategories");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Table", b =>
+                {
+                    b.Property<int>("tableId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("tableName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("tableId");
+
+                    b.ToTable("Tables");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.TableDiningSpace", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("branchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("diningspaceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("tableId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TablesDiningSpaces");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Unit", b =>
                 {
                     b.Property<int>("unitId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("unitName")
@@ -176,6 +271,55 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.HasKey("unitId");
 
                     b.ToTable("Units");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.VWItemParentChild", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("categorycatId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("childItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("childItemcode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("childItemname")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("itemtype")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("parentItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("parentItemcode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("parentItemname")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("unitId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("categorycatId");
+
+                    b.HasIndex("unitId");
+
+                    b.ToTable("ItemParentChilds");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.User", b =>
@@ -197,6 +341,36 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.Category", "category")
+                        .WithMany()
+                        .HasForeignKey("categorycatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("category");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItemUnit", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BillItem", "Item")
+                        .WithMany("ItemUnits")
+                        .HasForeignKey("itemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("unitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Unit");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillStation", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.BranchMaster", "Branch")
@@ -208,15 +382,23 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("Branch");
                 });
 
-            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.DiningSpace", b =>
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.DiningSpaceItemRate", b =>
                 {
-                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BranchMaster", "Branch")
-                        .WithMany("DiningSpaces")
-                        .HasForeignKey("branchId")
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.DiningSpace", "diningSpace")
+                        .WithMany()
+                        .HasForeignKey("diningSpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Branch");
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BillItem", "item")
+                        .WithMany("DiningSpaceItemRates")
+                        .HasForeignKey("itemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("diningSpace");
+
+                    b.Navigation("item");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Item", b =>
@@ -253,11 +435,35 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.VWItemParentChild", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.Category", "category")
+                        .WithMany()
+                        .HasForeignKey("categorycatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("unitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Unit");
+
+                    b.Navigation("category");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
+                {
+                    b.Navigation("DiningSpaceItemRates");
+
+                    b.Navigation("ItemUnits");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BranchMaster", b =>
                 {
                     b.Navigation("BillStations");
-
-                    b.Navigation("DiningSpaces");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Category", b =>

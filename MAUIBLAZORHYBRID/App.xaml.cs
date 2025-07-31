@@ -1,5 +1,12 @@
 ﻿using Microsoft.UI.Windowing;
 using System.Diagnostics;
+using Microsoft.Maui.Storage;
+using MAUIBLAZORHYBRID.Helpers;
+
+using Microsoft.EntityFrameworkCore;
+using MAUIBLAZORHYBRID.Data;
+
+
 
 #if WINDOWS
 using Microsoft.Maui.Platform;
@@ -10,7 +17,7 @@ namespace MAUIBLAZORHYBRID
 {
     public partial class App : Application
     {
-        public App()
+        public App(AppDbContext dbContext)
         {
             InitializeComponent();
 
@@ -26,6 +33,11 @@ namespace MAUIBLAZORHYBRID
                 HandleGlobalException(args.Exception);
                 args.SetObserved();
             };
+
+            Task.Run(async () =>
+            {
+                await DatabaseInitializer.EnsureDatabaseInitializedAsync(dbContext);
+            });
 
             MainPage = new MainPage();
         }

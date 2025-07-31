@@ -11,6 +11,7 @@ namespace MAUIBLAZORHYBRID.Data.Data
     public class SubCategory
     {
             [Key]
+            [DatabaseGenerated(DatabaseGeneratedOption.None)]
             public int subCatId { get; set; }
             public string subCatName { get; set; } = null!;
 

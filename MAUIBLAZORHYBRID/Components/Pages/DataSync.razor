@@ -1,0 +1,139 @@
+﻿@page "/sync"
+@layout Components.Layout.FullScreenLayout
+@using MudBlazor
+@inject ISnackbar Snackbar
+@using MAUIBLAZORHYBRID.Services.Sync
+@inject ISyncService SyncService
+
+<MudContainer  MaxWidth="MaxWidth.False" Style="background-color: var(--background-color); min-height: 100vh; padding: 2rem;">
+    <MudPaper Class="pos-screen">
+        <MudGrid Gutter="Size.Medium">
+            @foreach (var item in syncItems)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
+                    <MudCard Style="background-color: var(--card-background); color: var(--text-color); box-shadow: var(--box-shadow);">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">@item.Title</MudText>
+                            <MudText Typo="Typo.body2" Style="color: var(--text-muted);">@item.Description</MudText>
+                        </MudCardContent>
+                        <MudCardActions Class="d-flex justify-between">
+                            <MudIcon Icon="@Icons.Material.Filled.Sync" Color="Color.Primary" />
+                            <MudButton Variant="Variant.Filled" Style="background-color: var(--mint-green); color: white;" OnClick="HandleSync">Sync</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@if (isLoading)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <MudProgressCircular Color="Color.Primary"   Indeterminate="true" />
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Primary">Processing...</MudText>
+        </div>
+    </div>
+}
+
+@code {
+
+    private bool isLoading = false;
+    private List<SyncItem> syncItems = new()
+    {
+        new SyncItem { Id = 1, Title = "Sync", Description = "Sync all data" },
+    };
+
+    private void Sync(int id)
+    {
+        // Trigger sync logic here
+    }
+
+    public class SyncItem
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+
+    private async Task HandleSync()
+    {
+        try
+        {
+            isLoading = true;
+            var result = await SyncService.SyncBranchesWithMasters(); // your sync function returning SyncResult
+
+            if (result.Success)
+            {
+                Snackbar.Add("✅ master sync successful!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"❌ Sync failed: {result.Message}", Severity.Error);
+            }
+            var result1 = await SyncService.SyncOtherMasters();
+
+            if (result1.Success)
+            {
+                Snackbar.Add("✅ other master sync successful!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"❌ Sync failed: {result1.Message}", Severity.Error);
+            }
+            var resultitem = await SyncService.SyncItemData();
+
+            if (resultitem.Success)
+            {
+                Snackbar.Add("✅ item data sync successful!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"❌ Sync failed: {resultitem.Message}", Severity.Error);
+            }
+
+            var resultitemparent = await SyncService.SyncItemParentChildData();
+
+            if (resultitemparent.Success)
+            {
+                Snackbar.Add("✅ item changes sync successful!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"❌ Sync failed: {resultitemparent.Message}", Severity.Error);
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+<style>
+:root {
+    --mint-green-light: #d1f2eb;
+    --mint-green: #3eb489;
+    --mint-green-dark: #2e7e77;
+    --mint-green-text: #065a52;
+    --background-color: #eaf6f4;
+    --card-background: #ffffff;
+    --text-color: #04675e;
+    --text-muted: #4a6a63;
+    --box-shadow: 0 4px 8px rgba(62, 180, 137, 0.15);
+}
+
+    .pos-screen {
+        background-color: var(--background-color);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text-color);
+        padding: 16px;
+    }
+
+
+
+</style>

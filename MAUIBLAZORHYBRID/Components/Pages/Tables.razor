@@ -1,0 +1,153 @@
+﻿@page "/tables"
+@using MAUIBLAZORHYBRID.Data.DTO
+@using MAUIBLAZORHYBRID.Data.Data
+@using MAUIBLAZORHYBRID.Services.Sync
+@using MudBlazor
+@using System.Globalization
+@using System.Diagnostics
+@inject ISnackbar Snackbar
+@layout Components.Layout.FullScreenLayout
+@inject PosPageService PosService
+@inject TablePageService PageService
+@inject IJSRuntime JS
+@inject ISyncService SyncService
+@inject HttpClient Http
+@using System.Text.Json;
+
+
+<MudPaper Class="pos-screen">
+    <div class="main-layout">
+        <!-- First part: 75-80% width -->
+        <div class="left-panel">
+
+            <!-- Body: category list left and item cards right -->
+            <div class="body-part">
+
+                <!-- Category list with search box on top -->
+                <div class="category-list pa-0">
+                    <MudNavMenu Class="category-navmenu pa-0">
+
+
+                        @* <MudNavLink Class="category-link " Ripple="false">
+                            <MudButton Class="category-card" Variant="Variant.Text" Elevation="2"
+                                       OnClick="@(() => filteredtabels=pageinitdata.Tables)">
+                                <MudText Typo="Typo.subtitle1" Class="category-text">ALL</MudText>
+                            </MudButton>
+                        </MudNavLink> *@
+
+                        @foreach (var obj in pageinitdata.DiningSpaces)
+                        {
+                            <MudNavLink Class="@($"category-link {(obj.diningSpaceId == selectedDiningSpaceId ? "selected" : "")}")"
+                            Ripple="false">
+                                <MudButton Class="category-card" Variant="Variant.Text" Elevation="2"
+                                OnClick="@(() => FilterTableByDiningSpaces(obj.diningSpaceId))">
+                                    <MudText Typo="Typo.subtitle1" Class="category-text">
+                                        @obj.diningSpaceName
+                                    </MudText>
+                                </MudButton>
+                            </MudNavLink>
+                        }
+                    </MudNavMenu>
+                </div>
+
+                <!-- Items container -->
+                <div class="items-container">
+                    <MudGrid>
+                        @foreach (var table in filteredtabels) // Assuming 'Tabless' is your list of tables
+                        {
+                            <MudItem xs="6" sm="4" md="2" lg="2" Class="pa-0">
+                                <MudCard Class="name-card">
+                                    <MudCardContent>
+                                        <div class="name-display">
+                                            <MudText Typo="Typo.subtitle2" Class="table-name" Style="color: var(--text-color); text-align: center;">
+                                                @table.tableName
+                                            </MudText>
+                                        </div>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+
+
+                </div>
+            </div>
+
+            <!-- Footer with status and time -->
+        </div>
+
+    </div>
+</MudPaper>
+
+@code {
+
+    private TablePageDTO pageinitdata = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        pageinitdata = await PageService.GetInitData();
+        filteredtabels = pageinitdata.Tables;
+
+
+        pageinitdata.DiningSpaces.Insert(0, new DiningSpace
+        {
+            diningSpaceId = 0,
+            diningSpaceName = "ALL"
+        });
+
+        selectedDiningSpaceId = 0;
+    }
+    private int? selectedDiningSpaceId;
+
+    public List<Table> filteredtabels = new();
+
+    private void FilterTableByDiningSpaces(int diningSpaceId)
+    {
+        selectedDiningSpaceId = diningSpaceId;
+
+        if (diningSpaceId==0) filteredtabels=pageinitdata.Tables;
+        else{
+
+        var tableIds = pageinitdata.TablesDiningSpaces
+           .Where(ic => ic.diningspaceId == selectedDiningSpaceId)
+           .Select(ic => ic.tableId)
+           .Distinct()
+           .ToHashSet();
+
+        filteredtabels = pageinitdata.Tables
+           .Where(table => tableIds.Contains(table.tableId))
+            .ToList();
+        }
+    }
+
+    private List<RestaurantTable> Tabless = Enumerable.Range(1, 100).Select(id =>
+    {
+        var namePrefixes = new[] { "Table", "VIP", "Bar Counter", "Outdoor" };
+        var random = new Random(id); // seed with id to make deterministic per run
+        string prefix = namePrefixes[random.Next(namePrefixes.Length)];
+
+        return new RestaurantTable
+            {
+                Id = id,
+                Name = $"{prefix} {id}",
+                Capacity = random.Next(1, 11), // Capacity between 1 and 10
+                Status = random.Next(3) switch // Random status
+                {
+                    0 => "Available",
+                    1 => "Occupied",
+                    _ => "Reserved"
+                }
+            };
+    }).ToList();
+
+    public class RestaurantTable
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Capacity { get; set; }
+        public string Status { get; set; }
+    }
+
+}
+
+

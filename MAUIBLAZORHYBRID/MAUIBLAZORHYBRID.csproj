@@ -97,12 +97,4 @@
         <ProjectReference Include="..\MAUIBLAZORHYBRID.Data\MAUIBLAZORHYBRID.Data.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <MauiImage Include="wwwroot\Images\imagestemper.png" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Include="wwwroot\Images\imagestemper.png" />
-    </ItemGroup>
-
 </Project>

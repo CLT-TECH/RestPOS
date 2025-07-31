@@ -1,4 +1,5 @@
 ﻿using MAUIBLAZORHYBRID.Data.Data;
+using MAUIBLAZORHYBRID.Data.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,14 @@ namespace MAUIBLAZORHYBRID.Data
         public DbSet<BranchMaster> BranchMasters { get; set; }
         public DbSet<BillStation> BillStations { get; set; }
         public DbSet<DiningSpace> DiningSpaces { get; set; }
+
+        public DbSet<BillItem> BillItems { get; set; }
+        public DbSet<BillItemUnit> BillItemUnits { get; set; }
+        public DbSet<DiningSpaceItemRate> DiningSpaceItemRates { get; set; }
+        public DbSet<VWItemParentChild> ItemParentChilds { get; set; }
+
+        public DbSet<Table> Tables { get; set; }
+        public DbSet<TableDiningSpace> TablesDiningSpaces { get; set; }
 
         static AppDbContext()
         {

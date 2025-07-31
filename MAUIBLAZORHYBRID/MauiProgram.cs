@@ -2,6 +2,7 @@
 using MAUIBLAZORHYBRID.Data;
 using MAUIBLAZORHYBRID.Data.Seed;
 using MAUIBLAZORHYBRID.Services;
+using MAUIBLAZORHYBRID.Services.Sync;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,14 @@ namespace MAUIBLAZORHYBRID
             //var dbContext = builder.Services.GetService<AppDbContext>();
             //dbContext?.Database.Migrate(); 
 
+            builder.Services.AddTransient<ISyncService, SyncService>();
+
+            builder.Services.AddTransient<DiningspaceSyncService>();
+
+            builder.Services.AddTransient<MasterDataSyncService>();
+            builder.Services.AddTransient<OtherMasterSyncService>();
+            builder.Services.AddTransient<ItemDataSyncService>();
+
 
             builder.Services.AddSingleton<IErrorBoundaryLogger, MauiErrorBoundaryLogger>();
 
@@ -33,6 +42,7 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddSingleton<LoginService>();
 
             builder.Services.AddScoped<PosPageService>();
+            builder.Services.AddScoped<TablePageService>();
 
             builder.Services.AddBlazoredLocalStorage();
 
@@ -55,8 +65,11 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddScoped(sp =>
             new HttpClient
             {
-                BaseAddress = new Uri("http://hotelerp.azurewebsites.net") // Your API base URL
+                BaseAddress = new Uri("http://localhost:5108") // Your API base URL
+                //BaseAddress = new Uri("https://hotelerp.azurewebsites.net") // Your API base URL
             });
+                //BaseAddress = new Uri("http://hotelerp.azurewebsites.net") // Your API base URL
+
 
             var app = builder.Build();
 

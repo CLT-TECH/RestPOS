@@ -1,0 +1,73 @@
+.vertical-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    overflow-x: hidden;
+    transition: width 0.3s ease;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1rem;
+}
+
+.nav-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 0;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+    .nav-list li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #6b7280; /* neutral gray */
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 0.4rem 0.5rem;
+        border-radius: 0.5rem;
+        transition: background-color 0.25s ease, color 0.25s ease;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+        .nav-list li:hover {
+            background-color: #f3f4f6;
+            color: #111827; /* darker text on hover */
+        }
+
+        .nav-list li .mud-icon-root {
+            color: #6b7280;
+            min-width: 24px;
+            min-height: 24px;
+        }
+
+.vertical-navbar:not(:hover) .nav-text {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.vertical-navbar:hover .nav-text {
+    opacity: 1;
+    transition: opacity 0.3s 0.1s ease;
+}

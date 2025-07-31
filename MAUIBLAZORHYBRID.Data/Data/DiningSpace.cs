@@ -11,12 +11,9 @@ namespace MAUIBLAZORHYBRID.Data.Data
     public class DiningSpace
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int diningSpaceId { get; set; }
         public string diningSpaceName { get; set; }
-
-        [ForeignKey(nameof(BranchMaster))]
-        public int branchId { get; set; }
-        public BranchMaster Branch { get; set; }
 
     }
 }

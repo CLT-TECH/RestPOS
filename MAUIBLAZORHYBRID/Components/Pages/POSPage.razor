@@ -178,7 +178,7 @@
         overflow: hidden;
     }
 
-    /* Category section left in center content */
+    /* CategoryTemp section left in center content */
     .category-section {
         flex-basis: 280px;
         background-color: #2a2a2a;
@@ -377,16 +377,16 @@
         "Home", "Sales", "Inventory", "Reports", "Settings", "Help", "Logout"
     };
 
-    private List<Category> Categories = new()
+    private List<CategoryTemp> Categories = new()
     {
-        new Category { Id=1, Name="Beverages" },
-        new Category { Id=2, Name="Snacks" },
-        new Category { Id=3, Name="Desserts" },
-        new Category { Id=4, Name="Meals" },
-        new Category { Id=5, Name="Lunch Specials" },
-        new Category { Id=6, Name="Breakfast" },
-        new Category { Id=7, Name="Alcohol" },
-        new Category { Id=8, Name="Non-Alcoholic" }
+        new CategoryTemp { Id=1, Name="Beverages" },
+        new CategoryTemp { Id=2, Name="Snacks" },
+        new CategoryTemp { Id=3, Name="Desserts" },
+        new CategoryTemp { Id=4, Name="Meals" },
+        new CategoryTemp { Id=5, Name="Lunch Specials" },
+        new CategoryTemp { Id=6, Name="Breakfast" },
+        new CategoryTemp { Id=7, Name="Alcohol" },
+        new CategoryTemp { Id=8, Name="Non-Alcoholic" }
     };
 
     private List<Item> Items = new()
@@ -413,7 +413,7 @@
         "Open Order", "Running", "Billed", "Vacant Table"
     };
 
-    private IEnumerable<Category> FilteredCategories =>
+    private IEnumerable<CategoryTemp> FilteredCategories =>
         string.IsNullOrWhiteSpace(categorySearchText)
         ? Categories
         : Categories.FindAll(c => c.Name.Contains(categorySearchText, StringComparison.OrdinalIgnoreCase));
@@ -423,7 +423,7 @@
         ? Items
         : Items.FindAll(i => i.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase));
     
-    public class Category
+    public class CategoryTemp
     {
         public int Id { get; set; }
         public string Name { get; set; } = "";

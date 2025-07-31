@@ -34,15 +34,51 @@ namespace MAUIBLAZORHYBRID.Services
                 .ThenInclude(sc => sc.Category)
                 .ToListAsync();
         }
-        public async Task<List<MainItem>> GetMainItemsAsync()
+
+        public async Task<List<BillItem>> GetBillItemsAsync()
         {
-            return await _db.MainItems
+            return await _db.BillItems
+                .Include(u => u.ItemUnits)
+                    .ThenInclude(u => u.Unit)
+                .Include(i => i.category)
+                .Include(r=>r.DiningSpaceItemRates)
                 .ToListAsync();
         }
+        
+        public async Task<List<VWItemParentChild>> GetParentChildAsync()
+        {
+            return await _db.ItemParentChilds
+                .Include(u => u.Unit)
+                .Include(i => i.category)
+                .ToListAsync();
+        }
+
+        public async Task<List<DiningSpaceItemRate>> GetItemRateAsync()
+        {
+            return await _db.DiningSpaceItemRates
+                .ToListAsync();
+        }
+        //public async Task<List<MainItem>> GetMainItemsAsync()
+        //{
+        //    return await _db.MainItems
+        //        .ToListAsync();
+        //}
 
         public async Task<List<Unit>> GetUnitsAsync()
         {
             return await _db.Units
+                .ToListAsync();
+        }
+
+        public async Task<List<DiningSpace>> GetDiningSpaces()
+        {
+            return await _db.DiningSpaces
+                .ToListAsync();
+        }
+
+        public async Task<List<BillStation>> GetBillStations()
+        {
+            return await _db.BillStations
                 .ToListAsync();
         }
     }
