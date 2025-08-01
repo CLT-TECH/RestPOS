@@ -13,6 +13,7 @@
 @inject ISyncService SyncService
 @inject HttpClient Http
 @using System.Text.Json;
+@inject NavigationManager Nav
 
 
 <MudPaper Class="pos-screen">
@@ -26,15 +27,6 @@
                 <!-- Category list with search box on top -->
                 <div class="category-list pa-0">
                     <MudNavMenu Class="category-navmenu pa-0">
-
-
-                        @* <MudNavLink Class="category-link " Ripple="false">
-                            <MudButton Class="category-card" Variant="Variant.Text" Elevation="2"
-                                       OnClick="@(() => filteredtabels=pageinitdata.Tables)">
-                                <MudText Typo="Typo.subtitle1" Class="category-text">ALL</MudText>
-                            </MudButton>
-                        </MudNavLink> *@
-
                         @foreach (var obj in pageinitdata.DiningSpaces)
                         {
                             <MudNavLink Class="@($"category-link {(obj.diningSpaceId == selectedDiningSpaceId ? "selected" : "")}")"
@@ -56,11 +48,14 @@
                         @foreach (var table in filteredtabels) // Assuming 'Tabless' is your list of tables
                         {
                             <MudItem xs="6" sm="4" md="2" lg="2" Class="pa-0">
-                                <MudCard Class="name-card">
+                                <MudCard Class="name-card" @onclick="() => GoToKot(table.tableId)">
                                     <MudCardContent>
                                         <div class="name-display">
                                             <MudText Typo="Typo.subtitle2" Class="table-name" Style="color: var(--text-color); text-align: center;">
                                                 @table.tableName
+                                            </MudText>
+                                            <MudText Typo="Typo.subtitle1" Class="table-name" Style="color: var(--text-color); text-align: center;text-decoration:overline">
+                                                @table.noOfSeats
                                             </MudText>
                                         </div>
                                     </MudCardContent>
@@ -139,6 +134,12 @@
                 }
             };
     }).ToList();
+
+    void GoToKot(int tableId)
+    {
+        Nav.NavigateTo($"/kot/{tableId}");
+    }
+
 
     public class RestaurantTable
     {

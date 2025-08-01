@@ -14,5 +14,6 @@ namespace MAUIBLAZORHYBRID.Data.Data
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int tableId { get; set; }
         public string tableName { get; set; }
+        public int noOfSeats { get; set; } = 0;
     }
 }

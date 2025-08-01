@@ -12,7 +12,7 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         public List<UnitDTO> Units { get; set; } = new();
         public List<DiningSpaceDTO> DiningSpaces { get; set; } = new();
         public List<TablesDTO> Tables { get; set; } = new();
-        public List<DiningSpaceTables> DiningSpaceTables { get; set; } = new();
+        public List<DiningSpaceTablesDTO> DiningSpaceTables { get; set; } = new();
 
     }
 }

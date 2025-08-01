@@ -101,6 +101,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                 {
                     tableId = objtable.id,
                     tableName = objtable.name,
+                    noOfSeats = objtable.noofseats
                 };
 
                 var existingdining = await _db.Tables.FindAsync(objtable.id);

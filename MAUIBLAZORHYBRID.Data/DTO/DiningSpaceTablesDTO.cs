@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MAUIBLAZORHYBRID.Data.DTO
 {
-    public class DiningSpaceTables
+    public class DiningSpaceTablesDTO
     {
         public int id { get; set; }
         public int tableid { get; set; }

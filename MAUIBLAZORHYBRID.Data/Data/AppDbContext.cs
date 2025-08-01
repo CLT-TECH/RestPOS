@@ -27,9 +27,11 @@ namespace MAUIBLAZORHYBRID.Data
         public DbSet<BillItemUnit> BillItemUnits { get; set; }
         public DbSet<DiningSpaceItemRate> DiningSpaceItemRates { get; set; }
         public DbSet<VWItemParentChild> ItemParentChilds { get; set; }
-
         public DbSet<Table> Tables { get; set; }
         public DbSet<TableDiningSpace> TablesDiningSpaces { get; set; }
+        public DbSet<HotKOT> HotKOTMasters { get; set; }
+        public DbSet<HotKOTTable> HotKOTTables { get; set; }
+        public DbSet<HotKOTItemDetail> HotKOTItemDetails { get; set; }
 
         static AppDbContext()
         {

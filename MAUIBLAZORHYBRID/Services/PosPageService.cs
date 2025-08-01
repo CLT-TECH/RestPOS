@@ -21,6 +21,7 @@ namespace MAUIBLAZORHYBRID.Services
         public async Task<List<Category>> GetCategoriesAsync()
         {
             return await _db.Categories
+                .Where(i=>i.catId!=0)
                 .Include(c => c.SubCategories)
                 .ThenInclude(sc => sc.Items)
                 .ToListAsync();

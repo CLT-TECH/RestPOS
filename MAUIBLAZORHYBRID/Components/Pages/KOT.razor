@@ -1,4 +1,4 @@
-﻿@page "/kot"
+﻿@page "/kot/{TableId:int?}"
 @layout Components.Layout.POSLayout
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
@@ -8,6 +8,8 @@
 @using System.Diagnostics
 @inject ISnackbar Snackbar
 @inject PosPageService PosService
+@inject KOTService PageService
+@inject IHotKOTSaveService _HotKOTSaveService
 @inject IJSRuntime JS
 @inject ISyncService SyncService
 @inject HttpClient Http
@@ -26,38 +28,28 @@
                 <MudGrid >
                     <MudItem  sm="2">
                         <div class="header-details">
-                            @*   <div class="header-detail-item">
-                                <MudIcon Icon="@Icons.Material.Filled.Countertops" Size="Size.Small" Style="color:#3eb489;" />
-                                <span>Counter: <span id="diningspace"></span>@countername</span>
-                            </div> *@
                             <div class="header-detail-item">
                                 <MudIcon Icon="@Icons.Material.Filled.TableRestaurant" Size="Size.Small" Style="color:#3eb489;" />
                                 <span>Dining Space: <span id="diningspace">@diningspacename</span></span>
                             </div>
-                            @* <div class="header-detail-item">
-                                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Style="color:#3eb489;" />
-                                <span> ADMIN</span>
-                            </div> *@
                         </div>
 
                     </MudItem>
                     <MudItem sm="3">
-                        <MudAutocomplete T="BillItem"
+                        <MudAutocomplete T="Table"
                         Label="Table"
-                        Value="selectedItem"
-                        ValueChanged="HandleProductSelected"
-                        SearchFunc="SearchProducts"
-                        ToStringFunc="(p) => p?.itemName"
+                        Value="selectedTable"
+                        ValueChanged="HandleTableSelected"
+                        SearchFunc="SearchTable"
+                        ToStringFunc="(p) => p?.tableName"
                         Dense="true"
                         ResetValueOnEmptyText="true"
-                        @ref="productRef"
+                        Clearable="true"
                         Immediate="true">
                             <ItemTemplate>
-                                <div>@context.itemName</div>
+                                <div>@context.tableName</div>
                             </ItemTemplate>
                         </MudAutocomplete>
-
-
                     </MudItem>
                     <MudItem  sm="4">
                         <MudAutocomplete T="BillItem"
@@ -120,9 +112,9 @@
                         @foreach (var category in filteredcategories)
                         {
                             <MudNavLink Class="@($"category-link {(category == SelectedCategory ? "selected" : "")}")"
-                                        OnClick="@(() => SelectCategory(category))"
+                                        
                             Ripple="false">
-                                <MudButton Class="category-card" Variant="Variant.Text" >
+                                <MudButton Class="category-card" Variant="Variant.Text" OnClick="@(() => SelectCategory(category))">
                                     <MudText Typo="Typo.subtitle1" Class="category-text">@category.catName</MudText>
                                 </MudButton>
                             </MudNavLink>
@@ -246,6 +238,24 @@
                         }
                     </MudList>
                 </div>
+                <div class="custom-order-footer">
+                    <MudTextField T="int?"
+                                  Label="Diners #"
+                                  Variant="Variant.Outlined"
+                        Style="width:120px;"
+                        Immediate="true"
+                        @bind-Value="NumberOfGuests"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Group"
+                        />
+
+
+                <MudSpacer></MudSpacer>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleSave">
+                        <MudIcon Icon="@Icons.Material.Filled.Check" /> Place Order
+                    </MudButton>
+
+                </div>
 
             </MudPaper>
         </div>
@@ -262,8 +272,12 @@
     </div>
 }
 @code {
+    [Parameter]
+    public int? TableId { get; set; }
+
     private bool isLoading = false;
 
+    public int? NumberOfGuests { get; set; }
     public sealed class SaveBillResponse
     {
         public string? Message { get; init; }
@@ -276,80 +290,81 @@
         try
         {
             isLoading = true;
-            if (OrderedItems.Any())
+            if (selectedTable == null)
             {
-                newbillmaster = new BillMasterDTO
-                    {
-                        Hot_Bill_Type = 0,
-                        Hot_Bill_Prefix = "CB",
-                        Hot_Bill_No = 123,
-                        Bearer_ID = 1,
-                        Hot_Bill_Item_Total = TotalAmount,
-                        Hot_Bill_Tax_Total = 0.00m,
-                        B4Round_Amt = TotalAmount,
-                        Round_Need = 0,
-                        RoundOff_Val = 0.00m,
-                        Hot_Bill_NeT_Amt = TotalAmount,
-                        Cashier_Found = 0,
-                        Hot_Bill_Notes = "No remarks",
-                        App_Machine_ID = 0,
-                        Branch_ID = 1,
-                        Dining_Space_ID = 1,
-                        Entered_Emp_ID = 1,
-                        Counter_ID = 1,
-                        Customer_Mobile = "9999999999"
-                    };
-
-
-                newbillmaster.Items = new List<HotBillItemDetailDTO>();
-
-                foreach (var orderedItem in OrderedItems)
+                Snackbar.Add("Table Not Selected", Severity.Error);
+            }
+            else if (OrderedItems.Any())
+            {
+                var hotKOTMaster = new HotKOT
                 {
-                    var detail = new HotBillItemDetailDTO
+                    HotKOTType = 1, // e.g., dine-in
+                    HotKOTPrefix = "KOT",
+                    HotKOTRefNo = "KOT12345",
+
+                    HotKOTDate = DateTime.UtcNow.Date, // or convert to local if needed
+                    HotKOTTime = DateTime.UtcNow, // time component included
+
+                    BearerID = 1,
+                    NoOfGuests = NumberOfGuests??0,
+
+                    HotKotAmt = 0m, // will compute from items
+                    HotKOTNotes = "Special instructions here",
+
+                    AppMachineID = 1, // see below
+                    BranchID = 1,
+                    DiningSpaceID = 2,
+                    EnteredEmpID = 1,
+                    CounterID = 3,
+
+                    // status fields
+                    IsSynced = false,
+
+                    // link table and items
+                    Tables = new List<HotKOTTable>
+                    {
+                        new() { HotTabID = selectedTable.tableId } // selectedTableId is int from selection
+                    },
+                    Items = OrderedItems.Select(src =>
+                    {
+                        return new HotKOTItemDetail
                         {
-                            Hot_Bill_ID = 0, // usually set after master insert
-                            Item_ID = orderedItem.ItemId,
+                            ItemID = src.ItemId,
                             BarCode = "",
-                            Qty = orderedItem.Quantity,
-                            Unit_ID = orderedItem.UnitID,
-                            Det_Rate = orderedItem.Price,               // if exists
-                            Det_Amt = orderedItem.Amount,
-                            Det_Disc_Per = 0,
-                            Det_Disc_Amt = 0,
-                            Det_Gross_Amt = orderedItem.Amount,
-                            Det_Tax_Per = 0,
-                            Det_Tax_Amt = 0,
-                            Det_Net_Amt = orderedItem.Amount
+                            Qty = src.Quantity,
+                            UnitID = src.UnitID,
+                            DetRate = 0m,
+                            DetAmt = 0m,
+                            DetDiscPer =0m,
+                            DetDiscAmt = 0m,
+                            DetGrossAmt = 0m,
+                            DetTaxPer = 0m,
+                            DetTaxAmt = 0m,
+                            DetNetAmt = 0m,
+                            HotKotItemNotes = ""
                         };
+                    }).ToList()
+                };
 
-                    newbillmaster.Items.Add(detail);
-                }
+                // compute total
+                hotKOTMaster.HotKotAmt = hotKOTMaster.Items.Sum(i => i.DetNetAmt);
 
-                var json = JsonSerializer.Serialize(newbillmaster, new JsonSerializerOptions
-                    {
-                        WriteIndented = true
-                    });
-
-
-                var response = await Http.PostAsJsonAsync("api/AppSync/SaveBill", newbillmaster);
-                if (response.IsSuccessStatusCode)
+                // save
+                var saveResult = await _HotKOTSaveService.SaveHotKOTAsync(hotKOTMaster);
+                if (saveResult.IsSuccess)
                 {
-                    var body = await response.Content.ReadFromJsonAsync<SaveBillResponse>();
-
-                    var billId = body?.Message ?? "(unknown)";
-
-                    Snackbar.Add($"Bill #{billId} saved successfully", Severity.Success);
+                    Snackbar.Clear();
+                    Snackbar.Add("Order Placed Successfully!!.", Severity.Success);
                     OrderedItems = new();
                 }
                 else
                 {
-                    // var saveMessage = error?.Message ?? "Failed to save bill.";
-                    string errorMessage = await response.Content.ReadAsStringAsync();
-                    Snackbar.Add($"Save failed: {errorMessage}", Severity.Error);
+                    Snackbar.Add("Order Place Error!!. \n"+ saveResult.ErrorMessage , Severity.Error);
+                    // Console.WriteLine(saveResult.ErrorMessage);
                 }
             }
             else
-                Snackbar.Add("Nothing to save", Severity.Error);
+                Snackbar.Add("Nothing to order", Severity.Error);
         }
         finally
         {
@@ -357,7 +372,7 @@
         }
     }
 
-   
+
 
     public int selectedDiningSpace { get; set; } = 1;
     decimal TotalAmount => OrderedItems.Sum(x => x.Amount);
@@ -389,53 +404,83 @@
 
     public string diningspacename { get; set; }
     public string countername { get; set; }
+
+    private KOTInitDTO initData = new();
+
+
     protected override async Task OnInitializedAsync()
     {
-        dspace = await PosService.GetDiningSpaces();
-        billstationsss = await PosService.GetBillStations();
+        isLoading = true;
 
-        var firstSpace = dspace.FirstOrDefault();
-        var firstbill = billstationsss.FirstOrDefault();
-
-        if (firstSpace != null)
-            diningspacename = firstSpace.diningSpaceName ?? "";
-        if (firstbill != null)
-            countername = firstbill.billStationName ?? "";
-
-        categories = await PosService.GetCategoriesAsync();
-
-        BillItems = await PosService.GetBillItemsAsync();
-
-        dsitemrate = await PosService.GetItemRateAsync();
-        parentchildrenitem = await PosService.GetParentChildAsync();
+        try
+        {
 
 
-        filteredMainFillItem = BillItems
-    .Where(item => item.itemType == 1 || item.itemType == 2)
-    .ToList();
+            var result = await PageService.GetInitData();
 
-        filteredSubFillItem = BillItems
-        .Where(item => item.itemType == 1 || item.itemType == 3)
+            if (result.IsSuccess)
+            {
+                initData = result.Data ?? new KOTInitDTO();
+            }
+            else
+            {
+                Console.WriteLine($"Initialisatiion failed: {result.ErrorMessage}");
+            }
+
+
+            dspace = await PosService.GetDiningSpaces();
+            billstationsss = await PosService.GetBillStations();
+
+            var firstSpace = dspace.FirstOrDefault();
+            var firstbill = billstationsss.FirstOrDefault();
+
+            if (firstSpace != null)
+                diningspacename = firstSpace.diningSpaceName ?? "";
+            if (firstbill != null)
+                countername = firstbill.billStationName ?? "";
+
+            categories = await PosService.GetCategoriesAsync();
+
+            BillItems = await PosService.GetBillItemsAsync();
+
+            dsitemrate = await PosService.GetItemRateAsync();
+            parentchildrenitem = await PosService.GetParentChildAsync();
+
+
+            filteredMainFillItem = BillItems
+        .Where(item => item.itemType == 1 || item.itemType == 2)
         .ToList();
 
+            filteredSubFillItem = BillItems
+            .Where(item => item.itemType == 1 || item.itemType == 3)
+            .ToList();
 
-        filteredSubFillItemlist = filteredSubFillItem;
 
-        // mainitems = await PosService.GetMainItemsAsync();
+            filteredSubFillItemlist = filteredSubFillItem;
 
-        // filteredunits = await PosService.GetUnitsAsync();
 
-        var allCategory = new Category { catId = 0, catName = "All" };
 
-        categories.Insert(0, allCategory); // Add to top
-        SelectedCategory = allCategory;
-        filteredcategories = categories.ToList();
+            var allCategory = new Category { catId = 0, catName = "All" };
 
-        FilteredItems = Items.ToList();
-        Console.WriteLine("loaded!");
+            categories.Insert(0, allCategory); // Add to top
+            SelectedCategory = allCategory;
+            filteredcategories = categories.ToList();
 
-        Snackbar.Clear();
-        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomStart;
+            FilteredItems = Items.ToList();
+            Console.WriteLine("loaded!");
+
+            Snackbar.Clear();
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomStart;
+
+
+            selectedTable = initData.Tables.FirstOrDefault(t => t.tableId == TableId);
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Initialisatiion failed: {ex.Message}");
+        }
+        isLoading = false;
     }
 
     void ApplyDiscount()
@@ -548,6 +593,18 @@
             }
         }
     }
+
+
+    private async Task HandleTableSelected(Table tableSelect)
+    {
+            if (selectedTable?.tableId != tableSelect?.tableId && tableSelect != null)
+            {
+                selectedTable = tableSelect;
+            }
+    }
+
+
+
     private async Task HandleUnitSelected(Unit unitselect)
     {
         if (selectedUnit?.unitId != unitselect?.unitId && unitselect != null)
@@ -559,6 +616,7 @@
     }
     private MainItem selectedProduct;
     private BillItem selectedItem;
+    private Table selectedTable;
     private Unit selectedUnit;
     private MudAutocomplete<BillItem> productRef;
     private MudAutocomplete<Unit> unitRef;
@@ -589,6 +647,18 @@
 
         return Task.FromResult(result);
     }
+
+    private Task<IEnumerable<Table>> SearchTable(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<Table>>(initData.Tables);
+
+        var result = initData.Tables
+            .Where(p => p.tableName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+
+        return Task.FromResult(result);
+    }
+
 
     private void ClickMe()
     {
