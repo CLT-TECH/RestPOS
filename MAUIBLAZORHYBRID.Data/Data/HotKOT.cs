@@ -11,11 +11,11 @@ namespace MAUIBLAZORHYBRID.Data.Data
     public class HotKOT
     {
             [Key]
-            public int AppKOTId { get; set; }  // Local primary key for SQLite
 
-            public int? HotKOTId { get; set; } // Server-side master ID (nullable until synced)
+            public int HotKOTId { get; set; } 
 
             public int HotKOTType { get; set; }
+            public int HotKOTNo { get; set; }
 
             [MaxLength(50)]
             public string HotKOTPrefix { get; set; } = string.Empty;
@@ -41,14 +41,14 @@ namespace MAUIBLAZORHYBRID.Data.Data
             public int EnteredEmpID { get; set; }
             public int CounterID { get; set; }
 
-            /// <summary>
-            /// Tracks if this master record has been synced to server.
-            /// </summary>
             public bool IsSynced { get; set; } = false;
+            public int ServerKOTId { get; set; }   
 
-            // Navigation properties
-            public ICollection<HotKOTTable> Tables { get; set; } = new List<HotKOTTable>();
+
+            public HotKOTTable Tables { get; set; } = new();
             public ICollection<HotKOTItemDetail> Items { get; set; } = new List<HotKOTItemDetail>();
+            public ICollection<HOTKotBilled> Billed { get; set; } = new List<HOTKotBilled>();
+            public virtual ICollection<HotBillAgainstKot> HotBillAgainstKots { get; set; } = new List<HotBillAgainstKot>();
 
     }
 }

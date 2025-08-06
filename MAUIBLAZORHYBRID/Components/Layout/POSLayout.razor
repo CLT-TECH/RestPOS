@@ -3,14 +3,14 @@
 
 <MudThemeProvider Theme="_posTheme" />  <!-- Keep this line -->
 
-<MudPaper Class="vertical-navbar" Elevation="4" @onmouseenter="() => ShowNav()" @onmouseleave="() => HideNav()"
-          Style="@NavBarWidthStyle">
+<MudPaper Class="vertical-navbar" Elevation="4" 
+          Style="@NavBarWidthStyle" @onmouseleave="() => HideNav()">
     <nav aria-label="Main Navigation" class="nav-content">
         <MudIconButton Icon="@Icons.Material.Filled.Menu"
                        Color="Color.Primary"
                        Style="margin-bottom:1rem;"
                        OnClick="ToggleNav"
-                       AriaLabel="Toggle navigation" />
+                       AriaLabel="Toggle navigation" @onmouseenter="() => ShowNav()"  />
         <ul class="nav-list">
             <li @onclick="@(() => NavigateTo(""))"><MudIcon Icon="@Icons.Material.Filled.Home" /><span class="nav-text">Home</span></li>
             <li><MudIcon Icon="@Icons.Material.Filled.Dashboard" /><span class="nav-text">Dashboard</span></li>

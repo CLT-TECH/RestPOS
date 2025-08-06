@@ -13,12 +13,13 @@ namespace MAUIBLAZORHYBRID.Data.Data
         [Key]
         public int AppKOTTableId { get; set; }  // Local primary key
 
+        [ForeignKey(nameof(Tables))]
         public int HotTabID { get; set; }
+        public Table Tables { get; set; }
 
-        // Foreign key referencing local master key
-        public int AppKOTId { get; set; }
 
-        [ForeignKey(nameof(AppKOTId))]
-        public HotKOT? HotKOTMaster { get; set; }
+        [ForeignKey(nameof(HotKOTMaster))]
+        public int HotKOTId { get; set; }
+        public HotKOT HotKOTMaster { get; set; }
     }
 }

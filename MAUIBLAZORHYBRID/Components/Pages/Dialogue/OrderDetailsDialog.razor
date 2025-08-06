@@ -1,0 +1,153 @@
+@using MAUIBLAZORHYBRID.Data.DTO
+@inject MudBlazor.IDialogService DialogService
+@inject TablePageService PageService
+@inject NavigationManager Nav
+
+
+<MudDialog Class="pa-0">
+    <DialogContent >
+
+
+
+        <MudTable Items="tableOrders.Orders" Dense="true" Elevation="0" FixedFooter="true" Height="@tableHeight">
+                <RowTemplate >
+                    <MudTd Style="width:30%;background-color: #ffeb3b; color: #000;">SL# : @(tableOrders.Orders.IndexOf(context) + 1)</MudTd>
+                <MudTd Style="background-color: #ffeb3b; color: #000;">Ordered At : @context.OrderedAt.ToLocalTime().ToString("hh:mm tt")</MudTd>
+                </RowTemplate>
+                    <ChildRowContent>
+                        <MudTd colspan="2" Class="pa-0">
+                           @*  <table>
+
+                                <thead>
+                                    <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                        @foreach (var obj in @context.Items)
+                                        {
+                                            <tr>
+                                                <td>@obj.ItemName</td>
+                                                <td>@obj.Quantity</td>
+                                            </tr>
+                                        }
+                            
+                                </tbody>
+
+                            </table> *@
+
+                                <MudTable Items="@context.Items" Dense="true" Hover="true">
+                                    <HeaderContent>
+                                        <MudTh >#</MudTh>
+                            <MudTh Class="pa-0">Name</MudTh>
+                            <MudTh  >Qty</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate Context="detail">
+                            <MudTd>
+                                @if (!string.IsNullOrEmpty(detail.ItemName))
+                                {
+                                    @(context.Items.IndexOf(detail) + 1)
+                                }
+                                else
+                                {
+                                    @("\u00A0")
+                                }
+                            </MudTd>
+                            <MudTd Class="pa-0"  Style="max-width:min-content">@detail.ItemName</MudTd>
+                            <MudTd  >@detail.Quantity</MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                        </MudTd>
+                    </ChildRowContent>
+              
+            </MudTable>
+
+            <MudDivider></MudDivider>
+        
+            <MudGrid>
+                <MudItem xs="6">
+                </MudItem>
+                <MudItem xs="5">
+                    <MudText Typo="Typo.subtitle1" Style="text-align:right" Class="m-0">No of Items:@DistinctItemCount</MudText>
+                </MudItem>
+            </MudGrid>
+
+        <MudButton StartIcon="@Icons.Material.Filled.Reorder" Variant="Variant.Filled" Style="background-color: yellowgreen; color: white; width: 200px; height: 60px;" Class="mt-3" OnClick="() => GoToKot(tableId)">Running Order</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Receipt" Variant="Variant.Filled" Style="background-color: cadetblue; color: white; width: 200px; height: 60px;" Color="Color.Default" OnClick="() => GoToPOS(tableId)" Class="mt-3 ml-3">Bill</MudButton>
+        
+    </DialogContent>
+</MudDialog>
+
+
+
+@code {
+    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public int tableId { get; set; }
+
+    public TableOrdersDTO tableOrders { get; set; } = new();
+
+    public string tableHeight { get; set; } = "";
+
+    public int DistinctItemCount { get; set; }
+    public int OrderCount { get; set; }
+    protected override async Task OnParametersSetAsync()
+    {
+        tableOrders = await PageService.GetOrderDetailsByTable(tableId);
+        var Itemcount = tableOrders.Orders
+        .SelectMany(o => o.Items)
+        .Select(i => i.ItemId)
+        .Distinct()
+        .Count();
+
+        OrderCount = tableOrders.Orders.Distinct().Count();
+
+        if (OrderCount == 1)
+        {
+            foreach (var order in tableOrders.Orders)
+            {
+                if (order.Items.Count>5)
+                    tableHeight = "50vh";
+                // Ensure there are at least 5 items
+                while (order.Items.Count < 5)
+                {
+                    order.Items.Add(new OrderItemDTO
+                    {
+                        ItemName = ""
+                    });
+                }
+            }
+        }
+        else
+        {
+            tableHeight = "50vh";
+        }
+        DistinctItemCount = Itemcount;
+    }
+
+
+
+    void Close() => MudDialog?.Close();
+
+    void GoToKot(int tableId)
+    {
+        Nav.NavigateTo($"/kot/{tableId}");
+    }
+    void GoToPOS(int tableId)
+    {
+        Nav.NavigateTo($"/pos/{tableId}");
+    }
+}
+
+<style>
+    .isolated-theme {
+        --mud-palette-primary: #594ae2; /* Default primary color */
+        --mud-palette-secondary: #ff4081; /* Default secondary color */
+        /* Add other default theme variables as needed */
+    }
+
+    .mud-dialog-content{padding:1px !important}
+</style>

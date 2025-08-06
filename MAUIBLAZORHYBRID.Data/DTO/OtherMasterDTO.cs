@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MAUIBLAZORHYBRID.Data.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,7 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         public List<DiningSpaceDTO> DiningSpaces { get; set; } = new();
         public List<TablesDTO> Tables { get; set; } = new();
         public List<DiningSpaceTablesDTO> DiningSpaceTables { get; set; } = new();
+        public List<TaxMaster> TaxMasters { get; set; } = new();
 
     }
 }

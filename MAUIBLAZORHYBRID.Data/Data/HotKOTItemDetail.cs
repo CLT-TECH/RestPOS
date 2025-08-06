@@ -52,9 +52,9 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public string HotKotItemNotes { get; set; } = string.Empty;
 
         // Foreign key referencing local master key
-        public int AppKOTId { get; set; }
 
-        [ForeignKey(nameof(AppKOTId))]
+        [ForeignKey(nameof(HotKOTMaster))]
+        public int HotKOTId { get; set; }
         public HotKOT? HotKOTMaster { get; set; }
     }
 

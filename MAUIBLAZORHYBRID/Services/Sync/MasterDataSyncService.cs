@@ -1,11 +1,11 @@
 ﻿using MAUIBLAZORHYBRID.Data.Data;
-using MAUIBLAZORHYBRID.Data;
+using MAUIBLAZORHYBRID.Data.DTO;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MAUIBLAZORHYBRID.Data.DTO;
 
 namespace MAUIBLAZORHYBRID.Services.Sync
 {
@@ -60,6 +60,24 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                             await _db.SaveChangesAsync();
 
                         }
+                    }
+
+                    await _db.BranchTaxSettings.ExecuteDeleteAsync();
+
+                    foreach (var obj in branchDto.TaxSetting)
+                    {
+                        var taxSetting = new BranchTaxSetting
+                        {
+                            BranchId = obj.BranchId,
+                            BillingType = obj.BillingType,
+                            ItemType=obj.ItemType,
+                            TaxId = obj.TaxId,
+                            TaxPer = obj.TaxPer
+                        };
+
+
+                            _db.BranchTaxSettings.Add(taxSetting);
+                            await _db.SaveChangesAsync();
                     }
                 }
             }

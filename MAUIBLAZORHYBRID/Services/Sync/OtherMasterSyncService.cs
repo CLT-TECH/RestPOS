@@ -1,13 +1,11 @@
-﻿using MAUIBLAZORHYBRID.Data;
-using MAUIBLAZORHYBRID.Data.Data;
+﻿using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Data.DTO;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static MAUIBLAZORHYBRID.Components.Pages.POSPage;
-using static MudBlazor.Icons.Custom;
 
 namespace MAUIBLAZORHYBRID.Services.Sync
 {
@@ -129,6 +127,23 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                     _db.TablesDiningSpaces.Add(dstable);
                     await _db.SaveChangesAsync();
                 }
+            }
+
+            await _db.TaxMasters.ExecuteDeleteAsync();
+            foreach (var objTax in mastersothermastersdtos.TaxMasters)
+            {
+                var tax = new TaxMaster
+                {
+                    TaxId = objTax.TaxId,
+                    ApplicableType = objTax.ApplicableType,
+                    TaxCalcId = objTax.TaxCalcId,
+                    TaxCode = objTax.TaxCode,
+                    TaxGroupId = objTax.TaxGroupId,
+                    TaxName = objTax.TaxName
+                };
+
+                    _db.TaxMasters.Add(tax);
+                    await _db.SaveChangesAsync();
             }
         }
     }

@@ -12,6 +12,7 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         public string Name { get; set; }
 
         public List<BillStationDTO> BillStation { get; set; } = new();
+        public List<BranchTaxSettingsDTO> TaxSetting { get; set; } = new();
     }
 
 

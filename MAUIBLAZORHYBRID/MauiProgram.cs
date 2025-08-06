@@ -1,5 +1,5 @@
 ﻿using Blazored.LocalStorage;
-using MAUIBLAZORHYBRID.Data;
+using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Data.Seed;
 using MAUIBLAZORHYBRID.Services;
 using MAUIBLAZORHYBRID.Services.Interfaces;
@@ -41,13 +41,18 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddMauiBlazorWebView();
 
             builder.Services.AddSingleton<LoginService>();
+            builder.Services.AddSingleton<AppState>();
+            builder.Services.AddSingleton<TaxCalculationService>();
 
             builder.Services.AddScoped<PosPageService>();
             builder.Services.AddScoped<TablePageService>();
             builder.Services.AddScoped<KOTService>();
+            builder.Services.AddScoped<KOTBillService>();
+
+
             builder.Services.AddScoped<IHotKOTSaveService, HotKOTSaveService>();
-
-
+            builder.Services.AddScoped<IHotBillSaveService, HotBillSaveService>();
+            
             builder.Services.AddBlazoredLocalStorage();
 
             builder.Services.AddMudExtensions();
@@ -88,7 +93,7 @@ namespace MAUIBLAZORHYBRID
                 db.Database.Migrate();
 
                 //#if DEBUG
-                MainSeeder.Seed(db); // Only during development/testing
+                //MainSeeder.Seed(db); // Only during development/testing
                 //#endif
             }
 

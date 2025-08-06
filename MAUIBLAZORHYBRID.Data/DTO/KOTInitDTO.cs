@@ -10,6 +10,7 @@ namespace MAUIBLAZORHYBRID.Data.DTO
     public class KOTInitDTO
     {
         public List<Table> Tables { get; set; } = new();
+        public List<TableDiningSpace> TablesDiningSpaces { get; set; } = new();
 
     }
 }

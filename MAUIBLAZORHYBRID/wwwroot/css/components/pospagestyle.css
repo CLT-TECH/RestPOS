@@ -600,6 +600,7 @@ order-controls {
     display: flex;
     flex-direction: column;
     margin:10px;
+    min-height:100px
 }
 
 .name-card .mud-card-media {
@@ -623,5 +624,9 @@ order-controls {
 
 .name-card:first-child {
     margin-left: 0;
+}
+
+.pending {
+    background-color: #FFF59D;
 }
 

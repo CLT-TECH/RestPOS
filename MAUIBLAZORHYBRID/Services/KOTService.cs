@@ -1,4 +1,4 @@
-﻿using MAUIBLAZORHYBRID.Data;
+﻿using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Data.DTO;
 using MAUIBLAZORHYBRID.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -25,13 +25,17 @@ namespace MAUIBLAZORHYBRID.Services
                 var tablesTask = _db.Tables
                     .AsNoTracking()
                      .ToListAsync();
+                var tablesdiningspacesTask = _db.TablesDiningSpaces
+                                .AsNoTracking()
+                                 .ToListAsync();
 
 
-                await Task.WhenAll(tablesTask);
+                await Task.WhenAll(tablesTask, tablesdiningspacesTask);
 
                 var result = new KOTInitDTO
                 {
                     Tables = tablesTask.Result,
+                    TablesDiningSpaces = tablesdiningspacesTask.Result,
                 };
                 return Result<KOTInitDTO>.Success(result);
             }

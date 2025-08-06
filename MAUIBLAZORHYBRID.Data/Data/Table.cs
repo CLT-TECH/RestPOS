@@ -15,5 +15,8 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public int tableId { get; set; }
         public string tableName { get; set; }
         public int noOfSeats { get; set; } = 0;
+        public ICollection<HotKOTTable> HotKOTTables { get; set; } = new List<HotKOTTable>();
+        public ICollection<HOTKotCheckTable> HotKOTTablesCheck { get; set; } = new List<HOTKotCheckTable>();
     }
+    
 }

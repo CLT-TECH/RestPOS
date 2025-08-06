@@ -1,4 +1,4 @@
-﻿using MAUIBLAZORHYBRID.Data;
+﻿using MAUIBLAZORHYBRID.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace MAUIBLAZORHYBRID.Helpers
 {
     public class DatabaseInitializer
     {
-        private const string DbInitKey = "DbInitializedversion5";
+        private const string DbInitKey = "DbInitializedv0.0.9";
 
         public static async Task EnsureDatabaseInitializedAsync(AppDbContext dbContext)
         {

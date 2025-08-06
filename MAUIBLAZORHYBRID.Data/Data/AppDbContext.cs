@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MAUIBLAZORHYBRID.Data
+namespace MAUIBLAZORHYBRID.Data.Data
 {
     public class AppDbContext : DbContext
     {
@@ -32,7 +32,15 @@ namespace MAUIBLAZORHYBRID.Data
         public DbSet<HotKOT> HotKOTMasters { get; set; }
         public DbSet<HotKOTTable> HotKOTTables { get; set; }
         public DbSet<HotKOTItemDetail> HotKOTItemDetails { get; set; }
-
+        public DbSet<HOTKotBilled> HOTKotBilleds { get; set; }
+        public DbSet<HOTKotCheckTable> HOTKotCheckTabless { get; set; }
+        public DbSet<BranchTaxSetting> BranchTaxSettings { get; set; }
+        public DbSet<TaxMaster> TaxMasters { get; set; }
+        public DbSet<HotBillMaster> HotBillMasters { get; set; }
+        public DbSet<HotBillItemDetail> HotBillItemDetail { get; set; }
+        public DbSet<HotBillTaxDetail> HotBillTaxDetails { get; set; }
+        public DbSet<HotBillAgainstKot> HotBillAgainstKots { get; set; }
+        
         static AppDbContext()
         {
         }

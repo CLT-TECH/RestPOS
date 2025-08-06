@@ -1,4 +1,5 @@
 ﻿@page "/tables"
+@using MAUIBLAZORHYBRID.Components.Pages.Dialogue
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
 @using MAUIBLAZORHYBRID.Services.Sync
@@ -6,7 +7,7 @@
 @using System.Globalization
 @using System.Diagnostics
 @inject ISnackbar Snackbar
-@layout Components.Layout.FullScreenLayout
+@layout Components.Layout.POSLayout
 @inject PosPageService PosService
 @inject TablePageService PageService
 @inject IJSRuntime JS
@@ -14,7 +15,7 @@
 @inject HttpClient Http
 @using System.Text.Json;
 @inject NavigationManager Nav
-
+@inject IDialogService DialogService
 
 <MudPaper Class="pos-screen">
     <div class="main-layout">
@@ -47,8 +48,13 @@
                     <MudGrid>
                         @foreach (var table in filteredtabels) // Assuming 'Tabless' is your list of tables
                         {
-                            <MudItem xs="6" sm="4" md="2" lg="2" Class="pa-0">
-                                <MudCard Class="name-card" @onclick="() => GoToKot(table.tableId)">
+                            bool isPending = pendingIds.Contains(table.tableId);
+                            <MudItem xs="6" sm="4" md="1" lg="1" Class="pa-0">
+                                <MudCard Class="@(isPending ? "name-card pending" : "name-card")" @onclick="() => {
+                                    if(!isPending)
+                                    { GoToKot(table.tableId);}
+                                    else{  ShowOrderDetails(table);}}">
+
                                     <MudCardContent>
                                         <div class="name-display">
                                             <MudText Typo="Typo.subtitle2" Class="table-name" Style="color: var(--text-color); text-align: center;">
@@ -59,8 +65,12 @@
                                             </MudText>
                                         </div>
                                     </MudCardContent>
+                                    
+
                                 </MudCard>
                             </MudItem>
+
+                            
                         }
                     </MudGrid>
 
@@ -74,7 +84,37 @@
     </div>
 </MudPaper>
 
+
+
+
 @code {
+    public OrderDetailsDTO no = new();
+
+
+    void ShowOrderDetails(Table table)
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, CloseButton = true, FullWidth = false };
+        DialogService.Show<OrderDetailsDialog>($"Order Detais:- "+table.tableName, new DialogParameters { ["TableId"] = table.tableId }, options);
+    }
+
+     int? openPopoverTableId = null;
+
+    void TogglePopover(int tableId)
+    {
+        if (openPopoverTableId == tableId)
+            openPopoverTableId = null; // close if already open
+        else
+            openPopoverTableId = tableId; // open this one (implicitly closing others)
+    }
+
+    void CloseAllPopovers() => openPopoverTableId = null;
+
+    public Origin TransformOrigin { get; set; } = Origin.TopLeft;
+    public Origin AnchorOrigin { get; set; } = Origin.CenterCenter;
+    private bool _menuOpen;
+    private ElementReference? _anchorRef;
+    private Table? _currentTable;
+
 
     private TablePageDTO pageinitdata = new();
 
@@ -82,7 +122,7 @@
     {
         pageinitdata = await PageService.GetInitData();
         filteredtabels = pageinitdata.Tables;
-
+        orderPendingTables = pageinitdata.NonBilledTables;
 
         pageinitdata.DiningSpaces.Insert(0, new DiningSpace
         {
@@ -95,6 +135,8 @@
     private int? selectedDiningSpaceId;
 
     public List<Table> filteredtabels = new();
+    public List<Table> orderPendingTables = new();
+    private HashSet<int> pendingIds => orderPendingTables.Select(t => t.tableId).ToHashSet();
 
     private void FilterTableByDiningSpaces(int diningSpaceId)
     {
@@ -139,7 +181,13 @@
     {
         Nav.NavigateTo($"/kot/{tableId}");
     }
-
+    void OpenOrderMenu(Table table)
+    {
+        _currentTable = table;
+        _menuOpen = true;
+        // If using a MudIconButton as anchor, capture its ElementReference via @ref
+        // or use programmatic anchor assignment depending on your setup.
+    }
 
     public class RestaurantTable
     {

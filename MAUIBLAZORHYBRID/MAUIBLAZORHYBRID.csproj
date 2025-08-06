@@ -97,4 +97,8 @@
         <ProjectReference Include="..\MAUIBLAZORHYBRID.Data\MAUIBLAZORHYBRID.Data.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Components\Pages\Dialogue\" />
+    </ItemGroup>
+
 </Project>

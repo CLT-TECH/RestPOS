@@ -290,7 +290,7 @@
         try
         {
             isLoading = true;
-            if (selectedTable == null)
+            if (selectedTable == null || !(selectedTable.tableId > 0))
             {
                 Snackbar.Add("Table Not Selected", Severity.Error);
             }
@@ -299,8 +299,8 @@
                 var hotKOTMaster = new HotKOT
                 {
                     HotKOTType = 1, // e.g., dine-in
-                    HotKOTPrefix = "KOT",
-                    HotKOTRefNo = "KOT12345",
+                    HotKOTPrefix = "",
+                    HotKOTRefNo = "",
 
                     HotKOTDate = DateTime.UtcNow.Date, // or convert to local if needed
                     HotKOTTime = DateTime.UtcNow, // time component included
@@ -313,17 +313,17 @@
 
                     AppMachineID = 1, // see below
                     BranchID = 1,
-                    DiningSpaceID = 2,
+                    DiningSpaceID = diningspaceid,
                     EnteredEmpID = 1,
-                    CounterID = 3,
+                    CounterID = 1,
 
                     // status fields
                     IsSynced = false,
 
                     // link table and items
-                    Tables = new List<HotKOTTable>
+                    Tables = new HotKOTTable
                     {
-                        new() { HotTabID = selectedTable.tableId } // selectedTableId is int from selection
+                        HotTabID = selectedTable.tableId  
                     },
                     Items = OrderedItems.Select(src =>
                     {
@@ -356,6 +356,7 @@
                     Snackbar.Clear();
                     Snackbar.Add("Order Placed Successfully!!.", Severity.Success);
                     OrderedItems = new();
+                    NumberOfGuests = null;
                 }
                 else
                 {
@@ -403,6 +404,7 @@
     private List<BillStation> billstationsss = new();
 
     public string diningspacename { get; set; }
+    public int diningspaceid { get; set; }
     public string countername { get; set; }
 
     private KOTInitDTO initData = new();
@@ -434,8 +436,8 @@
             var firstSpace = dspace.FirstOrDefault();
             var firstbill = billstationsss.FirstOrDefault();
 
-            if (firstSpace != null)
-                diningspacename = firstSpace.diningSpaceName ?? "";
+            // if (firstSpace != null)
+            //     diningspacename = firstSpace.diningSpaceName ?? "";
             if (firstbill != null)
                 countername = firstbill.billStationName ?? "";
 
@@ -473,7 +475,23 @@
             Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomStart;
 
 
-            selectedTable = initData.Tables.FirstOrDefault(t => t.tableId == TableId);
+            selectedTable = initData.Tables.FirstOrDefault(t => t.tableId == TableId)??new();
+            if (selectedTable != null)
+            {
+                diningspaceid = initData.TablesDiningSpaces
+      .Where(tm => tm.tableId == selectedTable.tableId)
+      .Select(tm => tm.diningspaceId)
+      .FirstOrDefault();
+
+                if (diningspaceid > 0)
+                {
+                    diningspacename = dspace
+      .Where(tm => tm.diningSpaceId == diningspaceid)
+      .Select(tm => tm.diningSpaceName)
+      .FirstOrDefault()??"";
+                }
+
+            }
 
         }
         catch (Exception ex)
@@ -595,12 +613,28 @@
     }
 
 
-    private async Task HandleTableSelected(Table tableSelect)
+    private async Task HandleTableSelected(Table? tableSelect)
     {
-            if (selectedTable?.tableId != tableSelect?.tableId && tableSelect != null)
+        selectedTable = tableSelect;
+        if (selectedTable != null)
+        {
+            diningspaceid = initData.TablesDiningSpaces
+      .Where(tm => tm.tableId == selectedTable.tableId)
+      .Select(tm => tm.diningspaceId)
+      .FirstOrDefault();
+
+            if (diningspaceid > 0)
             {
-                selectedTable = tableSelect;
+                diningspacename = dspace
+      .Where(tm => tm.diningSpaceId == diningspaceid)
+      .Select(tm => tm.diningSpaceName)
+      .FirstOrDefault() ?? "";
             }
+
+        }
+        else diningspacename = "";
+
+        await Task.Delay(1);
     }
 
 
@@ -617,6 +651,9 @@
     private MainItem selectedProduct;
     private BillItem selectedItem;
     private Table selectedTable;
+
+
+
     private Unit selectedUnit;
     private MudAutocomplete<BillItem> productRef;
     private MudAutocomplete<Unit> unitRef;

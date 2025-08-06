@@ -1,12 +1,10 @@
-﻿using MAUIBLAZORHYBRID.Data;
-using MAUIBLAZORHYBRID.Data.Data;
+﻿using MAUIBLAZORHYBRID.Data.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using static MAUIBLAZORHYBRID.Components.Pages.Posneewnew;
 
 namespace MAUIBLAZORHYBRID.Services.Sync
 {

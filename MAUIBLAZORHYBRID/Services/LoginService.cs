@@ -1,4 +1,4 @@
-﻿using MAUIBLAZORHYBRID.Data;
+﻿using MAUIBLAZORHYBRID.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

@@ -4,7 +4,7 @@ using Microsoft.Maui.Storage;
 using MAUIBLAZORHYBRID.Helpers;
 
 using Microsoft.EntityFrameworkCore;
-using MAUIBLAZORHYBRID.Data;
+using MAUIBLAZORHYBRID.Data.Data;
 
 
 

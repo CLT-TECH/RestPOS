@@ -13,7 +13,6 @@ namespace MAUIBLAZORHYBRID.Data.Data
     {
         public AppDbContext CreateDbContext(string[] args)
         {
-            var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "app.db");
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlite(DbConfig.ConnectionString);
             return new AppDbContext(optionsBuilder.Options);

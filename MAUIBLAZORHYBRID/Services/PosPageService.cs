@@ -1,6 +1,7 @@
-﻿using MAUIBLAZORHYBRID.Data;
-using MAUIBLAZORHYBRID.Data.Data;
+﻿using MAUIBLAZORHYBRID.Data.Data;
+using MAUIBLAZORHYBRID.Data.DTO;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,6 +82,23 @@ namespace MAUIBLAZORHYBRID.Services
         {
             return await _db.BillStations
                 .ToListAsync();
+        }
+
+        public async Task<TaxConfigurationDTO> GetTaxConfigurationAsync()
+        {
+            var taxSettingTask =  _db.BranchTaxSettings
+                .ToListAsync();
+            var taxMasterTask = _db.TaxMasters
+                .ToListAsync();
+
+            await Task.WhenAll(taxSettingTask, taxMasterTask);
+
+            var result = new TaxConfigurationDTO
+            {
+                TaxMsters = taxMasterTask.Result,
+                TaxSettings = taxSettingTask.Result
+            };
+            return result;
         }
     }
 }
