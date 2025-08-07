@@ -17,16 +17,17 @@ namespace MAUIBLAZORHYBRID.Services.Sync
         private readonly OtherMasterSyncService _otherMasterSyncService;
         private readonly ItemDataSyncService _itemDataSyncService;
 
-
+        private readonly AppState _appState;
         public SyncService(
             DiningspaceSyncService diningSpaceSync,
-            HttpClient http, MasterDataSyncService masterDataSyncService, OtherMasterSyncService otherMasterSyncService, ItemDataSyncService itemDataSyncService)
+            HttpClient http, MasterDataSyncService masterDataSyncService, OtherMasterSyncService otherMasterSyncService, ItemDataSyncService itemDataSyncService,AppState appState)
         {
             _diningSpaceSync = diningSpaceSync;
             _http = http;
             _masterDataSyncService = masterDataSyncService;
             _otherMasterSyncService = otherMasterSyncService;
             _itemDataSyncService = itemDataSyncService;
+            _appState = appState;
         }
 
         public async Task SyncAllAsync()
@@ -45,7 +46,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
 
             try
             {
-                var response = await _http.GetAsync("api/AppSync/branches-with-masters");
+                var response = await _http.GetAsync($"api/AppSync/branches-with-masters/{_appState.BranchId}");
 
                 if (!response.IsSuccessStatusCode)
                 {

@@ -1,6 +1,7 @@
 ﻿using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Infrastructure;
 using MAUIBLAZORHYBRID.Services.Interfaces;
+using MAUIBLAZORHYBRID.Services.Mappers;
 using MAUIBLAZORHYBRID.Services.Upload;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -17,19 +18,80 @@ namespace MAUIBLAZORHYBRID.Services
         private readonly AppDbContext _dbContext;
         private readonly IApiClient _apiClient;
         private readonly ILogger<DataUploadService> _logger;
+        private readonly MappingService _mappingService;
 
         public DataUploadService(AppDbContext dbContext, IApiClient apiClient,
-                               ILogger<DataUploadService> logger)
+                               ILogger<DataUploadService> logger, MappingService mappingService)
         {
             _dbContext = dbContext;
             _apiClient = apiClient;
             _logger = logger;
+            _mappingService = mappingService;
         }
 
-        public async Task<bool> HasPendingUploadsAsync()
+        public async Task<bool> HasPendingUploadsBillsAsync()
         {
             return await _dbContext.HotBillMasters
                 .AnyAsync(b => !b.IsSynced);
+        }
+        public async Task<bool> HasPendingUploadsKOTAsync()
+        {
+            return await  _dbContext.HotKOTMasters
+       .AnyAsync(k => !k.IsSynced);
+
+        }
+
+        public async Task<bool> HasPendingUploadsBillKOTAsync()
+        {
+            return await _dbContext.HotBillAgainstKots
+        .Include(h => h.HotKot)
+        .AnyAsync(h => !h.HotKot.IsSynced); ;
+
+        }
+
+        public async Task<UploadResult> UploadPendingKOTsAsync()
+        {
+            try
+            {
+                var result = new UploadResult();
+                var pendingKOTs = await _dbContext.HotKOTMasters
+                    .Include(k => k.Items)
+                    .Include(k => k.Tables)
+                    .Where(k => !k.IsSynced)
+                    .ToListAsync();
+
+                foreach (var kot in pendingKOTs)
+                {
+                    var kotDto = _mappingService.MapToHotKOTMasterDTO(kot);
+                    var apiResponse = await _apiClient.PostKOTAsync(kotDto);
+
+                    if (apiResponse.Success && apiResponse.Data != null)
+                    {
+                        kot.IsSynced = true;
+                        kot.ServerKOTId = apiResponse.Data.ServerKOTId;
+                        result.SuccessCount++;
+                    }
+                    else
+                    {
+                        result.FailedCount++;
+                        var errorMessage = apiResponse.Message;
+                        if (apiResponse.Errors?.Any() == true)
+                        {
+                            errorMessage += " | " + string.Join(" | ",
+                                apiResponse.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                        }
+                        result.Errors.Add($"KOT {kot.HotKOTRefNo}: {errorMessage}");
+                    }
+                    
+                }
+                await _dbContext.SaveChangesAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during data upload");
+                throw;
+            }
         }
 
         public async Task<UploadResult> UploadPendingDataAsync()
@@ -42,23 +104,71 @@ namespace MAUIBLAZORHYBRID.Services
                 var pendingBills = await _dbContext.HotBillMasters
                     .Include(b => b.HotBillItemDetails)
                     .Include(b => b.HotBillTaxDetails)
+                    .Include(b => b.HotBillAgainstKots)
+                    .ThenInclude(d=>d.HotKot)
                     .Where(b => !b.IsSynced)
                     .ToListAsync();
 
                 foreach (var bill in pendingBills)
                 {
-                    var apiResponse = await _apiClient.PostBillAsync(bill);
 
-                    if (apiResponse.IsSuccess)
+                    var billDto = _mappingService.MapToBillMasterDTO(bill);
+
+                    var failFalg = 0;
+
+                    if (billDto.Hot_Bill_Type == 1)
                     {
-                        bill.IsSynced = true;
-                        bill.ServerHotBillId = apiResponse.ServerId??0;
-                        result.SuccessCount++;
+                        if (billDto.KOTs != null && billDto.KOTs.Any(k => k.Hot_KOT_ID > 0))
+                        {
+                            failFalg = 1;
+                        }
+                    }
+                    if(billDto.Items==null) failFalg = 2;
+
+
+                    if (failFalg > 0) {
+
+                        result.FailedCount++;
+                        var errorMessage1 = "HOT Kot bill not found";
+                        if (failFalg==2)
+                             errorMessage1 = "HOT  bill detail not found";
+
+
+                        result.Errors.Add($"Bill {bill.HotBillRefNo}: {errorMessage1}");
+
+                        _logger.LogWarning("Bill upload failed: {ErrorMessage}", errorMessage1);
                     }
                     else
                     {
-                        result.FailedCount++;
-                        result.Errors.Add($"Bill {bill.HotBillRefNo}: {apiResponse.ErrorMessage}");
+
+
+
+                        var apiResponse = await _apiClient.PostBillAsync(billDto);
+
+                        if (apiResponse.Success && apiResponse.Data != null)
+                        {
+                            // Success case
+                            bill.IsSynced = true;
+                            bill.ServerHotBillId = apiResponse.Data.ServerBillId;
+                            result.SuccessCount++;
+                        }
+                        else
+                        {
+                            // Error case
+                            result.FailedCount++;
+
+                            // Combine all error messages
+                            var errorMessage = apiResponse.Message;
+                            if (apiResponse.Errors?.Any() == true)
+                            {
+                                errorMessage += " | " + string.Join(" | ",
+                                    apiResponse.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                            }
+
+                            result.Errors.Add($"Bill {bill.HotBillRefNo}: {errorMessage}");
+
+                            _logger.LogWarning("Bill upload failed: {ErrorMessage}", errorMessage);
+                        }
                     }
                 }
 

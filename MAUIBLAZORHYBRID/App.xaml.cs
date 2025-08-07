@@ -34,13 +34,32 @@ namespace MAUIBLAZORHYBRID
                 args.SetObserved();
             };
 
-            Task.Run(async () =>
-            {
-                await DatabaseInitializer.EnsureDatabaseInitializedAsync(dbContext);
-            });
+            InitializeDatabase(dbContext);
 
             MainPage = new MainPage();
         }
+
+        private async void InitializeDatabase(AppDbContext dbContext)
+        {
+            try
+            {
+                // Run initialization synchronously on background thread
+                await Task.Run(async () =>
+                {
+                    await DatabaseInitializer.EnsureDatabaseInitializedAsync(dbContext);
+                });
+            }
+            catch (Exception ex)
+            {
+                MainPage = new ContentPage
+                {
+                    Content = new Label { Text = $"Fatal Error: Db initialisation failed {ex.Message}" }
+                };
+
+            }
+        }
+
+      
 
         private void HandleGlobalException(Exception ex)
         {

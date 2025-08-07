@@ -14,6 +14,7 @@
 @inject ISyncService SyncService
 @inject HttpClient Http
 @using System.Text.Json;
+@inject AppState appState
 
 
 <MudPaper Class="pos-screen">
@@ -305,17 +306,17 @@
                     HotKOTDate = DateTime.UtcNow.Date, // or convert to local if needed
                     HotKOTTime = DateTime.UtcNow, // time component included
 
-                    BearerID = 1,
+                    BearerID = appState.BearerId,
                     NoOfGuests = NumberOfGuests??0,
 
                     HotKotAmt = 0m, // will compute from items
                     HotKOTNotes = "Special instructions here",
 
-                    AppMachineID = 1, // see below
-                    BranchID = 1,
+                    AppMachineID = appState.MachineId, // see below
+                    BranchID = appState.BranchId,
                     DiningSpaceID = diningspaceid,
-                    EnteredEmpID = 1,
-                    CounterID = 1,
+                    EnteredEmpID = appState.LoggedInUserId,
+                    CounterID = appState.CounterId,
 
                     // status fields
                     IsSynced = false,

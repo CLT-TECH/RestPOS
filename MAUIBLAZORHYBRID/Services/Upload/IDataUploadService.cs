@@ -10,6 +10,11 @@ namespace MAUIBLAZORHYBRID.Services.Upload
     public interface IDataUploadService
     {
         Task<UploadResult> UploadPendingDataAsync();
-        Task<bool> HasPendingUploadsAsync();
+        Task<UploadResult> UploadPendingKOTsAsync();
+        Task<bool> HasPendingUploadsBillsAsync();
+        Task<bool> HasPendingUploadsKOTAsync();
+        Task<bool> HasPendingUploadsBillKOTAsync();
+
+        
     }
 }

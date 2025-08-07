@@ -10,7 +10,7 @@ namespace MAUIBLAZORHYBRID.Services
     {
         public int BranchId { get; set; } = 1;
         public int LoggedInUserId { get; set; } = 1;
-        public int MachineId { get; set; } = 1;
+        public int MachineId { get; set; } = 0;
         public int CounterId { get; set; } = 1;
         public int BearerId { get; set; } = 1;
     }

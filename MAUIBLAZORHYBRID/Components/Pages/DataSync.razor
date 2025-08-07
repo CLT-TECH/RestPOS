@@ -1,9 +1,11 @@
 ﻿@page "/sync"
 @layout Components.Layout.FullScreenLayout
+@using MAUIBLAZORHYBRID.Services.Upload
 @using MudBlazor
 @inject ISnackbar Snackbar
 @using MAUIBLAZORHYBRID.Services.Sync
 @inject ISyncService SyncService
+@inject IDataUploadService UploadService
 
 <MudContainer  MaxWidth="MaxWidth.False" Style="background-color: var(--background-color); min-height: 100vh; padding: 2rem;">
     <MudPaper Class="pos-screen">
@@ -23,6 +25,33 @@
                     </MudCard>
                 </MudItem>
             }
+
+            @foreach (var item in uploadDatas)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
+                    <MudCard Style="background-color: var(--card-background); color: var(--text-color); box-shadow: var(--box-shadow);">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">@item.Title</MudText>
+                            <MudText Typo="Typo.body2" Style="color: var(--text-muted);">@item.Description</MudText>
+                        </MudCardContent>
+                        <MudCardActions Class="d-flex justify-between">
+                            <MudIcon Icon="@Icons.Material.Filled.Upload" Color="Color.Primary" />
+                            <MudButton Variant="Variant.Filled" Style="background-color: var(--mint-green); color: white;" OnClick="UploadDataOnClick">
+                                @if (_isUploading)
+                                {
+                                    <MudProgressCircular Size="Size.Medium" Color="Color.Tertiary" Indeterminate="true" />
+                                    <span>Uploading...</span>
+                                }
+                                else
+                                {
+                                    <span>Upload Pending Data</span>
+                                }
+                                
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
         </MudGrid>
     </MudPaper>
 </MudContainer>
@@ -38,11 +67,17 @@
 }
 
 @code {
-
+    private bool _isUploading;
     private bool isLoading = false;
     private List<SyncItem> syncItems = new()
     {
         new SyncItem { Id = 1, Title = "Sync", Description = "Sync all data" },
+    };
+
+
+    private List<UploadData> uploadDatas = new()
+    {
+        new UploadData { Id = 1, Title = "Upload", Description = "Upload data to server" },
     };
 
     private void Sync(int id)
@@ -55,6 +90,77 @@
         public int Id { get; set; }
         public string Title { get; set; } = "";
         public string Description { get; set; } = "";
+    }
+    public class UploadData
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+    private async Task UploadDataOnClick()
+    {
+        _isUploading = true;
+        isLoading = true;
+        try
+        {
+
+            if (!await UploadService.HasPendingUploadsKOTAsync())
+            {
+                Snackbar.Add("No pending kot to upload", Severity.Info);
+            }
+            else
+            {
+                var resultkot = await UploadService.UploadPendingKOTsAsync();
+
+                if (resultkot.SuccessCount > 0)
+                {
+                    Snackbar.Add($"Successfully uploaded {resultkot.SuccessCount} KOTs",
+                               Severity.Success);
+                }
+                if (resultkot.FailedCount > 0)
+                {
+                    Snackbar.Add($"Failed to upload {resultkot.FailedCount} KOTs",
+                               Severity.Error);
+                    // Optionally show detailed errors
+                }
+            }
+
+            if (await UploadService.HasPendingUploadsBillKOTAsync())
+            {
+                Snackbar.Add("Some KOTs are not synced", Severity.Info);
+            }
+
+
+            if (!await UploadService.HasPendingUploadsBillsAsync())
+            {
+                Snackbar.Add("No pending bill to upload", Severity.Info);
+                return;
+            }
+
+            var result = await UploadService.UploadPendingDataAsync();
+
+            if (result.SuccessCount > 0)
+            {
+                Snackbar.Add($"Successfully uploaded {result.SuccessCount} bills",
+                           Severity.Success);
+            }
+
+            if (result.FailedCount > 0)
+            {
+                Snackbar.Add($"Failed to upload {result.FailedCount} bills",
+                           Severity.Error);
+                // Optionally show detailed errors
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Upload failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isUploading = false;
+            isLoading = false;
+        }
     }
 
     private async Task HandleSync()

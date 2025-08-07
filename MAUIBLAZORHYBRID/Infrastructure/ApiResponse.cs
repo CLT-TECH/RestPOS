@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 namespace MAUIBLAZORHYBRID.Infrastructure
 {
     public class ApiResponse
+    <T>
     {
-        public bool IsSuccess { get; private set; }
-        public int? ServerId { get; private set; }
-        public string ErrorMessage { get; private set; }
-
-        public static ApiResponse Success(int? serverId) => new() { IsSuccess = true, ServerId = serverId };
-        public static ApiResponse Fail(string error) => new() { IsSuccess = false, ErrorMessage = error };
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public T Data { get; set; }
+        public List<ApiError> Errors { get; set; } = new();
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
 }

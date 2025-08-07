@@ -63,7 +63,20 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         [JsonPropertyName("customer_Mobile")]
         public string Customer_Mobile { get; set; } = string.Empty;
 
+        [JsonPropertyName("hot_Bill_Date")]
+        public DateTime Hot_Bill_Date { get; set; }
+
+        [JsonPropertyName("hot_Bill_Time")]
+        public DateTime Hot_Bill_Time { get; set; }
+
         [JsonPropertyName("items")]
         public List<HotBillItemDetailDTO> Items { get; set; } = new();
+
+        [JsonPropertyName("koTs")]
+        public List<HotBillAgainstKOTDTO> KOTs { get; set; } = new();
+
+        [JsonPropertyName("taxDetails")]
+        public List<HotBillTaxDetailDTO> TaxDetails { get; set; } = new();
+
     }
 }

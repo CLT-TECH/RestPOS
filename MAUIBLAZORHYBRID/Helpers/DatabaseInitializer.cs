@@ -10,19 +10,19 @@ namespace MAUIBLAZORHYBRID.Helpers
 {
     public class DatabaseInitializer
     {
-        private const string DbInitKey = "DbInitializedv0.0.9";
+        private const string DbInitKey = "DbInitializedv0.1.4";
 
         public static async Task EnsureDatabaseInitializedAsync(AppDbContext dbContext)
         {
             if (!Preferences.ContainsKey(DbInitKey))
             {
-                // Delete + re-create/migrate only on first run
-                await dbContext.Database.EnsureDeletedAsync();
-                await dbContext.Database.MigrateAsync();
-
-                Preferences.Set(DbInitKey, true); // Mark as initialized
+                    await dbContext.Database.EnsureDeletedAsync();
+                    await dbContext.Database.MigrateAsync();
+                    Preferences.Set(DbInitKey, true); // Mark as initialized
             }
         }
+
+
 
     }
 }

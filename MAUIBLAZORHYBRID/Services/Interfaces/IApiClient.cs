@@ -1,4 +1,5 @@
 ﻿using MAUIBLAZORHYBRID.Data.Data;
+using MAUIBLAZORHYBRID.Data.DTO;
 using MAUIBLAZORHYBRID.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace MAUIBLAZORHYBRID.Services.Interfaces
 {
     public interface IApiClient
     {
-        Task<ApiResponse> PostBillAsync(HotBillMaster bill);
+        Task<ApiResponse<KOTUploadResponse>> PostKOTAsync(HotKOTMasterDTO kot);
+        Task<ApiResponse<BillUploadResponse>> PostBillAsync(BillMasterDTO bill);
     }
 }

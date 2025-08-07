@@ -12,7 +12,7 @@ public static class DbConfig
                 .GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var folder = Path.Combine(appData, "MAUIHybridApp");
             Directory.CreateDirectory(folder);         // ensure folder exists
-            var filePath = Path.Combine(folder, "posapplication.db");
+            var filePath = Path.Combine(folder, "posapplicationv0.0.1.db");
             return $"Data Source={filePath}";
         }
     }

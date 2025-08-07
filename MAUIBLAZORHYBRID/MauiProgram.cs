@@ -3,7 +3,9 @@ using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Data.Seed;
 using MAUIBLAZORHYBRID.Services;
 using MAUIBLAZORHYBRID.Services.Interfaces;
+using MAUIBLAZORHYBRID.Services.Mappers;
 using MAUIBLAZORHYBRID.Services.Sync;
+using MAUIBLAZORHYBRID.Services.Upload;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -52,7 +54,10 @@ namespace MAUIBLAZORHYBRID
 
             builder.Services.AddScoped<IHotKOTSaveService, HotKOTSaveService>();
             builder.Services.AddScoped<IHotBillSaveService, HotBillSaveService>();
-            
+
+            builder.Services.AddSingleton<IApiClient, ApiClient>();
+            builder.Services.AddScoped<IDataUploadService, DataUploadService>();
+
             builder.Services.AddBlazoredLocalStorage();
 
             builder.Services.AddMudExtensions();
@@ -69,13 +74,13 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddSingleton<LoginService>();
             builder.Services.AddSingleton<SessionService>();
             builder.Services.AddSingleton<LoadingService>();
-
+            builder.Services.AddSingleton<MappingService>();
 
             builder.Services.AddScoped(sp =>
             new HttpClient
             {
-                //BaseAddress = new Uri("http://localhost:5108") // Your API base URL
-                BaseAddress = new Uri("https://hotelerp.azurewebsites.net") // Your API base URL
+                BaseAddress = new Uri("http://localhost:5108") // Your API base URL
+                //BaseAddress = new Uri("https://hotelerp.azurewebsites.net") // Your API base URL
             });
                 //BaseAddress = new Uri("http://hotelerp.azurewebsites.net") // Your API base URL
 
