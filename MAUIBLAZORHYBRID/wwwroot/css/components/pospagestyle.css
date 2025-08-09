@@ -629,4 +629,20 @@ order-controls {
 .pending {
     background-color: #FFF59D;
 }
+.center-panel {
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* full height */
+    width: 33.33vw;
+    padding: 2rem;
+    background-color: #f9f9f9; /* optional background */
+}
 
+    .center-panel > .content-box {
+        width: 100%;
+        max-width: 600px;
+        background-color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }

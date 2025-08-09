@@ -40,7 +40,10 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public DbSet<HotBillItemDetail> HotBillItemDetail { get; set; }
         public DbSet<HotBillTaxDetail> HotBillTaxDetails { get; set; }
         public DbSet<HotBillAgainstKot> HotBillAgainstKots { get; set; }
-        
+        public DbSet<StockTransfer> StockTransfers { get; set; }
+        public DbSet<StockTransferItem> StockTransferItems { get; set; }
+        public DbSet<BarItem> BarItems { get; set; }
+
         static AppDbContext()
         {
         }

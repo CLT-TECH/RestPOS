@@ -129,7 +129,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                 }
             }
 
-            await _db.TaxMasters.ExecuteDeleteAsync();
+
             foreach (var objTax in mastersothermastersdtos.TaxMasters)
             {
                 var tax = new TaxMaster
@@ -141,9 +141,14 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                     TaxGroupId = objTax.TaxGroupId,
                     TaxName = objTax.TaxName
                 };
-
+                var existingtax = await _db.TablesDiningSpaces.FindAsync(objTax.TaxId);
+                if (existingtax == null)
+                {
                     _db.TaxMasters.Add(tax);
-                    await _db.SaveChangesAsync();
+                }
+                else
+                    _db.TaxMasters.Update(tax);
+                await _db.SaveChangesAsync();
             }
         }
     }

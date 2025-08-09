@@ -50,10 +50,12 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddScoped<TablePageService>();
             builder.Services.AddScoped<KOTService>();
             builder.Services.AddScoped<KOTBillService>();
-
+            builder.Services.AddScoped<StockTransferService>();
+            
 
             builder.Services.AddScoped<IHotKOTSaveService, HotKOTSaveService>();
             builder.Services.AddScoped<IHotBillSaveService, HotBillSaveService>();
+            builder.Services.AddScoped<IStockTransferSaveService, StockTransferSaveService>();
 
             builder.Services.AddSingleton<IApiClient, ApiClient>();
             builder.Services.AddScoped<IDataUploadService, DataUploadService>();
@@ -79,8 +81,8 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddScoped(sp =>
             new HttpClient
             {
-                BaseAddress = new Uri("http://localhost:5108") // Your API base URL
-                //BaseAddress = new Uri("https://hotelerp.azurewebsites.net") // Your API base URL
+                //BaseAddress = new Uri("http://localhost:5108") // Your API base URL
+                BaseAddress = new Uri("https://hotelerp.azurewebsites.net") // Your API base URL
             });
                 //BaseAddress = new Uri("http://hotelerp.azurewebsites.net") // Your API base URL
 

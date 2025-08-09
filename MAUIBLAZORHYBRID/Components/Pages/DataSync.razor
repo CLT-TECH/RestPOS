@@ -134,7 +134,6 @@
             if (!await UploadService.HasPendingUploadsBillsAsync())
             {
                 Snackbar.Add("No pending bill to upload", Severity.Info);
-                return;
             }
 
             var result = await UploadService.UploadPendingDataAsync();
@@ -148,6 +147,27 @@
             if (result.FailedCount > 0)
             {
                 Snackbar.Add($"Failed to upload {result.FailedCount} bills",
+                           Severity.Error);
+                // Optionally show detailed errors
+            }
+
+
+            if (!await UploadService.HasPendingUploadsStockTransferAsync())
+            {
+                Snackbar.Add("No pending stock transfer to upload", Severity.Info);
+                return;
+            }
+             var resultstock = await UploadService.UploadPendingStockTransfersAsync();
+
+            if (resultstock.SuccessCount > 0)
+            {
+                Snackbar.Add($"Successfully uploaded {resultstock.SuccessCount} stock transfer",
+                           Severity.Success);
+            }
+
+            if (resultstock.FailedCount > 0)
+            {
+                Snackbar.Add($"Failed to upload {resultstock.FailedCount} stock transfer",
                            Severity.Error);
                 // Optionally show detailed errors
             }

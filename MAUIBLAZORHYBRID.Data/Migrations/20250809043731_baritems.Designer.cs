@@ -3,6 +3,7 @@ using System;
 using MAUIBLAZORHYBRID.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MAUIBLAZORHYBRID.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250809043731_baritems")]
+    partial class baritems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
@@ -41,9 +44,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("MainBarItem")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("MainBarItemID")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

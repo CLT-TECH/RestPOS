@@ -12,5 +12,6 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         public List<ItemMasterDTO> items { get; set; } = new();
         public List<ItemUnitDTO> itemunits { get; set; } = new();
         public List<DiningSpaceItemRateDTO> diningspacerates { get; set; } = new();
+        public List<BarItem> baritems { get; set; } = new();
     }
 }

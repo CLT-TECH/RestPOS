@@ -129,7 +129,34 @@ namespace MAUIBLAZORHYBRID.Services.Mappers
                 Hot_Kot_Item_Notes = item.HotKotItemNotes
             };
         }
+        public StockTransferDTO MapToStockTransferDTO(StockTransfer transfer)
+        {
+            return new StockTransferDTO
+            {
+                Stk_Tr_SlNo=transfer.StkTrSlNo,
+                Stk_Tr_Prefix = transfer.Prefix,
+                Stk_Tr_RefNo = transfer.RefNo,
+                Stk_Tr_Date = transfer.TransferDate,
+                Stk_Tr_Time = transfer.TransferTime,
+                Stock_From_Type = transfer.FromType,
+                Stock_To_Type = transfer.ToType,
+                Entry_Branch_ID = transfer.BranchId,
+                Entry_Emp_ID = transfer.EmployeeId,
+                Stk_Tr_Notes = transfer.Notes,
+                From_Godown_ID = transfer.FromGodownId,
+                From_Counter_ID = transfer.FromCounterId,
+                To_Godown_ID = transfer.ToGodownId,
+                To_Counter_ID = transfer.ToCounterId,
+                Items = transfer.StockTransferDetails.Select(d => new StockTransferItemDTO
+                {
+                    Main_Bar_Item_ID = d.MainBarItemId,
+                    Unit_ID = d.UnitId,
+                    TR_Qty = d.Quantity,
+                    Stk_Tr_Det_Notes = d.Notes ?? ""
+                }).ToList()
+            };
+        }
 
-        
+
     }
 }

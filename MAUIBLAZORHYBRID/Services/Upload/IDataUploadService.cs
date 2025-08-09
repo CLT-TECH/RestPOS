@@ -15,6 +15,7 @@ namespace MAUIBLAZORHYBRID.Services.Upload
         Task<bool> HasPendingUploadsKOTAsync();
         Task<bool> HasPendingUploadsBillKOTAsync();
 
-        
+        Task<UploadResult> UploadPendingStockTransfersAsync();
+        Task<bool> HasPendingUploadsStockTransferAsync();
     }
 }

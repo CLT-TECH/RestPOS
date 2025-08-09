@@ -118,7 +118,7 @@ namespace MAUIBLAZORHYBRID.Services
 
                     if (billDto.Hot_Bill_Type == 1)
                     {
-                        if (billDto.KOTs != null && billDto.KOTs.Any(k => k.Hot_KOT_ID > 0))
+                        if (!(billDto.KOTs != null && billDto.KOTs.Any(k => k.Hot_KOT_ID > 0)))
                         {
                             failFalg = 1;
                         }
@@ -181,5 +181,62 @@ namespace MAUIBLAZORHYBRID.Services
                 throw;
             }
         }
+
+        public async Task<bool> HasPendingUploadsStockTransferAsync()
+        {
+            return await _dbContext.StockTransfers
+                .AnyAsync(st => !st.IsSynced);
+        }
+
+        public async Task<UploadResult> UploadPendingStockTransfersAsync()
+        {
+            var result = new UploadResult();
+
+            try
+            {
+                var pendingTransfers = await _dbContext.StockTransfers
+                    .Include(st => st.StockTransferDetails)
+                    .Where(st => !st.IsSynced)
+                    .ToListAsync();
+
+                foreach (var transfer in pendingTransfers)
+                {
+                    var dto = _mappingService.MapToStockTransferDTO(transfer); // You must define this mapping
+
+                    var apiResponse = await _apiClient.PostStockTransferAsync(dto); // Ensure this method is in your IApiClient
+
+                    if (apiResponse.Success && apiResponse.Data != null)
+                    {
+                        transfer.IsSynced = true;
+                        transfer.ServerTransferId = apiResponse.Data.ServerTransferId;
+                        result.SuccessCount++;
+                    }
+                    else
+                    {
+                        result.FailedCount++;
+
+                        var errorMessage = apiResponse.Message;
+                        if (apiResponse.Errors?.Any() == true)
+                        {
+                            errorMessage += " | " + string.Join(" | ",
+                                apiResponse.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                        }
+
+                        result.Errors.Add($"Transfer {transfer.RefNo}: {errorMessage}");
+                        _logger.LogWarning("Stock transfer upload failed: {ErrorMessage}", errorMessage);
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading stock transfers");
+                throw;
+            }
+        }
+
+
     }
 }
