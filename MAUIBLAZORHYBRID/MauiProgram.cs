@@ -40,11 +40,19 @@ namespace MAUIBLAZORHYBRID
 
             builder.Services.AddSingleton<IErrorBoundaryLogger, MauiErrorBoundaryLogger>();
 
+            builder.Services.AddSingleton<IPreferences>(Preferences.Default);
+           
+            builder.Logging.AddDebug();
+
             builder.Services.AddMauiBlazorWebView();
+
+
 
             builder.Services.AddSingleton<LoginService>();
             builder.Services.AddSingleton<AppState>();
             builder.Services.AddSingleton<TaxCalculationService>();
+
+            //builder.Services.AddSingleton<BackgroundDataService>();
 
             builder.Services.AddScoped<PosPageService>();
             builder.Services.AddScoped<TablePageService>();
@@ -64,6 +72,10 @@ namespace MAUIBLAZORHYBRID
 
             builder.Services.AddMudExtensions();
             builder.Services.AddMudServices();
+
+            builder.Services.AddSingleton<BackgroundDataService>();
+
+
 
 #if DEBUG
 
@@ -88,6 +100,7 @@ namespace MAUIBLAZORHYBRID
 
 
             var app = builder.Build();
+
 
             // 2) Apply migrations on startup
             using (var scope = app.Services.CreateScope())

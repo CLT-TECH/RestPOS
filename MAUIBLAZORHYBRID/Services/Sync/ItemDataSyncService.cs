@@ -169,5 +169,32 @@ namespace MAUIBLAZORHYBRID.Services.Sync
 
 
         }
+
+        public async Task SaveToLocalDbBarItemStock(DAStockDTO stockdata)
+        {
+            _db.ChangeTracker.Clear();
+            foreach (var item in stockdata.BarItemStock)
+            {
+
+                var itemresult = new BarItemStockCounter
+                {
+                    BarItemId = item.BarItemId,
+                    CounterId = item.CounterId,
+                    Stock = item.Stock,
+                };
+                var britemresult = await _db.BarItemCounterStocks.FirstOrDefaultAsync(b => b.BarItemId == item.BarItemId);
+
+                if (britemresult == null)
+                {
+                    await _db.BarItemCounterStocks.AddAsync(itemresult);
+                }
+                else
+                {
+                    britemresult.Stock = item.Stock;
+                }
+                await _db.SaveChangesAsync();
+            }
+
+        }
     }
 }

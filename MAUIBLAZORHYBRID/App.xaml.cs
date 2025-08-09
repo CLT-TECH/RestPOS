@@ -5,6 +5,8 @@ using MAUIBLAZORHYBRID.Helpers;
 
 using Microsoft.EntityFrameworkCore;
 using MAUIBLAZORHYBRID.Data.Data;
+using MAUIBLAZORHYBRID.Services;
+
 
 
 
@@ -17,9 +19,19 @@ namespace MAUIBLAZORHYBRID
 {
     public partial class App : Application
     {
-        public App(AppDbContext dbContext)
+        private readonly BackgroundDataService _backgroundDataService;
+        public App(AppDbContext dbContext, BackgroundDataService backgroundDataService)
         {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                File.WriteAllText(
+                    Path.Combine(FileSystem.AppDataDirectory, "crash.log"),
+                    e.ExceptionObject.ToString());
+            };
+
             InitializeComponent();
+
+            
 
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
@@ -36,8 +48,54 @@ namespace MAUIBLAZORHYBRID
 
             InitializeDatabase(dbContext);
 
+            _backgroundDataService = backgroundDataService;
+
             MainPage = new MainPage();
         }
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+
+            try
+            {
+                // Start background services
+                _backgroundDataService.StartBackgroundTasks();
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        protected override void OnSleep()
+        {
+            base.OnSleep();
+
+            try
+            {
+                // Stop background services when app sleeps
+                _backgroundDataService.StopBackgroundTasks();
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+
+            try
+            {
+                // Restart background services when app resumes
+                _backgroundDataService.StartBackgroundTasks();
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+
 
         private async void InitializeDatabase(AppDbContext dbContext)
         {

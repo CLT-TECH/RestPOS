@@ -43,7 +43,8 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public DbSet<StockTransfer> StockTransfers { get; set; }
         public DbSet<StockTransferItem> StockTransferItems { get; set; }
         public DbSet<BarItem> BarItems { get; set; }
-
+        public DbSet<SyncHistory> SyncHistories { get; set; }
+        public DbSet<BarItemStockCounter> BarItemCounterStocks { get; set; }
         static AppDbContext()
         {
         }

@@ -18,5 +18,8 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public int BarItemInventoryUnitId { get; set; }
         public int MainBarItem { get; set; }
         public int MainBarItemID { get; set; }
+
+        public virtual ICollection<BarItemStockCounter> BarItemStockCounters { get; set; } = new List<BarItemStockCounter>();
+
     }
 }

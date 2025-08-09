@@ -2,11 +2,16 @@
 @layout Components.Layout.POSLayout
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
+@using MAUIBLAZORHYBRID.Services.Sync
+@using MAUIBLAZORHYBRID.Services.Upload
+
 @inject HttpClient Http
 @inject ISnackbar Snackbar
 @inject AppState appState
 @inject StockTransferService pageService
 @inject IStockTransferSaveService saveService
+@inject ISyncService SyncService
+@inject IDataUploadService UploadService
 
 
 
@@ -173,6 +178,17 @@
 
     protected override async Task OnInitializedAsync()
     {
+
+        try
+        {
+            var resultkot = await UploadService.UploadPendingKOTsAsync();
+            var result = await UploadService.UploadPendingDataAsync();
+
+            var resultstock = await SyncService.SyncBarItemCounterStock();
+
+        }
+        catch { }
+
         isLoading = true;
         try
         {
@@ -230,7 +246,7 @@
     {
         if (selectedItem != null  && itemQuantity > 0)
         {
-            
+
 
             var existing = TransferItems.FirstOrDefault(x => x.Main_Bar_Item_ID == selectedItem.MainBarItemID);
 
@@ -239,30 +255,45 @@
                 TransferItems.Remove(existing);
             }
 
+            var totalStock = initData.barItems
+                         .Where(b => b.BarItemId == selectedItem.BarItemId)
+                         .SelectMany(b => b.BarItemStockCounters)
+                         .Sum(s => (int?)s.Stock) ?? 0;
 
-
-
-            TransferItems.Add(new StockTransferItemDTO
+            if (itemQuantity > totalStock)
             {
-                Main_Bar_Item_ID = selectedItem.MainBarItemID,
-                Unit_ID = selectedItem.BarItemBaseUnitId,
-                TR_Qty = itemQuantity??0,
-                ItemName = selectedItem.BarItemName
-            });
-
-            if (enterflag == 0)
-            {
-                selectedItem = null;
-                selectedUnit = null;
-                itemQuantity = null;
-
-                StateHasChanged();
-
-                await Task.Delay(300);
-
-                await productRef.FocusAsync();
+                Snackbar.Add($"Only {totalStock} available .", Severity.Error);
+                TransferItems.Add(new StockTransferItemDTO
+                {
+                    Main_Bar_Item_ID = selectedItem.MainBarItemID,
+                    Unit_ID = selectedItem.BarItemBaseUnitId,
+                    TR_Qty = totalStock,
+                    ItemName = selectedItem.BarItemName
+                });
             }
+            else
+            {
+                TransferItems.Add(new StockTransferItemDTO
+                    {
+                        Main_Bar_Item_ID = selectedItem.MainBarItemID,
+                        Unit_ID = selectedItem.BarItemBaseUnitId,
+                        TR_Qty = itemQuantity ?? 0,
+                        ItemName = selectedItem.BarItemName
+                    });
+            }
+            
+            if (enterflag == 0)
+                {
+                    selectedItem = null;
+                    selectedUnit = null;
+                    itemQuantity = null;
 
+                    StateHasChanged();
+
+                    await Task.Delay(300);
+
+                    await productRef.FocusAsync();
+                }
         }
     }
 
@@ -293,6 +324,9 @@
             selectedItem = mainitemselect;
 
             selectedUnit = mainitemselect.BarItemBaseUnitId;
+
+
+           
 
             // filteredunits = filteredMainFillItem
             //     .Where(i => i.itemId == selectedItem.itemId && i.ItemUnits != null)

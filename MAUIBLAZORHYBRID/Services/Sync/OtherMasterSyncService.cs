@@ -141,13 +141,11 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                     TaxGroupId = objTax.TaxGroupId,
                     TaxName = objTax.TaxName
                 };
-                var existingtax = await _db.TablesDiningSpaces.FindAsync(objTax.TaxId);
+                var existingtax = await _db.TaxMasters.FindAsync(objTax.TaxId);
                 if (existingtax == null)
                 {
                     _db.TaxMasters.Add(tax);
                 }
-                else
-                    _db.TaxMasters.Update(tax);
                 await _db.SaveChangesAsync();
             }
         }

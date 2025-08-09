@@ -1,29 +1,70 @@
-﻿<MudThemeProvider />
+﻿@using MAUIBLAZORHYBRID.Components.Pages
+<MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
 
 <ErrorBoundary>
-<ChildContent>
-<Router AppAssembly="@typeof(MauiProgram).Assembly">
-    <Found Context="routeData">
-                <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-</Router>
-</ChildContent>
-<ErrorContent>
-        <MAUIBLAZORHYBRID.Components.Pages.ErrorPage />
-</ErrorContent>
-
+    <ChildContent>
+        <Router AppAssembly="@typeof(MauiProgram).Assembly">
+            <Found Context="routeData">
+                @if (isLoading)
+                {
+                    <MudProgressCircular Indeterminate="true" />
+                }
+                else
+                {
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                }
+            </Found>
+            <NotFound>
+                <LayoutView Layout="@typeof(Layout.MainLayout)">
+                    <MudText Typo="Typo.h6">Page not found</MudText>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </ChildContent>
+    <ErrorContent>
+        <ErrorPage />
+    </ErrorContent>
 </ErrorBoundary>
 
 @code {
-    private ErrorBoundary? errorBoundary;
+    private bool isLoading = true;
+    [Inject] private BackgroundDataService BackgroundDataService { get; set; }
 
-    protected override void OnParametersSet()
+    protected override async Task OnInitializedAsync()
     {
-        errorBoundary?.Recover();
-        base.OnParametersSet();
+        try
+        {
+            // First check current state
+            if (BackgroundDataService.IsInitialSyncComplete)
+            {
+                isLoading = false;
+                return;
+            }
+
+            // Register for state changes
+            BackgroundDataService.InitialSyncCompleted += () =>
+            {
+                isLoading = false;
+                StateHasChanged();
+            };
+
+            BackgroundDataService.InitialSyncFailed += (ex) =>
+            {
+                isLoading = false;
+                StateHasChanged();
+            };
+
+            // Actively trigger sync if needed
+            await BackgroundDataService.EnsureInitialSyncAsync();
+        }
+        catch
+        {
+            isLoading = false;
+            throw;
+        }
     }
 }

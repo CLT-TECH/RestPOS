@@ -229,6 +229,17 @@
             {
                 Snackbar.Add($"❌ Sync failed: {resultitemparent.Message}", Severity.Error);
             }
+
+            var resultstock = await SyncService.SyncBarItemCounterStock();
+
+            if (resultstock.Success)
+            {
+                Snackbar.Add("✅ bar item stock sync successful!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"❌ Stock Sync failed: {resultstock.Message}", Severity.Error);
+            }
         }
         finally
         {

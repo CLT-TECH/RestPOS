@@ -8,6 +8,9 @@ namespace MAUIBLAZORHYBRID.Services.Sync
         Task<SyncResultDTO> SyncOtherMasters();
         Task<SyncResultDTO> SyncItemData();
         Task<SyncResultDTO> SyncItemParentChildData();
+        Task<SyncResultDTO> SyncBarItemCounterStock();
+
+        
 
     }
 }

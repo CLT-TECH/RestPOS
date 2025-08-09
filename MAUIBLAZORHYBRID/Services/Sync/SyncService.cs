@@ -187,6 +187,43 @@ namespace MAUIBLAZORHYBRID.Services.Sync
             }
 
         }
+
+        public async Task<SyncResultDTO> SyncBarItemCounterStock()
+        {
+            var result = new SyncResultDTO { Source = "stockforcounter" };
+
+            try
+            {
+                var response = await _http.GetAsync($"api/AppSync/stockforcounter/{_appState.CounterId}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    result.Success = false;
+                    result.Message = $"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}";
+                    return result;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var dtoList = JsonSerializer.Deserialize<DAStockDTO>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                if (dtoList is not null)
+                    await _itemDataSyncService.SaveToLocalDbBarItemStock(dtoList);
+
+                result.Success = true;
+                result.Message = "Sync successful.";
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = ex.Message;
+                result.Exception = ex;
+                return result;
+            }
+
+        }
     }
 
 }

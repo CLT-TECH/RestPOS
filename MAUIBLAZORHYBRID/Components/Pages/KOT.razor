@@ -15,6 +15,7 @@
 @inject HttpClient Http
 @using System.Text.Json;
 @inject AppState appState
+@inject NavigationManager Nav
 
 
 <MudPaper Class="pos-screen">
@@ -358,6 +359,10 @@
                     Snackbar.Add("Order Placed Successfully!!.", Severity.Success);
                     OrderedItems = new();
                     NumberOfGuests = null;
+
+
+                    await Task.Delay(1000);
+                    Nav.NavigateTo("/tables");
                 }
                 else
                 {
