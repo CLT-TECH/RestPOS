@@ -138,7 +138,8 @@
     }
     void GoToPOS(int tableId)
     {
-        Nav.NavigateTo($"/pos/{tableId}");
+        MudDialog.Close(DialogResult.Ok(tableId));
+        // Nav.NavigateTo($"/pos/{tableId}");
     }
 }
 

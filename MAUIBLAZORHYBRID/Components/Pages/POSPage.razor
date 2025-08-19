@@ -19,6 +19,7 @@
 @inject TaxCalculationService TaxService
 @inject AppState appState
 @inject KOTBillService KOTService
+@inject BackgroundDataService BgService
 
 
 
@@ -416,6 +417,7 @@
 
     private async Task HandleSave()
     {
+        BgService.StopBackgroundTasks();
         try
         {
             isLoading = true;
@@ -485,7 +487,7 @@
                 OrderedItems = new();
                 kotInitData = new();
                 TableId = new();
-                billType = 1;
+                billType = 0;
                 Recalculate();
             }
             else
@@ -501,6 +503,8 @@
         finally
         {
             isLoading = false;
+            BgService.StartBackgroundTasks();
+
         }
     }
 

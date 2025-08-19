@@ -1,4 +1,5 @@
 ﻿@page "/tables"
+@using MAUIBLAZORHYBRID.Components.Data
 @using MAUIBLAZORHYBRID.Components.Pages.Dialogue
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
@@ -16,6 +17,13 @@
 @using System.Text.Json;
 @inject NavigationManager Nav
 @inject IDialogService DialogService
+@inject AppState appState
+
+@inject TaxCalculationService TaxService
+@inject KOTBillService KOTService
+@inject BackgroundDataService BgService
+
+
 
 <MudPaper Class="pos-screen">
     <div class="main-layout">
@@ -50,9 +58,9 @@
                         {
                             bool isPending = pendingIds.Contains(table.tableId);
                             <MudItem xs="6" sm="4" md="1" lg="1" Class="pa-0">
-                                <MudCard Class="@(isPending ? "name-card pending" : "name-card")" @onclick="() => {
+                                <MudCard Class="@(isPending ? "name-card pending" : "name-card")" @onclick="async () => {
                                     if(!isPending)
-                                    { GoToKot(table.tableId);}
+                                    {  GoToKot(table.tableId);}
                                     else{  ShowOrderDetails(table);}}">
 
                                     <MudCardContent>
@@ -81,6 +89,142 @@
             <!-- Footer with status and time -->
         </div>
 
+
+        @{
+            if(ShowBilling)
+            {
+        <div class="right-panel">
+          
+
+            <MudPaper Class="custom-order-list" Elevation="6">
+
+                <div class="custom-order-header-row">
+                    <MudText Typo="Typo.h5" Class="custom-order-header">
+                        Ordered Items
+                    </MudText>
+
+                    <MudTextField 
+                    T="string"
+                    @bind-Value="qrCode"
+                    Placeholder="Item qr code..."
+                    Class="custom-order-qrcode" />
+                </div>
+
+                <div id="scrollContainer" class="custom-ordered-items-list">
+                    <MudList T="object">
+                        @if (OrderedItems == null || !OrderedItems.Any())
+                        {
+                            <MudText Typo="Typo.body1" Align="Align.Center" Class="custom-empty-order-text">
+                                No items ordered yet.
+                            </MudText>
+                        }
+                        else
+                        {
+                            @foreach (var orderItem in OrderedItems.AsEnumerable().Reverse())
+                            {
+                                <MudListItem Class="custom-ordered-list-item">
+
+                                    <MudText Class="custom-order-line1"  Align="Align.Left">@ToTitleCase(orderItem.Name)</MudText>
+
+                                    <div class="custom-order-line2">
+                                        <div class="order-controls">
+                                            <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
+                                            Style="color:#3eb489"
+                                            Size="Size.Small"
+                                            Variant="Variant.Text"
+                                            OnClick="@(() => AddItem(orderItem))" />
+
+                                            <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle"
+                                            Style="color:#3eb489"
+                                            Size="Size.Small"
+                                            Variant="Variant.Text"
+                                            OnClick="@(() => MinusItem(orderItem))" />
+                                        </div>
+                                        ₹@orderItem.Price.ToString("F2") x @orderItem.Quantity
+                                        <span class="custom-order-total">= <span>₹@orderItem.Amount.ToString("F2")</span></span>
+                                    </div>
+
+
+
+                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                    Class="delete-button-inside"
+                                    Color="Color.Error"
+                                    Size="Size.Small"
+                                    Variant="Variant.Text"
+                                    OnClick="@(() => DeleteItem(orderItem))" />
+                                </MudListItem>
+                            }
+                        }
+                    </MudList>
+                </div>
+                <MudCard Class="custom-order-footer" >
+                    <MudCardContent Class="pa-0" Style="width:100%">
+
+                        <MudChip T="string" Style="display:none" Variant="Variant.Outlined" Color="Color.Primary">Cash</MudChip>
+                        <MudChip T="string" Style="display:none" Variant="Variant.Outlined" Color="Color.Secondary">Card</MudChip>
+                        <MudChip T="string" Style="display:none" Variant="Variant.Outlined" Color="Color.Info">Wallet</MudChip>
+                        <div class="row-between">
+                            <div class="left-content">
+                                <!-- Line 1: Total + Icons -->
+                                <div class="summary-line summary-header" >
+                                    <MudText Typo="Typo.subtitle1" Class="label">Total:</MudText>
+                                    <MudText Typo="Typo.subtitle1" Class="value">₹@bill.ItemTotal.ToString("F2")</MudText>
+
+                                    <MudIconButton Disabled  Style="display:none" Icon="@Icons.Material.Filled.LocalOffer"
+                                    Color="Color.Primary"
+                                    Size="Size.Small"
+                                    OnClick="ApplyDiscount" />
+
+                                    <MudIconButton  Style="display:none" Icon="@Icons.Material.Filled.EmojiEmotions"
+                                    Color="Color.Secondary"
+                                    Size="Size.Small"
+                                    OnClick="ApplyLoyalty" />
+                                </div>
+
+                                <!-- Discount Line -->
+                                @if (DiscountPercent > 0)
+                                {
+                                    <div class="summary-line">
+                                        <MudText Typo="Typo.body2" Class="label">Discount:</MudText>
+                                        <MudText Typo="Typo.body2" Class="value">@DiscountPercent% - ₹@DiscountAmount.ToString("F2")</MudText>
+                                    </div>
+
+                                    <div class="summary-line">
+                                        <MudText Typo="Typo.body2" Class="label">Subtotal:</MudText>
+                                        <MudText Typo="Typo.body2" Class="value">₹@SubTotal.ToString("F2")</MudText>
+                                    </div>
+                                }
+
+                                <!-- Tax Line -->
+                                <div class="summary-line"  >
+                                    <MudText Typo="Typo.body2" Class="label">Tax :</MudText>
+                                    <MudText Typo="Typo.body2" Class="value">₹@bill.TaxTotal.ToString("F2")</MudText>
+                                </div>
+
+
+                                <!-- Grand Total -->
+                                <div class="summary-line summary-total">
+                                    <MudText Typo="Typo.h6" Class="label">Grand Total:</MudText>
+                                    <MudText Typo="Typo.h6" Class="value">₹@bill.TotalAmount.ToString("F2")</MudText>
+                                </div>
+                            </div>
+                            <div class="right-content">
+                                <MudButton Variant="Variant.Filled"
+                                Color="Color.Success"
+                                StartIcon="@Icons.Material.Filled.Save"
+                                Class="summary-action-button" OnClick="HandleSave">
+                                </MudButton>
+                            </div>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudPaper>
+        </div>
+                
+            }
+        }
+
+
     </div>
 </MudPaper>
 
@@ -88,16 +232,30 @@
 
 
 @code {
+    public bool ShowBilling { get; set; } = false;
     public OrderDetailsDTO no = new();
 
 
-    void ShowOrderDetails(Table table)
+    async Task ShowOrderDetails(Table table)
     {
+        OrderedItems =new();
+        TableId = 0;
+        ShowBilling = false;
         var options = new DialogOptions { MaxWidth = MaxWidth.Small, CloseButton = true, FullWidth = false };
-        DialogService.Show<OrderDetailsDialog>($"Order Detais:- "+table.tableName, new DialogParameters { ["TableId"] = table.tableId }, options);
+        var dialog = DialogService.Show<OrderDetailsDialog>($"Order Detais:- "+table.tableName, new DialogParameters { ["TableId"] = table.tableId }, options);
+
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is int returnedTableId)
+        {
+
+            await GenerateBillAsync(returnedTableId);
+            StateHasChanged();
+        }
     }
 
-     int? openPopoverTableId = null;
+    int? openPopoverTableId = null;
 
     void TogglePopover(int tableId)
     {
@@ -118,11 +276,20 @@
 
     private TablePageDTO pageinitdata = new();
 
+    private List<VWItemParentChild> parentchildrenitem = new();
+    private List<DiningSpaceItemRate> dsitemrate = new();
+
     protected override async Task OnInitializedAsync()
     {
         pageinitdata = await PageService.GetInitData();
         filteredtabels = pageinitdata.Tables;
         orderPendingTables = pageinitdata.NonBilledTables;
+
+        dsitemrate = await PosService.GetItemRateAsync();
+
+        parentchildrenitem = await PosService.GetParentChildAsync();
+
+        taxconfig = await PosService.GetTaxConfigurationAsync();
 
         pageinitdata.DiningSpaces.Insert(0, new DiningSpace
         {
@@ -145,15 +312,15 @@
         if (diningSpaceId==0) filteredtabels=pageinitdata.Tables;
         else{
 
-        var tableIds = pageinitdata.TablesDiningSpaces
-           .Where(ic => ic.diningspaceId == selectedDiningSpaceId)
-           .Select(ic => ic.tableId)
-           .Distinct()
-           .ToHashSet();
+            var tableIds = pageinitdata.TablesDiningSpaces
+               .Where(ic => ic.diningspaceId == selectedDiningSpaceId)
+               .Select(ic => ic.tableId)
+               .Distinct()
+               .ToHashSet();
 
-        filteredtabels = pageinitdata.Tables
-           .Where(table => tableIds.Contains(table.tableId))
-            .ToList();
+            filteredtabels = pageinitdata.Tables
+               .Where(table => tableIds.Contains(table.tableId))
+                .ToList();
         }
     }
 
@@ -177,9 +344,95 @@
             };
     }).ToList();
 
-    void GoToKot(int tableId)
+    public string diningspacename { get; set; }
+    public string countername { get; set; }
+
+
+    async Task GenerateBillAsync(int tableId)
     {
-        Nav.NavigateTo($"/kot/{tableId}");
+
+        ShowBilling = true;
+        TableId = tableId;
+        if (TableId > 0)
+        {
+            billType = 1;
+
+            var result = await KOTService.GetKOTDetailsByTable(TableId);
+
+            if (result.IsSuccess)
+            {
+                kotInitData = result.Data ?? new KOTBillDTO();
+
+                if(kotInitData.DiningSpaces!=null)
+                {
+                    selectedDiningSpace = kotInitData.DiningSpaces.diningSpaceId;
+                    diningspacename = kotInitData.DiningSpaces.diningSpaceName;
+                }
+                else
+                {
+                    selectedDiningSpace = 0;
+                    diningspacename = "";
+                }
+
+                foreach(var order in kotInitData.Orders)
+                {
+                    foreach(var item in order.Items)
+                    {
+                        int itemid = item.ItemId;
+                        int unitid = item.UnitId;
+                        var itemname = item.ItemName;
+                        int qty = Convert.ToInt16(item.Quantity);
+
+                        var existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == itemid && o.UnitID==unitid);
+
+                        if(existingOrder==null)
+                        {
+                            if (unitid > 0)
+                            {
+                                var filtered = parentchildrenitem
+                           .Where(x => x.parentItemId == itemid && x.unitId == unitid)
+                           .ToList();
+
+
+                                int childItemId = filtered.FirstOrDefault()?.childItemId ?? 0;
+                                int itemType = filtered.FirstOrDefault()?.itemtype ?? 0;
+                                string childItemName = filtered.FirstOrDefault()?.childItemname ?? "";
+
+
+                                var filtereddiningspacerate = dsitemrate
+                                               .Where(x => x.itemId == childItemId && x.diningSpaceId == selectedDiningSpace)
+                                               .ToList();
+
+                                decimal mainiitemrate = filtereddiningspacerate?.FirstOrDefault()?.itemRate ?? 0m;
+
+                                OrderedItems.Add(new ItemOrder { ItemId = itemid, Name = itemname, Price = mainiitemrate, Quantity = qty, UnitID = unitid, ItemType = 2 });
+
+                            }
+                            else
+                            {
+                                var filtereddiningspacerate = dsitemrate
+                                  .Where(x => x.itemId == itemid && x.diningSpaceId == selectedDiningSpace)
+                                  .ToList();
+                                decimal mainiitemrate = filtereddiningspacerate?.FirstOrDefault()?.itemRate ?? 0m;
+
+                                OrderedItems.Add(new ItemOrder { ItemId = itemid, Name = itemname, Price = mainiitemrate, Quantity = qty, UnitID = 0, ItemType = 1 });
+
+                            }
+                        }
+                        else
+                        {
+                            existingOrder.Quantity += qty;
+                        }
+                    }
+                }
+                Recalculate();
+            }
+            else
+            {
+                Snackbar.Add("KOT retrieve failed", Severity.Error);
+                Console.WriteLine($"KOT retrieve failed: {result.ErrorMessage}");
+            }
+        }
     }
     void OpenOrderMenu(Table table)
     {
@@ -195,6 +448,186 @@
         public string Name { get; set; }
         public int Capacity { get; set; }
         public string Status { get; set; }
+    }
+
+
+    public string qrCode { get; set; }
+    public bool intermediateTime { get; set; } = true;
+
+    private List<ItemOrder> OrderedItems = new List<ItemOrder>();
+
+    private void AddItem(ItemOrder addItem)
+    {
+        addItem.Quantity ++;
+        Recalculate();
+
+    }
+    private void MinusItem(ItemOrder minuItem)
+    {
+        if (minuItem.Quantity != 1)
+        {
+            minuItem.Quantity--;
+        }
+        else
+            OrderedItems.Remove(minuItem);
+        Recalculate();
+    }
+    private void DeleteItem(ItemOrder deleteItem)
+    {
+        OrderedItems.Remove(deleteItem);
+        Recalculate();
+    }
+    private TaxConfigurationDTO taxconfig = new();
+
+    private BillTotalDTO bill = new BillTotalDTO();
+    private void Recalculate()
+    {
+        bill = TaxService.CalculateBill(OrderedItems, taxconfig.TaxSettings);
+    }
+
+    private string ToTitleCase(string input)
+    {
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
+    }
+
+    decimal TotalAmount => OrderedItems.Sum(x => x.Amount);
+    decimal DiscountPercent { get; set; } = 0;
+    decimal DiscountAmount => TotalAmount * DiscountPercent / 100;
+    void ApplyDiscount()
+    {
+        DiscountPercent = DiscountPercent == 0 ? 10 : 0; // Toggle for example
+    }
+
+    void ApplyLoyalty()
+    {
+        // Not yet implemented
+    }
+
+    public string billNotes { get; set; } = "generated from kot";
+
+
+    decimal SubTotal => TotalAmount - DiscountAmount;
+    decimal TaxPercent => 0;
+    decimal TaxAmount => (DiscountPercent > 0 ? SubTotal : TotalAmount) * TaxPercent / 100;
+    decimal GrandTotal => (DiscountPercent > 0 ? SubTotal : TotalAmount) + TaxAmount;
+
+    private bool isLoading = false;
+    public int billType { get; set; } = 0;
+
+    public int selectedDiningSpace { get; set; } = 0;
+    private KOTBillDTO kotInitData = new();
+    [Inject] IHotBillSaveService BillService { get; set; }
+    public int TableId { get; set; }
+
+    private async Task HandleSave()
+    {
+        BgService.StopBackgroundTasks();
+        try
+        {
+            isLoading = true;
+
+
+            if (!OrderedItems.Any())
+            {
+                Snackbar.Add("Nothing to order", Severity.Error);
+                return;
+            }
+
+            var billMaster = new HotBillMaster
+            {
+                HotBillType = billType,
+                HotBillPrefix = "",
+                HotBillDate = DateTime.UtcNow.Date,
+                HotBillTime = DateTime.UtcNow,
+                BearerId = appState.BearerId, 
+                HotBillItemTotal = bill.ItemTotal,
+                HotBillTaxTotal = bill.TaxTotal,
+                B4roundAmt = bill.TotalAmount,
+                HotBillNeTAmt = bill.TotalAmount,
+                HotBillNotes = billNotes,
+                AppMachineId = appState.MachineId, 
+                BranchId = appState.BranchId, 
+                DiningSpaceId = selectedDiningSpace,
+                EnteredEmpId = appState.LoggedInUserId, 
+                CounterId = appState.CounterId,
+                CustomerMobile = string.Empty, // Optional
+                IsSynced = false,
+                HotBillItemDetails = OrderedItems.Select(item => new HotBillItemDetail
+                {
+                    ItemId = item.ItemId,
+                    BarCode =   string.Empty,
+                    Qty = item.Quantity,
+                    UnitId = item.UnitID,
+                    DetRate = item.Price,
+                    DetAmt = item.Amount,
+                    DetDiscPer = 0m, // Add if you have discounts
+                    DetDiscAmt = 0m,
+                    DetGrossAmt = item.Amount,
+                    DetTaxPer = 0m, // Your logic
+                    DetTaxAmt = 0m, // Your logic
+                    DetNetAmt = item.Amount
+                }).ToList(),
+                HotBillTaxDetails = bill.TaxDetails.Select(tax => new HotBillTaxDetail
+                {
+                    TaXId = tax.TaxId,
+                    TaxableAmt = tax.TaxableAmount,
+                    TaxPer = tax.TaxPer,
+                    TaxAmt = tax.TaxAmount
+                }).ToList(),
+                HotBillAgainstKots=kotInitData.Orders?.Select(kotorder=> new HotBillAgainstKot
+                {
+                    HotKotId=kotorder.KOTId
+                }).ToList() ?? new ()
+            };
+
+
+            // Save
+            var result = await BillService.SaveHotBillAsync(billMaster);
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Bill generated successfully!", Severity.Success);
+                ShowBilling = false;
+                OrderedItems = new();
+                kotInitData = new();
+                TableId = new();
+
+                pageinitdata = await PageService.GetInitData();
+                filteredtabels = pageinitdata.Tables;
+                orderPendingTables = pageinitdata.NonBilledTables;
+
+                pageinitdata.DiningSpaces.Insert(0, new DiningSpace
+                {
+                    diningSpaceId = 0,
+                    diningSpaceName = "ALL"
+                });
+
+                selectedDiningSpaceId = 0;
+
+                Recalculate();
+
+            }
+            else
+            {
+                Snackbar.Add($"Error: {result.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unexpected error: {ex.Message}", Severity.Error);
+            // Log detailed error if needed
+        }
+        finally
+        {
+            isLoading = false;
+         BgService.StartBackgroundTasks();
+
+        }
+    }
+
+     void GoToKot(int tableId)
+    {
+        Nav.NavigateTo($"/kot/{tableId}");
     }
 
 }

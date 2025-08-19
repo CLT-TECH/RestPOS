@@ -41,8 +41,6 @@ namespace MAUIBLAZORHYBRID.Services
                 .ToListAsync();
 
                 var baritemtask = _db.BarItems
-                                .Include(d=>d.BarItemStockCounters)
-                                .Where(b => b.BarItemStockCounters.Any(s => s.Stock > 0))
                               .AsNoTracking()
                                .ToListAsync();
 

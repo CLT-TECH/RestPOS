@@ -19,8 +19,7 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItem", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("BarItemId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("BarItemBaseUnitId")
@@ -29,9 +28,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Property<string>("BarItemCode")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("BarItemId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("BarItemInventoryUnitId")
                         .HasColumnType("INTEGER");
@@ -46,7 +42,7 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Property<int>("MainBarItemID")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.HasKey("BarItemId");
 
                     b.ToTable("BarItems");
                 });
@@ -125,7 +121,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillStation", b =>
                 {
                     b.Property<int>("billStationId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("billStationName")
@@ -145,7 +140,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BranchMaster", b =>
                 {
                     b.Property<int>("branchId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("branchName")
@@ -629,7 +623,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Item", b =>
                 {
                     b.Property<int>("itemId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MainItemId")

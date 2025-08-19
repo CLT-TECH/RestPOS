@@ -16,6 +16,7 @@
 @using System.Text.Json;
 @inject AppState appState
 @inject NavigationManager Nav
+@inject BackgroundDataService BgService
 
 
 <MudPaper Class="pos-screen">
@@ -289,6 +290,7 @@
     private HotBillItemDetailDTO detail = new();
     private async Task HandleSave()
     {
+        BgService.StopBackgroundTasks();
         try
         {
             isLoading = true;
@@ -375,6 +377,7 @@
         }
         finally
         {
+            BgService.StartBackgroundTasks();
             isLoading = false;
         }
     }

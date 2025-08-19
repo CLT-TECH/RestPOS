@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace MAUIBLAZORHYBRID.Services
@@ -24,6 +25,11 @@ namespace MAUIBLAZORHYBRID.Services
 
         public async Task<Result<HotBillMaster>> SaveHotBillAsync(HotBillMaster billMaster)
         {
+            string json = JsonSerializer.Serialize(billMaster, new JsonSerializerOptions
+            {
+                WriteIndented = true // Makes it pretty-printed
+            });
+
             // 1. Basic validation
             if (billMaster == null)
                 return Result<HotBillMaster>.Failure("Bill master cannot be null.");
@@ -71,6 +77,8 @@ namespace MAUIBLAZORHYBRID.Services
                 // 5. Save changes
                 await _dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                
 
                 return Result<HotBillMaster>.Success(billMaster);
             }

@@ -1,125 +1,115 @@
 ﻿using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Data.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MAUIBLAZORHYBRID.Services.Sync
 {
-    public class ItemDataSyncService
+    public class ItemDataSyncService(
+     IDbContextFactory<AppDbContext> dbFactory,
+     ILogger<ItemDataSyncService> logger)
     {
-        private readonly AppDbContext _db;
+        private readonly IDbContextFactory<AppDbContext> _dbFactory = dbFactory;
+        private readonly ILogger<ItemDataSyncService> _logger = logger;
 
-        public ItemDataSyncService(AppDbContext db)
+        public async Task SaveToLocalDbAsync(ItemSyncDTO itemdata, CancellationToken ct = default)
         {
-            _db = db;
-        }
 
-        public async Task SaveToLocalDbAsync(ItemSyncDTO itemdata)
-        {
-            _db.ChangeTracker.Clear();
-            var icount = 0;
-            foreach (var item in itemdata.items)
+            await using var db = await _dbFactory.CreateDbContextAsync(ct);
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            try
             {
-
-                var categoryresult = await _db.Categories
-                     .Include(c => c.SubCategories)
-                     .FirstOrDefaultAsync(c => c.catId == item.catid);
-                var itemresult = new BillItem
+                var icount = 0;
+                foreach (var item in itemdata.items ?? Enumerable.Empty<ItemMasterDTO>())
                 {
-                    itemId = item.id,
-                    itemName = item.name,
-                    itemType = item.type,
-                    CatId = item.catid,
-                    category= categoryresult
-                };
 
-                if (itemresult.itemId > 0 && item.catid>0)
-                {
-                    var existingitem = await _db.BillItems.FindAsync(itemresult.itemId);
-                    if (existingitem == null)
+                    var categoryresult = await db.Categories
+                         .Include(c => c.SubCategories)
+                         .FirstOrDefaultAsync(c => c.catId == item.catid, ct);
+                    var itemresult = new BillItem
                     {
-                        await _db.BillItems.AddAsync(itemresult);
-                        await _db.SaveChangesAsync();
-
-                        icount++;
-                    }
-
-                }
-            }
-
-            _db.ChangeTracker.Clear();
-
-            foreach (var itemunit in itemdata.itemunits)
-            {
-                var unitmaster = await _db.Units.FindAsync(itemunit.unitid);
-                var itembyid = await _db.BillItems.FindAsync(itemunit.itemid);
-
-                if (itembyid != null && unitmaster != null)
-                {
-                    var itemunitresult = new BillItemUnit
-                    {
-                        itemUnitId = itemunit.id,
-                        itemId = itemunit.itemid,
-                        unitId = itemunit.unitid,
-                        Unit = unitmaster,
-                        Item = itembyid
+                        itemId = item.id,
+                        itemName = item.name,
+                        itemType = item.type,
+                        CatId = item.catid,
+                        category = categoryresult ?? new()
                     };
 
-                    if (itemunitresult.itemUnitId > 0)
+                    if (itemresult.itemId > 0 && item.catid > 0)
                     {
-                        var existingitemunit = await _db.BillItemUnits.FindAsync(itemunitresult.itemUnitId);
-                        if (existingitemunit == null)
+                        var existingitem = await db.BillItems.FindAsync(itemresult.itemId, ct);
+                        if (existingitem == null)
                         {
-                            await _db.BillItemUnits.AddAsync(itemunitresult);
-                            await _db.SaveChangesAsync();
-
-
+                            await db.BillItems.AddAsync(itemresult, ct);
+                            icount++;
                         }
-
                     }
                 }
-            }
 
-            _db.ChangeTracker.Clear();
 
-            foreach (var itemrate in itemdata.diningspacerates)
-            {
-                var diningspaceresult = await _db.DiningSpaces.FindAsync(itemrate.diningspaceid);
-                var itemresult = await _db.BillItems.FindAsync(itemrate.itemid);
-                if (diningspaceresult != null && itemresult != null)
+                foreach (var itemunit in itemdata.itemunits ?? Enumerable.Empty<ItemUnitDTO>())
                 {
-                    var itemrateresult = new DiningSpaceItemRate
-                    {
-                        id = itemrate.id,
-                        itemId = itemrate.itemid,
-                        diningSpaceId = itemrate.diningspaceid,
-                        itemRate = itemrate.rate,
-                        diningSpace = diningspaceresult,
-                        item = itemresult
-                    };
+                    var unitmaster = await db.Units.FindAsync(itemunit.unitid, ct);
+                    var itembyid = await db.BillItems.FindAsync(itemunit.itemid, ct);
 
-                    if (itemrateresult.id > 0)
+                    if (itembyid != null && unitmaster != null)
                     {
-                        var existingitemrate = await _db.DiningSpaceItemRates.FindAsync(itemrateresult.id);
-                        if (existingitemrate == null)
+                        var itemunitresult = new BillItemUnit
                         {
-                            await _db.DiningSpaceItemRates.AddAsync(itemrateresult);
-                            await _db.SaveChangesAsync();
+                            itemUnitId = itemunit.id,
+                            itemId = itemunit.itemid,
+                            unitId = itemunit.unitid,
+                            Unit = unitmaster,
+                            Item = itembyid
+                        };
+
+                        if (itemunitresult.itemUnitId > 0)
+                        {
+                            var existingitemunit = await db.BillItemUnits.FindAsync(itemunitresult.itemUnitId, ct);
+                            if (existingitemunit == null)
+                            {
+                                await db.BillItemUnits.AddAsync(itemunitresult, ct);
+
+
+                            }
 
                         }
                     }
                 }
-            }
 
-                _db.ChangeTracker.Clear();
 
-                foreach (var baritem in itemdata.baritems)
+                foreach (var itemrate in itemdata.diningspacerates ?? Enumerable.Empty<DiningSpaceItemRateDTO>())
                 {
-                    var britemresult = await _db.BarItems.FirstOrDefaultAsync(b => b.BarItemId == baritem.BarItemId);
+                    var diningspaceresult = await db.DiningSpaces.FindAsync(itemrate.diningspaceid, ct);
+                    var itemresult = await db.BillItems.FindAsync(itemrate.itemid, ct);
+                    if (diningspaceresult != null && itemresult != null)
+                    {
+                        var itemrateresult = new DiningSpaceItemRate
+                        {
+                            id = itemrate.id,
+                            itemId = itemrate.itemid,
+                            diningSpaceId = itemrate.diningspaceid,
+                            itemRate = itemrate.rate,
+                            diningSpace = diningspaceresult,
+                            item = itemresult
+                        };
+
+                        if (itemrateresult.id > 0)
+                        {
+                            var existingitemrate = await db.DiningSpaceItemRates.FindAsync(itemrateresult.id, ct);
+                            if (existingitemrate == null)
+                            {
+                                await db.DiningSpaceItemRates.AddAsync(itemrateresult, ct);
+
+                            }
+                        }
+                    }
+                }
+
+
+                foreach (var baritem in itemdata.baritems ?? Enumerable.Empty<BarItem>())
+                {
+                    var britemresult = await db.BarItems.FirstOrDefaultAsync(b => b.BarItemId == baritem.BarItemId, ct);
                     if (britemresult == null)
                     {
                         var baritemmaster = new BarItem
@@ -129,70 +119,129 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                             BarItemCode = baritem.BarItemCode,
                             BarItemInventoryUnitId = baritem.BarItemInventoryUnitId,
                             BarItemName = baritem.BarItemName,
-                            MainBarItem =baritem.MainBarItem,
-                            MainBarItemID =baritem.MainBarItemID
+                            MainBarItem = baritem.MainBarItem,
+                            MainBarItemID = baritem.MainBarItemID
                         };
-                        await _db.BarItems.AddAsync(baritemmaster);
-                        await _db.SaveChangesAsync();
+                        await db.BarItems.AddAsync(baritemmaster, ct);
                     }
+                   
 
                 }
+                await db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(ct);
+                db.ChangeTracker.Clear(); // important: clear bad entities so they don't retry
+                _logger.LogError(ex, "Error saving ItemDataSyncService ,SaveToLocalDbAsync batch");
+                throw;
+            }
 
         }
 
-        public async Task SaveToLocalDbItemParntChildAsync(List<ItemParentChildDTO>  itemdata)
+        public async Task SaveToLocalDbItemParntChildAsync(List<ItemParentChildDTO> itemdata, CancellationToken ct = default)
         {
-            _db.ChangeTracker.Clear();
-            foreach (var item in itemdata)
+            await using var db = await _dbFactory.CreateDbContextAsync(ct);
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            try
             {
-                var unitmaster = await _db.Units.FindAsync(item.unitid);
-                var categoryresult = await _db.Categories.FindAsync(item.catid);
-
-                var itemresult = new VWItemParentChild
+                foreach (var item in itemdata ?? Enumerable.Empty<ItemParentChildDTO>())
                 {
-                    parentItemId = item.parentitemid,
-                    childItemId = item.childitemid,
-                    parentItemname = item.parentitemname,
-                    parentItemcode = item.parentitemcode,
-                    childItemname = item.childitemname,
-                    childItemcode = item.childitemcode,
-                    itemtype = item.itemtype,
-                    unitId = item.unitid,
-                    Unit = unitmaster,
-                    CatId = item.catid,
-                    category = categoryresult
-                };
-                
-                await _db.ItemParentChilds.AddAsync(itemresult);
-                await _db.SaveChangesAsync();
+                    var unitmaster = await db.Units.FindAsync(item.unitid, ct);
+                    var categoryresult = await db.Categories.FindAsync(item.catid, ct);
+
+                    var itemresult = new VWItemParentChild
+                    {
+                        parentItemId = item.parentitemid,
+                        childItemId = item.childitemid,
+                        parentItemname = item.parentitemname,
+                        parentItemcode = item.parentitemcode,
+                        childItemname = item.childitemname,
+                        childItemcode = item.childitemcode,
+                        itemtype = item.itemtype,
+                        unitId = item.unitid,
+                        Unit = unitmaster,
+                        CatId = item.catid,
+                        category = categoryresult??new()
+                    };
+
+                    await db.ItemParentChilds.AddAsync(itemresult, ct);
+                }
+                await db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(ct);
+                db.ChangeTracker.Clear(); // important: clear bad entities so they don't retry
+                _logger.LogError(ex, "Error saving ItemDataSyncService ,SaveToLocalDbItemParntChildAsync batch");
+                throw;
             }
 
 
         }
 
-        public async Task SaveToLocalDbBarItemStock(DAStockDTO stockdata)
+        public async Task SaveToLocalDbBarItemStock(DAStockDTO stockdata, CancellationToken ct = default)
         {
-            _db.ChangeTracker.Clear();
-            foreach (var item in stockdata.BarItemStock)
+            await using var db = await _dbFactory.CreateDbContextAsync(ct);
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            try
             {
+                foreach (var item in stockdata.BarItemStock ?? Enumerable.Empty<DABarItemStockCounter>())
+                {
 
-                var itemresult = new BarItemStockCounter
-                {
-                    BarItemId = item.BarItemId,
-                    CounterId = item.CounterId,
-                    Stock = item.Stock,
-                };
-                var britemresult = await _db.BarItemCounterStocks.FirstOrDefaultAsync(b => b.BarItemId == item.BarItemId);
+                    var barItemExists = await db.BarItems.AnyAsync(b => b.BarItemId == item.BarItemId, ct);
+                    var counterExists = await db.BillStations.AnyAsync(c => c.billStationId == item.CounterId, ct);
 
-                if (britemresult == null)
-                {
-                    await _db.BarItemCounterStocks.AddAsync(itemresult);
+
+
+                    var itemresult = new BarItemStockCounter
+                    {
+                        BarItemId = item.BarItemId,
+                        CounterId = item.CounterId,
+                        Stock = item.Stock,
+                    };
+                    var britemresult = await db.BarItemCounterStocks.FirstOrDefaultAsync(b => b.BarItemId == item.BarItemId, ct);
+
+                    if (britemresult == null)
+                    {
+                        await db.BarItemCounterStocks.AddAsync(itemresult, ct);
+                    }
+                    else
+                    {
+                        britemresult.Stock = item.Stock;
+                    }
                 }
-                else
+                await db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                await transaction.RollbackAsync(ct);
+                db.ChangeTracker.Clear();
+
+                // Check if it's a FK violation
+                if (dbEx.InnerException != null)
                 {
-                    britemresult.Stock = item.Stock;
+                    var sqlEx = dbEx.InnerException;
+
+                    // For SQL Server, the message contains table/column info
+                    var message = sqlEx.Message;
+                    _logger.LogError(dbEx, "Foreign key violation detected: {Message}", message);
+
+                    // Optional: parse the message to extract table/column names
                 }
-                await _db.SaveChangesAsync();
+
+                throw; // rethrow if needed
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(ct);
+                db.ChangeTracker.Clear(); // important: clear bad entities so they don't retry
+                _logger.LogError(ex, "Error saving ItemDataSyncService ,SaveToLocalDbBarItemStock batch");
+                throw;
             }
 
         }

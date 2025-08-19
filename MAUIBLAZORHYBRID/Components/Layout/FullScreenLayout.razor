@@ -17,9 +17,12 @@
             <li><MudIcon Icon="@Icons.Material.Filled.Settings" /><span class="nav-text">Settings</span></li>
             <li><MudIcon Icon="@Icons.Material.Filled.HelpOutline" /><span class="nav-text">Help</span></li>
             <li @onclick="@(() => NavigateTo("sync"))"><MudIcon Icon="@Icons.Material.Filled.Sync" /><span class="nav-text">Load Data</span></li>
-            <li @onclick="@(() => NavigateTo("tables"))"><MudIcon Icon="@Icons.Material.Filled.TableRestaurant" /><span class="nav-text">Tables</span></li>
-            <li @onclick="@(() => NavigateTo("kot"))"><MudIcon Icon="@Icons.Material.Filled.RestaurantMenu" /><span class="nav-text">KOT</span></li>
+            @* <li @onclick="@(() => NavigateTo("tables"))"><MudIcon Icon="@Icons.Material.Filled.TableRestaurant" /><span class="nav-text">Tables</span></li> *@
+            <li @onclick="@(() => NavigateTo("tables"))"><MudIcon Icon="@Icons.Material.Filled.RestaurantMenu" /><span class="nav-text">KOT</span></li>
             <li @onclick="@(() => NavigateTo("stocktransfer"))"><MudIcon Icon="@Icons.Material.Filled.ImportExport" /><span class="nav-text">Stock Transfer</span></li>
+
+            
+
         </ul>
     </nav>
 </MudPaper>

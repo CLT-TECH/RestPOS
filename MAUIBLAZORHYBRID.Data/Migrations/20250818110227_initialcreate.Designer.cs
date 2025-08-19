@@ -11,14 +11,68 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MAUIBLAZORHYBRID.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250806044815_hotkottablefkHotkotMaster")]
-    partial class hotkottablefkHotkotMaster
+    [Migration("20250818110227_initialcreate")]
+    partial class initialcreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItem", b =>
+                {
+                    b.Property<int>("BarItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BarItemBaseUnitId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BarItemCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("BarItemInventoryUnitId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BarItemName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MainBarItem")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MainBarItemID")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("BarItemId");
+
+                    b.ToTable("BarItems");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItemStockCounter", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BarItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CounterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Stock")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BarItemId");
+
+                    b.HasIndex("CounterId");
+
+                    b.ToTable("BarItemCounterStocks");
+                });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
                 {
@@ -70,7 +124,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillStation", b =>
                 {
                     b.Property<int>("billStationId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("billStationName")
@@ -90,7 +143,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BranchMaster", b =>
                 {
                     b.Property<int>("branchId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("branchName")
@@ -100,6 +152,33 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.HasKey("branchId");
 
                     b.ToTable("BranchMasters");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BranchTaxSetting", b =>
+                {
+                    b.Property<int>("id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BillingType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ItemType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TaxId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TaxPer")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("BranchId");
+
+                    b.ToTable("BranchTaxSettings");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Category", b =>
@@ -194,6 +273,194 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.HasIndex("HotTabID");
 
                     b.ToTable("HOTKotCheckTabless");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillAgainstKot", b =>
+                {
+                    b.Property<int>("HotBillKotId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HotBillId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HotKotId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("HotBillKotId");
+
+                    b.HasIndex("HotBillId");
+
+                    b.HasIndex("HotKotId");
+
+                    b.ToTable("HotBillAgainstKots");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillItemDetail", b =>
+                {
+                    b.Property<int>("HotBillItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BarCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DetAmt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DetDiscAmt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DetDiscPer")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DetGrossAmt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DetNetAmt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DetRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DetTaxAmt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DetTaxPer")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HotBillId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Qty")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("HotBillItemId");
+
+                    b.HasIndex("HotBillId");
+
+                    b.ToTable("HotBillItemDetail");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillMaster", b =>
+                {
+                    b.Property<int>("HotBillId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AppMachineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("B4roundAmt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("BearerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CashierFound")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CounterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CustomerMobile")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DiningSpaceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EnteredEmpId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("HotBillDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("HotBillItemTotal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("HotBillNeTAmt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HotBillNo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("HotBillNotes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HotBillPrefix")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HotBillRefNo")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("HotBillTaxTotal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("HotBillTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HotBillType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSynced")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RoundNeed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("RoundOffVal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ServerHotBillId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("HotBillId");
+
+                    b.ToTable("HotBillMasters");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillTaxDetail", b =>
+                {
+                    b.Property<int>("HotBillTaxId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HotBillId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TaXId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TaxAmt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TaxPer")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TaxableAmt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("HotBillTaxId");
+
+                    b.HasIndex("HotBillId");
+
+                    b.HasIndex("TaXId");
+
+                    b.ToTable("HotBillTaxDetails");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotKOT", b =>
@@ -358,7 +625,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Item", b =>
                 {
                     b.Property<int>("itemId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MainItemId")
@@ -409,6 +675,104 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.ToTable("MainItems");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransfer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FromCounterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FromGodownId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FromType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSynced")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RefNo")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ServerTransferId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StkTrSlNo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ToCounterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ToGodownId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ToType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("TransferDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("TransferTime")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StockTransfers");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransferItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MainBarItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StkTrId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StockTransferLocalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StkTrId");
+
+                    b.ToTable("StockTransferItems");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.SubCategory", b =>
                 {
                     b.Property<int>("subCatId")
@@ -426,6 +790,24 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.HasIndex("catId");
 
                     b.ToTable("SubCategories");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.SyncHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastSyncTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SyncType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SyncHistories");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Table", b =>
@@ -462,6 +844,31 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TablesDiningSpaces");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.TaxMaster", b =>
+                {
+                    b.Property<int>("TaxId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ApplicableType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TaxCalcId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TaxCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TaxGroupId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TaxName")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("TaxId");
+
+                    b.ToTable("TaxMasters");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.Unit", b =>
@@ -546,6 +953,25 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.ToTable("ItemParentChilds");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItemStockCounter", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BarItem", "BarItem")
+                        .WithMany("BarItemStockCounters")
+                        .HasForeignKey("BarItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BillStation", "Counter")
+                        .WithMany()
+                        .HasForeignKey("CounterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BarItem");
+
+                    b.Navigation("Counter");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.Category", "category")
@@ -581,6 +1007,17 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.BranchMaster", "Branch")
                         .WithMany("BillStations")
                         .HasForeignKey("branchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BranchTaxSetting", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BranchMaster", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -636,6 +1073,55 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("Tables");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillAgainstKot", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.HotBillMaster", "HotBill")
+                        .WithMany("HotBillAgainstKots")
+                        .HasForeignKey("HotBillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.HotKOT", "HotKot")
+                        .WithMany("HotBillAgainstKots")
+                        .HasForeignKey("HotKotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HotBill");
+
+                    b.Navigation("HotKot");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillItemDetail", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.HotBillMaster", "HotBill")
+                        .WithMany("HotBillItemDetails")
+                        .HasForeignKey("HotBillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HotBill");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillTaxDetail", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.HotBillMaster", "HotBill")
+                        .WithMany("HotBillTaxDetails")
+                        .HasForeignKey("HotBillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.TaxMaster", "TaX")
+                        .WithMany()
+                        .HasForeignKey("TaXId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HotBill");
+
+                    b.Navigation("TaX");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotKOTItemDetail", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.HotKOT", "HotKOTMaster")
@@ -689,6 +1175,17 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("Unit");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransferItem", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.StockTransfer", "StkTr")
+                        .WithMany("StockTransferDetails")
+                        .HasForeignKey("StkTrId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StkTr");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.SubCategory", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.Category", "Category")
@@ -719,6 +1216,11 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("category");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItem", b =>
+                {
+                    b.Navigation("BarItemStockCounters");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
                 {
                     b.Navigation("DiningSpaceItemRates");
@@ -736,9 +1238,20 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("SubCategories");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillMaster", b =>
+                {
+                    b.Navigation("HotBillAgainstKots");
+
+                    b.Navigation("HotBillItemDetails");
+
+                    b.Navigation("HotBillTaxDetails");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotKOT", b =>
                 {
                     b.Navigation("Billed");
+
+                    b.Navigation("HotBillAgainstKots");
 
                     b.Navigation("Items");
 
@@ -749,6 +1262,11 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.MainItem", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransfer", b =>
+                {
+                    b.Navigation("StockTransferDetails");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.SubCategory", b =>

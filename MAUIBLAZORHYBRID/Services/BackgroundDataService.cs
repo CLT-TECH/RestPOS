@@ -23,10 +23,10 @@ namespace MAUIBLAZORHYBRID.Services
             public event Action InitialSyncCompleted;
             public event Action<Exception> InitialSyncFailed;
 
-            private const string SyncStateKey = "InitialSyncCompleteV0.2.1";
+            private const string SyncStateKey = "InitialSyncCompleteV0.2.3";
 
-        private readonly SemaphoreSlim _initLock = new(1, 1);
-        private bool _initialSyncStarted = false;
+            private readonly SemaphoreSlim _initLock = new(1, 1);
+            private bool _initialSyncStarted = false;
 
         public BackgroundDataService(
                 IDataUploadService uploadService,
@@ -123,7 +123,7 @@ namespace MAUIBLAZORHYBRID.Services
 
                         // Mark as complete
                         IsInitialSyncComplete = true;
-                        _preferences.Set(SyncStateKey, true);
+                    _preferences.Set(SyncStateKey, true);
 
 
                     if (InitialSyncCompleted != null)

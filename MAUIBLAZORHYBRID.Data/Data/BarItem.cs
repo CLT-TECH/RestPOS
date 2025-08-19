@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace MAUIBLAZORHYBRID.Data.Data
     public class BarItem
     {
         [Key]
-        public int Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int BarItemId { get; set; }
         public string BarItemCode { get; set; } = string.Empty;
         public string BarItemName { get; set; } = string.Empty;

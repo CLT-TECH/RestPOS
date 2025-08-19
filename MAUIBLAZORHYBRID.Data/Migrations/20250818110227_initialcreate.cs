@@ -6,17 +6,33 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MAUIBLAZORHYBRID.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class newdbmigrations : Migration
+    public partial class initialcreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "BarItems",
+                columns: table => new
+                {
+                    BarItemId = table.Column<int>(type: "INTEGER", nullable: false),
+                    BarItemCode = table.Column<string>(type: "TEXT", nullable: false),
+                    BarItemName = table.Column<string>(type: "TEXT", nullable: false),
+                    BarItemBaseUnitId = table.Column<int>(type: "INTEGER", nullable: false),
+                    BarItemInventoryUnitId = table.Column<int>(type: "INTEGER", nullable: false),
+                    MainBarItem = table.Column<int>(type: "INTEGER", nullable: false),
+                    MainBarItemID = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BarItems", x => x.BarItemId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "BranchMasters",
                 columns: table => new
                 {
-                    branchId = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    branchId = table.Column<int>(type: "INTEGER", nullable: false),
                     branchName = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -47,6 +63,41 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DiningSpaces", x => x.diningSpaceId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HotBillMasters",
+                columns: table => new
+                {
+                    HotBillId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HotBillType = table.Column<int>(type: "INTEGER", nullable: false),
+                    HotBillPrefix = table.Column<string>(type: "TEXT", nullable: false),
+                    HotBillNo = table.Column<int>(type: "INTEGER", nullable: false),
+                    HotBillRefNo = table.Column<string>(type: "TEXT", nullable: false),
+                    HotBillDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    HotBillTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    BearerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    HotBillItemTotal = table.Column<decimal>(type: "TEXT", nullable: false),
+                    HotBillTaxTotal = table.Column<decimal>(type: "TEXT", nullable: false),
+                    B4roundAmt = table.Column<decimal>(type: "TEXT", nullable: false),
+                    RoundNeed = table.Column<int>(type: "INTEGER", nullable: false),
+                    RoundOffVal = table.Column<decimal>(type: "TEXT", nullable: false),
+                    HotBillNeTAmt = table.Column<decimal>(type: "TEXT", nullable: false),
+                    CashierFound = table.Column<int>(type: "INTEGER", nullable: false),
+                    HotBillNotes = table.Column<string>(type: "TEXT", nullable: false),
+                    AppMachineId = table.Column<int>(type: "INTEGER", nullable: false),
+                    BranchId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DiningSpaceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    EnteredEmpId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CounterId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CustomerMobile = table.Column<string>(type: "TEXT", nullable: false),
+                    IsSynced = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ServerHotBillId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HotBillMasters", x => x.HotBillId);
                 });
 
             migrationBuilder.CreateTable(
@@ -93,6 +144,48 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "StockTransfers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ServerTransferId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Prefix = table.Column<string>(type: "TEXT", nullable: false),
+                    StkTrSlNo = table.Column<int>(type: "INTEGER", nullable: false),
+                    RefNo = table.Column<string>(type: "TEXT", nullable: false),
+                    TransferDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    TransferTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    FromType = table.Column<int>(type: "INTEGER", nullable: false),
+                    ToType = table.Column<int>(type: "INTEGER", nullable: false),
+                    FromGodownId = table.Column<int>(type: "INTEGER", nullable: false),
+                    FromCounterId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ToGodownId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ToCounterId = table.Column<int>(type: "INTEGER", nullable: false),
+                    BranchId = table.Column<int>(type: "INTEGER", nullable: false),
+                    EmployeeId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", nullable: false),
+                    IsSynced = table.Column<bool>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StockTransfers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SyncHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    LastSyncTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    SyncType = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SyncHistories", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tables",
                 columns: table => new
                 {
@@ -117,6 +210,22 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TablesDiningSpaces", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaxMasters",
+                columns: table => new
+                {
+                    TaxId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxCode = table.Column<string>(type: "TEXT", nullable: true),
+                    TaxName = table.Column<string>(type: "TEXT", nullable: true),
+                    TaxGroupId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxCalcId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ApplicableType = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaxMasters", x => x.TaxId);
                 });
 
             migrationBuilder.CreateTable(
@@ -149,8 +258,7 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 name: "BillStations",
                 columns: table => new
                 {
-                    billStationId = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    billStationId = table.Column<int>(type: "INTEGER", nullable: false),
                     billStationName = table.Column<string>(type: "TEXT", nullable: false),
                     branchId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
@@ -160,6 +268,28 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     table.ForeignKey(
                         name: "FK_BillStations_BranchMasters_branchId",
                         column: x => x.branchId,
+                        principalTable: "BranchMasters",
+                        principalColumn: "branchId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BranchTaxSettings",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "INTEGER", nullable: false),
+                    BranchId = table.Column<int>(type: "INTEGER", nullable: false),
+                    BillingType = table.Column<int>(type: "INTEGER", nullable: false),
+                    ItemType = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxPer = table.Column<decimal>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BranchTaxSettings", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_BranchTaxSettings_BranchMasters_BranchId",
+                        column: x => x.BranchId,
                         principalTable: "BranchMasters",
                         principalColumn: "branchId",
                         onDelete: ReferentialAction.Cascade);
@@ -207,20 +337,77 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HotBillItemDetail",
+                columns: table => new
+                {
+                    HotBillItemId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HotBillId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ItemId = table.Column<int>(type: "INTEGER", nullable: false),
+                    BarCode = table.Column<string>(type: "TEXT", nullable: false),
+                    Qty = table.Column<decimal>(type: "TEXT", nullable: false),
+                    UnitId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DetAmt = table.Column<decimal>(type: "TEXT", nullable: false),
+                    DetDiscPer = table.Column<decimal>(type: "TEXT", nullable: false),
+                    DetDiscAmt = table.Column<decimal>(type: "TEXT", nullable: false),
+                    DetGrossAmt = table.Column<decimal>(type: "TEXT", nullable: false),
+                    DetTaxPer = table.Column<decimal>(type: "TEXT", nullable: false),
+                    DetTaxAmt = table.Column<decimal>(type: "TEXT", nullable: false),
+                    DetNetAmt = table.Column<decimal>(type: "TEXT", nullable: false),
+                    DetRate = table.Column<decimal>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HotBillItemDetail", x => x.HotBillItemId);
+                    table.ForeignKey(
+                        name: "FK_HotBillItemDetail_HotBillMasters_HotBillId",
+                        column: x => x.HotBillId,
+                        principalTable: "HotBillMasters",
+                        principalColumn: "HotBillId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HotBillAgainstKots",
+                columns: table => new
+                {
+                    HotBillKotId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HotBillId = table.Column<int>(type: "INTEGER", nullable: false),
+                    HotKotId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HotBillAgainstKots", x => x.HotBillKotId);
+                    table.ForeignKey(
+                        name: "FK_HotBillAgainstKots_HotBillMasters_HotBillId",
+                        column: x => x.HotBillId,
+                        principalTable: "HotBillMasters",
+                        principalColumn: "HotBillId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_HotBillAgainstKots_HotKOTMasters_HotKotId",
+                        column: x => x.HotKotId,
+                        principalTable: "HotKOTMasters",
+                        principalColumn: "HotKOTId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "HOTKotBilleds",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     HOTKotBillID = table.Column<int>(type: "INTEGER", nullable: false),
-                    AppKOTId = table.Column<int>(type: "INTEGER", nullable: false)
+                    HotKOTId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_HOTKotBilleds", x => x.id);
                     table.ForeignKey(
-                        name: "FK_HOTKotBilleds_HotKOTMasters_AppKOTId",
-                        column: x => x.AppKOTId,
+                        name: "FK_HOTKotBilleds_HotKOTMasters_HotKOTId",
+                        column: x => x.HotKOTId,
                         principalTable: "HotKOTMasters",
                         principalColumn: "HotKOTId",
                         onDelete: ReferentialAction.Cascade);
@@ -245,16 +432,41 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     DetTaxAmt = table.Column<decimal>(type: "TEXT", precision: 20, scale: 3, nullable: false),
                     DetNetAmt = table.Column<decimal>(type: "TEXT", precision: 20, scale: 3, nullable: false),
                     HotKotItemNotes = table.Column<string>(type: "TEXT", maxLength: 900, nullable: false),
-                    AppKOTId = table.Column<int>(type: "INTEGER", nullable: false)
+                    HotKOTId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_HotKOTItemDetails", x => x.AppKOTItemId);
                     table.ForeignKey(
-                        name: "FK_HotKOTItemDetails_HotKOTMasters_AppKOTId",
-                        column: x => x.AppKOTId,
+                        name: "FK_HotKOTItemDetails_HotKOTMasters_HotKOTId",
+                        column: x => x.HotKOTId,
                         principalTable: "HotKOTMasters",
                         principalColumn: "HotKOTId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StockTransferItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    StockTransferLocalId = table.Column<int>(type: "INTEGER", nullable: false),
+                    MainBarItemId = table.Column<int>(type: "INTEGER", nullable: false),
+                    UnitId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Quantity = table.Column<decimal>(type: "TEXT", nullable: false),
+                    ItemName = table.Column<string>(type: "TEXT", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", nullable: false),
+                    StkTrId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StockTransferItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StockTransferItems_StockTransfers_StkTrId",
+                        column: x => x.StkTrId,
+                        principalTable: "StockTransfers",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -311,6 +523,35 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HotBillTaxDetails",
+                columns: table => new
+                {
+                    HotBillTaxId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HotBillId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaXId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxableAmt = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TaxPer = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TaxAmt = table.Column<decimal>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HotBillTaxDetails", x => x.HotBillTaxId);
+                    table.ForeignKey(
+                        name: "FK_HotBillTaxDetails_HotBillMasters_HotBillId",
+                        column: x => x.HotBillId,
+                        principalTable: "HotBillMasters",
+                        principalColumn: "HotBillId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_HotBillTaxDetails_TaxMasters_TaXId",
+                        column: x => x.TaXId,
+                        principalTable: "TaxMasters",
+                        principalColumn: "TaxId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ItemParentChilds",
                 columns: table => new
                 {
@@ -341,6 +582,33 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                         column: x => x.unitId,
                         principalTable: "Units",
                         principalColumn: "unitId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BarItemCounterStocks",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CounterId = table.Column<int>(type: "INTEGER", nullable: false),
+                    BarItemId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Stock = table.Column<decimal>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BarItemCounterStocks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BarItemCounterStocks_BarItems_BarItemId",
+                        column: x => x.BarItemId,
+                        principalTable: "BarItems",
+                        principalColumn: "BarItemId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BarItemCounterStocks_BillStations_CounterId",
+                        column: x => x.CounterId,
+                        principalTable: "BillStations",
+                        principalColumn: "billStationId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -401,8 +669,7 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 name: "Items",
                 columns: table => new
                 {
-                    itemId = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    itemId = table.Column<int>(type: "INTEGER", nullable: false),
                     itemName = table.Column<string>(type: "TEXT", nullable: false),
                     subCatId = table.Column<int>(type: "INTEGER", nullable: false),
                     picURL = table.Column<string>(type: "TEXT", nullable: true),
@@ -432,6 +699,16 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_BarItemCounterStocks_BarItemId",
+                table: "BarItemCounterStocks",
+                column: "BarItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BarItemCounterStocks_CounterId",
+                table: "BarItemCounterStocks",
+                column: "CounterId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_BillItems_categorycatId",
                 table: "BillItems",
                 column: "categorycatId");
@@ -452,6 +729,11 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 column: "branchId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_BranchTaxSettings_BranchId",
+                table: "BranchTaxSettings",
+                column: "BranchId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DiningSpaceItemRates_diningSpaceId",
                 table: "DiningSpaceItemRates",
                 column: "diningSpaceId");
@@ -462,9 +744,34 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 column: "itemId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_HOTKotBilleds_AppKOTId",
+                name: "IX_HotBillAgainstKots_HotBillId",
+                table: "HotBillAgainstKots",
+                column: "HotBillId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HotBillAgainstKots_HotKotId",
+                table: "HotBillAgainstKots",
+                column: "HotKotId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HotBillItemDetail_HotBillId",
+                table: "HotBillItemDetail",
+                column: "HotBillId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HotBillTaxDetails_HotBillId",
+                table: "HotBillTaxDetails",
+                column: "HotBillId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HotBillTaxDetails_TaXId",
+                table: "HotBillTaxDetails",
+                column: "TaXId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HOTKotBilleds_HotKOTId",
                 table: "HOTKotBilleds",
-                column: "AppKOTId");
+                column: "HotKOTId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HOTKotCheckTabless_AppKOTId",
@@ -477,9 +784,9 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 column: "HotTabID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_HotKOTItemDetails_AppKOTId",
+                name: "IX_HotKOTItemDetails_HotKOTId",
                 table: "HotKOTItemDetails",
-                column: "AppKOTId");
+                column: "HotKOTId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HotKOTTables_HotKOTId",
@@ -518,6 +825,11 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 column: "unitId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_StockTransferItems_StkTrId",
+                table: "StockTransferItems",
+                column: "StkTrId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SubCategories_catId",
                 table: "SubCategories",
                 column: "catId");
@@ -527,13 +839,25 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "BarItemCounterStocks");
+
+            migrationBuilder.DropTable(
                 name: "BillItemUnits");
 
             migrationBuilder.DropTable(
-                name: "BillStations");
+                name: "BranchTaxSettings");
 
             migrationBuilder.DropTable(
                 name: "DiningSpaceItemRates");
+
+            migrationBuilder.DropTable(
+                name: "HotBillAgainstKots");
+
+            migrationBuilder.DropTable(
+                name: "HotBillItemDetail");
+
+            migrationBuilder.DropTable(
+                name: "HotBillTaxDetails");
 
             migrationBuilder.DropTable(
                 name: "HOTKotBilleds");
@@ -554,19 +878,34 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                 name: "Items");
 
             migrationBuilder.DropTable(
+                name: "StockTransferItems");
+
+            migrationBuilder.DropTable(
+                name: "SyncHistories");
+
+            migrationBuilder.DropTable(
                 name: "TablesDiningSpaces");
 
             migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "BranchMasters");
+                name: "BarItems");
+
+            migrationBuilder.DropTable(
+                name: "BillStations");
 
             migrationBuilder.DropTable(
                 name: "BillItems");
 
             migrationBuilder.DropTable(
                 name: "DiningSpaces");
+
+            migrationBuilder.DropTable(
+                name: "HotBillMasters");
+
+            migrationBuilder.DropTable(
+                name: "TaxMasters");
 
             migrationBuilder.DropTable(
                 name: "HotKOTMasters");
@@ -582,6 +921,12 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Units");
+
+            migrationBuilder.DropTable(
+                name: "StockTransfers");
+
+            migrationBuilder.DropTable(
+                name: "BranchMasters");
 
             migrationBuilder.DropTable(
                 name: "Categories");

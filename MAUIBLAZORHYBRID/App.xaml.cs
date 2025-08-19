@@ -125,13 +125,6 @@ namespace MAUIBLAZORHYBRID
             // Consider writing to a separate crash log file here
         }
 
-        public void ToggleFullScreen()
-        {
-            #if WINDOWS
-                        var window = Application.Current.Windows[0].Handler.PlatformView as MauiWinUIWindow;
-                        window?.ToggleFullScreen();
-            #endif
-        }
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Blazored.LocalStorage;
+using GlobalKeyboardCapture.Maui.Configuration;
 using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Data.Seed;
 using MAUIBLAZORHYBRID.Services;
@@ -9,6 +10,8 @@ using MAUIBLAZORHYBRID.Services.Upload;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
+using Microsoft.UI.Windowing;
 using MudBlazor.Services;
 using MudExtensions.Services;
 
@@ -24,15 +27,33 @@ namespace MAUIBLAZORHYBRID
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                }).ConfigureLifecycleEvents(events =>
+                {
+                #if WINDOWS
+                    events.AddWindows(windows => windows
+                        .OnWindowCreated(window =>
+                        {
+                            window.ExtendsContentIntoTitleBar = true;
+                            var handle = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                            var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
+                            var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
+                            if (appWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter p)
+                            {
+                                p.Maximize();
+                            }
+
+                        }));
+                    #endif
                 });
 
             //var dbContext = builder.Services.GetService<AppDbContext>();
             //dbContext?.Database.Migrate(); 
 
+            
+
             builder.Services.AddTransient<ISyncService, SyncService>();
 
             builder.Services.AddTransient<DiningspaceSyncService>();
-
             builder.Services.AddTransient<MasterDataSyncService>();
             builder.Services.AddTransient<OtherMasterSyncService>();
             builder.Services.AddTransient<ItemDataSyncService>();
@@ -74,7 +95,6 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddMudServices();
 
             builder.Services.AddSingleton<BackgroundDataService>();
-
 
 
 #if DEBUG

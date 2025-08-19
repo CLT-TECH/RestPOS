@@ -11,6 +11,7 @@ namespace MAUIBLAZORHYBRID.Data.Data
     public class Item
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int itemId { get; set; }
         public string itemName { get; set; } = null!;
 

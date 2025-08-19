@@ -11,6 +11,7 @@ namespace MAUIBLAZORHYBRID.Data.Data
     public class BillStation
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int billStationId { get; set; }
         public string billStationName { get; set; }
 
