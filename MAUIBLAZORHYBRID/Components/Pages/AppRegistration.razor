@@ -66,7 +66,7 @@
                
                 <!-- Step 1: Online User Validation -->
                 <MudStep Label="User Validation">
-                    <MudText Typo="Typo.h5" Class="mb-4">Authorized by Manager</MudText>
+                    <MudText Typo="Typo.h5" Class="mb-4">Branch Registration</MudText>
                     <MudTextField Label="Username" @bind-Value="_userLogin.Username" FullWidth="true" />
                     <MudTextField Label="Password" @bind-Value="_userLogin.Password" InputType="InputType.Password" FullWidth="true" />
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleLogin">Authorize</MudButton>
@@ -74,14 +74,14 @@
 
                 <!-- Step 2: Counter Selection -->
                 <MudStep Label="Counter">
-                    <MudText Typo="Typo.h5" Class="mb-4">Select Counter</MudText>
-                    <MudSelect T="BillStationDTO" Label="Counter" @bind-Value="_selectedCounter" FullWidth="true">
+                    <MudText Typo="Typo.h5" Class="mb-4">Bill Station</MudText>
+                    <MudSelect T="BillStationDTO" Label="Bill Station" @bind-Value="_selectedCounter" FullWidth="true">
                         @foreach (var obj in counters)
                         {
                             <MudSelectItem Value="@obj">@obj.Name</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="RegisterMachine">Save Counter</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="RegisterMachine">Save Bill Station</MudButton>
                 </MudStep>
 
                 <MudStep Label="App Login">
@@ -295,7 +295,7 @@
             case 1:
                 if (_step2Complete != true)
                 {
-                    await DialogService.ShowMessageBox("Error", "Counter Registration Not Completed");
+                    await DialogService.ShowMessageBox("Error", "Bill Station Registration Not Completed");
                     arg.Cancel = true;
                 }
                 break;
@@ -316,7 +316,7 @@
             case 2:
                 if (_step1Complete != true || _step2Complete != true)
                 {
-                    await DialogService.ShowMessageBox("Error.", "Counter Registration Not Completed.");
+                    await DialogService.ShowMessageBox("Error.", "Bill Station Registration Not Completed.");
                     arg.Cancel = true;
                 }
                 break;

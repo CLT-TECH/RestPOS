@@ -127,7 +127,7 @@
                                     <MudText Class="custom-order-line1"  Align="Align.Left">@ToTitleCase(orderItem.Name)</MudText>
 
                                     <div class="custom-order-line2">
-                                        <div class="order-controls">
+                                        <div class="order-controls" style="display:none">
                                             <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
                                             Style="color:#3eb489"
                                             Size="Size.Small"
@@ -150,6 +150,7 @@
                                     Class="delete-button-inside"
                                     Color="Color.Error"
                                     Size="Size.Small"
+                                    Style="display:none"
                                     Variant="Variant.Text"
                                     OnClick="@(() => DeleteItem(orderItem))" />
                                 </MudListItem>

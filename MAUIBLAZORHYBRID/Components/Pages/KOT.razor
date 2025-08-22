@@ -40,6 +40,7 @@
                     </MudItem>
                     <MudItem sm="3">
                         <MudAutocomplete T="Table"
+                            ReadOnly="true"
                         Label="Table"
                         Value="selectedTable"
                         ValueChanged="HandleTableSelected"
@@ -386,7 +387,7 @@
 
 
 
-    public int selectedDiningSpace { get; set; } = 1;
+    public int selectedDiningSpace { get; set; } = 0;
     decimal TotalAmount => OrderedItems.Sum(x => x.Amount);
     decimal DiscountPercent { get; set; } = 0;
     decimal DiscountAmount => TotalAmount * DiscountPercent / 100;
@@ -493,6 +494,8 @@
       .Where(tm => tm.tableId == selectedTable.tableId)
       .Select(tm => tm.diningspaceId)
       .FirstOrDefault();
+
+                selectedDiningSpace = diningspaceid;
 
                 if (diningspaceid > 0)
                 {

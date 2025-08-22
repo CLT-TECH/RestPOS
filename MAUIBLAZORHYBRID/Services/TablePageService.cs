@@ -26,6 +26,7 @@ namespace MAUIBLAZORHYBRID.Services
 
             var conb = _db.Database.GetConnectionString();
             var tablesTask = _db.Tables
+                 .Where(a => _db.TablesDiningSpaces.Any(b => b.tableId == a.tableId))
                 .AsNoTracking()
                 .ToListAsync();
             var diningspacesTask = _db.DiningSpaces

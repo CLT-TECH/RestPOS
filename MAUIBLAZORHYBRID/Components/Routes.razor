@@ -58,12 +58,17 @@
                 StateHasChanged();
             };
 
-             BackgroundDataService.StartBackgroundTasks();
+            BackgroundDataService.StartBackgroundTasks();
         }
         catch
         {
             isLoading = false;
             throw;
+        }
+        finally
+        {
+            isLoading = false;
+            
         }
     }
 }

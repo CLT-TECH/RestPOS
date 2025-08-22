@@ -95,11 +95,11 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddSingleton<BackgroundDataService>();
 
 
-             #if DEBUG
+#if DEBUG
 
-                builder.Services.AddBlazorWebViewDeveloperTools();
-    		    builder.Logging.AddDebug();
-            #endif
+            builder.Services.AddBlazorWebViewDeveloperTools();
+    		builder.Logging.AddDebug();
+#endif
 
             builder.Services.AddDbContextFactory<AppDbContext>(options =>
                     options.UseSqlite(DbConfig.ConnectionString));
@@ -119,22 +119,7 @@ namespace MAUIBLAZORHYBRID
 
             var app = builder.Build();
 
-
-            // 2) Apply migrations on startup
-            using (var scope = app.Services.CreateScope())
-            {
-                // Resolve the factory…
-                var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
-
-                // Create a context instance and migrate
-                using var db = factory.CreateDbContext();
-                db.Database.Migrate();
-
-                //#if DEBUG
-                //MainSeeder.Seed(db); // Only during development/testing
-                //#endif
-            }
-
+            
             return app;
         }
     }
