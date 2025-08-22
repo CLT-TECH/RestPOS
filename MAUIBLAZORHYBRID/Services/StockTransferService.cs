@@ -41,6 +41,7 @@ namespace MAUIBLAZORHYBRID.Services
                 .ToListAsync();
 
                 var baritemtask = _db.BarItems
+                               .Include(d=>d.BarItemGodownStocks)
                               .AsNoTracking()
                                .ToListAsync();
 

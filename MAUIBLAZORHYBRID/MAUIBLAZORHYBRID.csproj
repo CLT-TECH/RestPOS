@@ -78,22 +78,13 @@
 
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-        <PackageReference Include="Blazor.ContextMenu" Version="2.1.0" />
         <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
         <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.2.2" />
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.14" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.14">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.14" />
-        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
-        <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4188" />
+        <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4948" />
         <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
-        <PackageReference Include="MudBlazor" Version="8.8.0" />
         <ProjectReference Include="..\MAUIBLAZORHYBRID.Data\MAUIBLAZORHYBRID.Data.csproj" />
     </ItemGroup>
 

@@ -1,0 +1,535 @@
+﻿@page "/"
+@using MAUIBLAZORHYBRID.Data.DTO
+@using MAUIBLAZORHYBRID.Infrastructure
+@using MudBlazor
+@using System.Security.Cryptography
+@inject ISnackbar Snackbar
+@inject HttpClient Http
+@inject NavigationManager nav
+@inject AppState appstate
+
+@inject BackgroundDataService bgserviice
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-6">
+
+    @if (_isRegistrationComplete)
+    {
+        <MudCard Class="pa-6">
+            <MudText Typo="Typo.h5" Class="mb-4">App Login</MudText>
+            <EditForm Model="_appLogin" OnValidSubmit="HandleAppLogin">
+                <DataAnnotationsValidator />
+                <MudTextField @bind-Value="_appLogin.Username"
+                              Label="Username"
+                              FullWidth="true"
+                              Immediate="true"
+                              Class="mb-3" />
+                <ValidationMessage For="@(() => _appLogin.Username)" />
+
+                <MudTextField @bind-Value="_appLogin.Password"
+                              Label="Password"
+                              InputType="InputType.Password"
+                              FullWidth="true"
+                              Immediate="true"
+                              Class="mb-3" />
+                <ValidationMessage For="@(() => _appLogin.Password)" />
+
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Class="mt-3">
+                    Login
+                </MudButton>
+            </EditForm>
+
+            @if (!string.IsNullOrEmpty(_appLoginMessage))
+            {
+                <MudAlert Severity="@(_appLoginSuccess? Severity.Success: Severity.Error)"
+                          Class="mt-3">
+                    @_appLoginMessage
+                </MudAlert>
+            }
+
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Secondary"
+                       FullWidth="true"
+                       Class="mt-2"
+                       OnClick="ResetRegistration">
+                Reset App Registration
+            </MudButton>
+        </MudCard>
+    }
+    else
+    {
+        <MudCard Class="pa-6">
+            <MudStepper   @bind-ActiveIndex="_activeStep" OnPreviewInteraction="OnPreviewInteraction"  >
+               
+                <!-- Step 1: Online User Validation -->
+                <MudStep Label="User Validation">
+                    <MudText Typo="Typo.h5" Class="mb-4">Authorized by Manager</MudText>
+                    <MudTextField Label="Username" @bind-Value="_userLogin.Username" FullWidth="true" />
+                    <MudTextField Label="Password" @bind-Value="_userLogin.Password" InputType="InputType.Password" FullWidth="true" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleLogin">Authorize</MudButton>
+                </MudStep>
+
+                <!-- Step 2: Counter Selection -->
+                <MudStep Label="Counter">
+                    <MudText Typo="Typo.h5" Class="mb-4">Select Counter</MudText>
+                    <MudSelect T="BillStationDTO" Label="Counter" @bind-Value="_selectedCounter" FullWidth="true">
+                        @foreach (var obj in counters)
+                        {
+                            <MudSelectItem Value="@obj">@obj.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="RegisterMachine">Save Counter</MudButton>
+                </MudStep>
+
+                <MudStep Label="App Login">
+                    <MudText Typo="Typo.h5" Class="mb-4">App Login Registration</MudText>
+                    <MudTextField Label="App Username" @bind-Value="_appRegister.Username" FullWidth="true" />
+                    <MudTextField Label="Password" @bind-Value="_appRegister.Password" InputType="InputType.Password" FullWidth="true" />
+                    <MudTextField Label="Confirm Password" @bind-Value="_appRegister.ConfirmPassword" InputType="InputType.Password" FullWidth="true" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="RegisterAppLogin">Register</MudButton>
+                </MudStep>
+
+            </MudStepper>
+        </MudCard>
+
+    }
+</MudContainer>
+
+@if (isLoading)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    </div>
+}
+
+@code {
+    private bool isLoading = false;
+
+    private bool _isRegistrationComplete = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            await CheckRegistrationStatus();
+
+        }
+        catch { }
+        finally { isLoading = false; }
+    }
+
+    private async Task CheckRegistrationStatus()
+    {
+        try
+        {
+            // Check all required registration values
+            var machineId = await SecureStorage.GetAsync("AppMachineId");
+            var machineName = await SecureStorage.GetAsync("AppMachineName");
+            var username = await SecureStorage.GetAsync("AppUsername");
+            var password = await SecureStorage.GetAsync("AppPassword");
+            var managerId = await SecureStorage.GetAsync("AppManagerID");
+            var branchId = await SecureStorage.GetAsync("AppBranchId");
+
+            // All required values must be present for registration to be complete
+            _isRegistrationComplete = !string.IsNullOrEmpty(machineId) &&
+                                    !string.IsNullOrEmpty(machineName) &&
+                                    !string.IsNullOrEmpty(username) &&
+                                    !string.IsNullOrEmpty(password) &&
+                                    !string.IsNullOrEmpty(managerId) &&
+                                    !string.IsNullOrEmpty(branchId);
+
+            _appLogin.Username = username??"";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error checking registration status: {ex.Message}", Severity.Error);
+        }
+    }
+    private bool _appLoginSuccess = false;
+    private string _appLoginMessage = string.Empty;
+    private AppLoginDto _appLogin = new();
+
+    private async Task HandleAppLogin()
+    {
+        if (isLoading) return;
+        isLoading = true;
+        try
+        {
+            // Get stored credentials from SecureStorage
+            var storedUsername = await SecureStorage.GetAsync("AppUsername");
+            var storedPassword = await SecureStorage.GetAsync("AppPassword");
+
+            // Validate credentials
+            if (string.IsNullOrEmpty(storedUsername) || string.IsNullOrEmpty(storedPassword))
+            {
+                _appLoginSuccess = false;
+                _appLoginMessage = "No registration found. Please complete the setup process.";
+                return;
+            }
+
+            if (_appLogin.Username == storedUsername && _appLogin.Password == storedPassword)
+            {
+                _appLoginSuccess = true;
+                _appLoginMessage = "Login successful! Redirecting...";
+
+                // Store login state
+                await SecureStorage.SetAsync("IsLoggedIn", "true");
+                await SecureStorage.SetAsync("LastLogin", DateTime.Now.ToString());
+
+                // Navigate to homepage after a brief delay
+
+                await appstate.LoadAsync();
+                await Task.Delay(1000);
+                NavigateToHomepage();
+            }
+            else
+            {
+                _appLoginSuccess = false;
+                _appLoginMessage = "Invalid username or password";
+            }
+        }
+        catch (Exception ex)
+        {
+            _appLoginSuccess = false;
+            _appLoginMessage = $"Login error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+        StateHasChanged();
+    }
+
+    private void NavigateToHomepage()
+    {
+        nav.NavigateTo("/pos", forceLoad: true);
+    }
+
+    private async Task ResetRegistration()
+    {
+        try
+        {
+            // Clear all SecureStorage data
+            SecureStorage.Remove("AppMachineId");
+            SecureStorage.Remove("AppMachineName");
+            SecureStorage.Remove("AppUsername");
+            SecureStorage.Remove("AppPassword");
+            SecureStorage.Remove("AppManagerID");
+            SecureStorage.Remove("AppBranchId");
+            SecureStorage.Remove("IsLoggedIn");
+            SecureStorage.Remove("LastLogin");
+
+            _isRegistrationComplete = false;
+            _appLoginSuccess = false;
+            _appLoginMessage = string.Empty;
+            _appLogin = new AppLoginDto();
+
+            _activeStep = 0;
+            _step1Complete = false;
+            _step2Complete = false;
+
+            Snackbar.Add("Registration reset successfully. Please complete setup again.", Severity.Info);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error resetting registration: {ex.Message}", Severity.Error);
+        }
+    }
+
+
+
+
+    private int _activeStep = 0;
+
+    private UserLoginDto _userLogin = new();
+    private BillStationDTO _selectedCounter;
+    private AppRegisterDto _appRegister = new();
+
+    private string loginUsername;
+    private string loginPassword;
+    private string LoginMessage;
+    private string RegisterMessage;
+    private int ManagerID;
+    private int BranchId;
+
+    [Inject]
+    IDialogService DialogService { get; set; }
+
+    private bool? _step1Complete;
+    private bool? _step2Complete;
+
+    private async Task OnPreviewInteraction(StepperInteractionEventArgs arg)
+    {
+        if (arg.Action == StepAction.Complete)
+        {
+            // occurrs when clicking next
+            await ControlStepCompletion(arg);
+        }
+        else if (arg.Action == StepAction.Activate)
+        {
+            // occurrs when clicking a step header with the mouse
+            await ControlStepNavigation(arg);
+        }
+    }
+
+
+    private async Task ControlStepCompletion(StepperInteractionEventArgs arg)
+    {
+        switch (arg.StepIndex)
+        {
+            case 0:
+                if (_step1Complete != true)
+                {
+                    await DialogService.ShowMessageBox("Error", "Manager Authorization Required");
+                    arg.Cancel = true;
+                }
+                break;
+            case 1:
+                if (_step2Complete != true)
+                {
+                    await DialogService.ShowMessageBox("Error", "Counter Registration Not Completed");
+                    arg.Cancel = true;
+                }
+                break;
+        }
+    }
+
+    private async Task ControlStepNavigation(StepperInteractionEventArgs arg)
+    {
+        switch (arg.StepIndex)
+        {
+            case 1:
+                if (_step1Complete != true)
+                {
+                    await DialogService.ShowMessageBox("Error.", "Manager Authorization Required.");
+                    arg.Cancel = true;
+                }
+                break;
+            case 2:
+                if (_step1Complete != true || _step2Complete != true)
+                {
+                    await DialogService.ShowMessageBox("Error.", "Counter Registration Not Completed.");
+                    arg.Cancel = true;
+                }
+                break;
+        }
+    }
+
+
+    private List<BillStationDTO> counters = new();
+
+
+    private async Task HandleLogin()
+    {
+        if (isLoading) return;
+        isLoading = true;
+        try
+        {
+
+
+            var request = new DALoginRequestDTO
+            {
+                Username = _userLogin.Username,
+                Password = _userLogin.Password
+            };
+
+            var response = await Http.PostAsJsonAsync("api/appsync/login", request);
+            var result = await response.Content.ReadFromJsonAsync<DALoginResponseDTO>();
+
+            if (result != null && result.Success)
+            {
+                ManagerID = result.ManagerId;
+                BranchId = result.BranchId;
+                counters = result.Counters ?? new();
+                LoginMessage = "Login successful!";
+
+                Snackbar.Add("Authorized", Severity.Success);
+
+                await SecureStorage.SetAsync("AppManagerID", result.ManagerId.ToString());
+                await SecureStorage.SetAsync("AppBranchID", result.BranchId.ToString());
+                _activeStep = 1;
+
+                _step1Complete = true;
+
+
+                _userLogin = new();
+            }
+            else
+            {
+
+                Snackbar.Add(result?.Message ?? "Login failed", Severity.Error);
+
+                LoginMessage = result?.Message ?? "Login failed";
+            }
+        }
+        catch
+        {
+
+        }
+        finally
+        {
+            isLoading = false;
+        }
+
+        StateHasChanged();
+    }
+
+    public string GetOrCreateDeviceId()
+    {
+        // Generate a secure, random 128-bit ID
+        byte[] randomBytes = new byte[16]; // 16 bytes * 8 bits = 128 bits
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(randomBytes);
+        }
+
+        // Convert to a URL-safe Base64 string
+        var newId = Convert.ToBase64String(randomBytes)
+            .TrimEnd('=') // Remove padding
+            .Replace('+', '-') // Replace URL-unsafe characters
+            .Replace('/', '_');
+
+        var machineName = Environment.MachineName;
+
+
+        var deviceId = $"{machineName}-{newId}";
+
+        return deviceId;
+    }
+
+    private async Task RegisterMachine()
+    {
+        if (isLoading) return;
+        isLoading = true;
+        try
+        {
+
+            var dto = new DAAppMachineMasterDTO
+            {
+                App_Machine_Name = GetOrCreateDeviceId(),
+                App_Machine_Detail = $"{Environment.MachineName} {Environment.OSVersion}",
+                App_Machine_Emp_ID = ManagerID,
+                App_Machine_Set_Date = DateTime.Now.Date,
+                App_Machine_Set_Time = DateTime.Now,
+                Counter_ID = _selectedCounter.Id
+            };
+
+            var response = await Http.PostAsJsonAsync("api/appsync/SaveAppMachine", dto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<SaveAppMachineResult>>();
+
+                if (result != null && result.Success)
+                {
+                    int machineId = result.Data.AppMachineId;
+
+                    Snackbar.Add("Bill Station Registered Successfully", Severity.Success);
+
+                    await SecureStorage.SetAsync("AppMachineId", machineId.ToString());
+                    await SecureStorage.SetAsync("AppMachineName", dto.App_Machine_Name);
+                    RegisterMessage = $"Machine registered successfully. ID = {machineId}";
+                    _activeStep = 2;
+                    _step2Complete = true;
+                    _selectedCounter = null;
+                }
+                else
+                {
+                    RegisterMessage = "Registration failed: " + (result?.Message ?? "Unknown error");
+                    Snackbar.Add(RegisterMessage, Severity.Error);
+                }
+
+            }
+            else
+            {
+                RegisterMessage = "Machine registration failed.";
+                Snackbar.Add(RegisterMessage, Severity.Error);
+            }
+        }
+        catch
+        {
+
+        }
+        finally
+        {
+            isLoading = false;
+        }
+        StateHasChanged();
+    }
+
+    private async Task RegisterAppLogin()
+    {
+        if (isLoading) return;
+        isLoading = true;
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_appRegister.Username) ||
+           _appRegister.Username.Length < 4 ||
+           _appRegister.Username.Length > 20)
+            {
+                Snackbar.Add("Username must be between 4 and 20 characters.", Severity.Error);
+                return;
+            }
+
+            // Check password length
+            if (string.IsNullOrWhiteSpace(_appRegister.Password) ||
+                _appRegister.Password.Length < 8 ||
+                _appRegister.Password.Length > 50)
+            {
+                Snackbar.Add("Password must be between 8 and 50 characters.", Severity.Error);
+                return;
+            }
+
+
+            if (_appRegister.Password != _appRegister.ConfirmPassword)
+            {
+                Snackbar.Add("Passwords do not match.", Severity.Error);
+                return;
+            }
+
+            await SecureStorage.SetAsync("AppUsername", _appRegister.Username);
+            await SecureStorage.SetAsync("AppPassword", _appRegister.Password);
+
+
+            _appRegister = new();
+            Snackbar.Add("App login registered successfully.", Severity.Success);
+            _isRegistrationComplete = true;
+
+            var username = await SecureStorage.GetAsync("AppUsername");
+            _appLogin.Username = username ?? "";
+
+            await SecureStorage.SetAsync("IsAppRegistered", "true");
+            bgserviice.StartBackgroundTasks();
+        }
+        catch
+        {
+
+        }
+        finally
+        {
+            isLoading = false;
+        }
+        StateHasChanged();
+    }
+
+    public class UserLoginDto
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class AppRegisterDto
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+}

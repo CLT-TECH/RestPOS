@@ -1,5 +1,7 @@
+@using MAUIBLAZORHYBRID.Components.Pages
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
+@inject AppState _appstate
 
 
 <MudPaper Class="vertical-navbar" Elevation="4" @onmouseenter="() => ShowNav()" @onmouseleave="() => HideNav()"
@@ -11,15 +13,20 @@
                        OnClick="ToggleNav"
                        AriaLabel="Toggle navigation" />
         <ul class="nav-list">
-            <li @onclick="@(() => NavigateTo(""))"><MudIcon Icon="@Icons.Material.Filled.Home" /><span class="nav-text">Home</span></li>
-            <li><MudIcon Icon="@Icons.Material.Filled.Dashboard" /><span class="nav-text">Dashboard</span></li>
+            <li @onclick="@(() => NavigateTo("pos"))"><MudIcon Icon="@Icons.Material.Filled.Home" /><span class="nav-text">Home</span></li>
+@*             <li><MudIcon Icon="@Icons.Material.Filled.Dashboard" /><span class="nav-text">Dashboard</span></li>
             <li><MudIcon Icon="@Icons.Material.Filled.ShoppingCart" /><span class="nav-text">Orders</span></li>
             <li><MudIcon Icon="@Icons.Material.Filled.Settings" /><span class="nav-text">Settings</span></li>
             <li><MudIcon Icon="@Icons.Material.Filled.HelpOutline" /><span class="nav-text">Help</span></li>
-            <li @onclick="@(() => NavigateTo("sync"))"><MudIcon Icon="@Icons.Material.Filled.Sync" /><span class="nav-text">Load Data</span></li>
+            <li @onclick="@(() => NavigateTo("sync"))"><MudIcon Icon="@Icons.Material.Filled.Sync" /><span class="nav-text">Load Data</span></li> *@
             @* <li @onclick="@(() => NavigateTo("tables"))"><MudIcon Icon="@Icons.Material.Filled.TableRestaurant" /><span class="nav-text">Tables</span></li> *@
             <li @onclick="@(() => NavigateTo("tables"))"><MudIcon Icon="@Icons.Material.Filled.RestaurantMenu" /><span class="nav-text">KOT</span></li>
-            <li @onclick="@(() => NavigateTo("stocktransfer"))"><MudIcon Icon="@Icons.Material.Filled.ImportExport" /><span class="nav-text">Stock Transfer</span></li>
+
+            @if (_appstate.GodownId > 0)
+            {
+                
+                <li @onclick="@(() => NavigateTo("stocktransfer"))"><MudIcon Icon="@Icons.Material.Filled.ImportExport" /><span class="nav-text">Stock Transfer</span></li>
+            }
 
             
 
@@ -31,6 +38,8 @@
     @Body
 </div>
 
+
+ <LockOverlay />
 
 @code {
 

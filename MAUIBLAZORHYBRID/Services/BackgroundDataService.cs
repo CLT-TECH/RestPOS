@@ -1,4 +1,5 @@
-﻿using MAUIBLAZORHYBRID.Services.Interfaces;
+﻿using MAUIBLAZORHYBRID.Services.Deactivate;
+using MAUIBLAZORHYBRID.Services.Interfaces;
 using MAUIBLAZORHYBRID.Services.Sync;
 using MAUIBLAZORHYBRID.Services.Upload;
 using Microsoft.Extensions.Logging;
@@ -17,42 +18,48 @@ namespace MAUIBLAZORHYBRID.Services
             private PeriodicTimer _uploadTimer;
             private CancellationTokenSource _cts;
             private readonly SemaphoreSlim _syncLock = new(1, 1);
+            private readonly IDeviceStatusService _deviceStatus;
 
-            // Sync state properties
-            public bool IsInitialSyncComplete { get; private set; }
+
+            //public bool IsInitialSyncComplete { get; private set; }
             public event Action InitialSyncCompleted;
             public event Action<Exception> InitialSyncFailed;
 
-            private const string SyncStateKey = "InitialSyncCompleteV0.2.3";
+            //private const string SyncStateKey = "InitialSyncCompleteV0.2.3";
 
             private readonly SemaphoreSlim _initLock = new(1, 1);
             private bool _initialSyncStarted = false;
-
+        private readonly DeviceStateService _deviceState;
         public BackgroundDataService(
                 IDataUploadService uploadService,
                 ISyncService syncService,
                 ILogger<BackgroundDataService> logger,
-                IPreferences preferences)
+                IPreferences preferences,
+                 IDeviceStatusService deviceStatus,
+                 DeviceStateService deviceState)
             {
                 _uploadService = uploadService;
                 _syncService = syncService;
                 _logger = logger;
                 _preferences = preferences;
 
-                // Load initial sync state
-                IsInitialSyncComplete = _preferences.Get(SyncStateKey, false);
+            _deviceStatus = deviceStatus;
+              _deviceState = deviceState;
+
+            // Load initial sync state
+            //IsInitialSyncComplete = _preferences.Get(SyncStateKey, false);
             }
 
         public async Task EnsureInitialSyncAsync()
         {
-            if (IsInitialSyncComplete || _initialSyncStarted)
-                return;
+            //if (IsInitialSyncComplete || _initialSyncStarted)
+            //    return;
 
             await _initLock.WaitAsync();
             try
             {
-                if (IsInitialSyncComplete || _initialSyncStarted)
-                    return;
+                //if (IsInitialSyncComplete || _initialSyncStarted)
+                //    return;
 
                 _initialSyncStarted = true;
                 await PerformInitialSyncAsync(_cts.Token);
@@ -77,10 +84,10 @@ namespace MAUIBLAZORHYBRID.Services
                 _ = Task.Run(() => ProcessUploadsAsync(_cts.Token));
 
                 // Perform initial sync if not already done
-                if (!IsInitialSyncComplete)
-                {
                     _ = Task.Run(() => PerformInitialSyncAsync(_cts.Token));
-                }
+                //if (!IsInitialSyncComplete)
+                //{
+                //}
             }
             catch (Exception ex)
             {
@@ -111,19 +118,19 @@ namespace MAUIBLAZORHYBRID.Services
 
             private async Task PerformInitialSyncAsync(CancellationToken token)
             {
-                if (IsInitialSyncComplete) return;
+                //if (IsInitialSyncComplete) return;
 
                 await _syncLock.WaitAsync(token);
                 try
                 {
-                    if (!IsInitialSyncComplete) // Double-check
-                    {
+                    //if (!IsInitialSyncComplete) // Double-check
+                    //{
                         _logger.LogInformation("Performing initial sync...");
                         await PerformSyncOperationsAsync();
 
                         // Mark as complete
-                        IsInitialSyncComplete = true;
-                    _preferences.Set(SyncStateKey, true);
+                        //IsInitialSyncComplete = true;
+                    //_preferences.Set(SyncStateKey, true);
 
 
                     if (InitialSyncCompleted != null)
@@ -144,7 +151,7 @@ namespace MAUIBLAZORHYBRID.Services
 
 
                     _logger.LogInformation("Initial sync completed");
-                    }
+                    //}
                 }
                 catch (Exception ex)
                 {
@@ -160,11 +167,18 @@ namespace MAUIBLAZORHYBRID.Services
 
             private async Task PerformSyncOperationsAsync()
             {
+                if (!await _deviceStatus.IsDeviceActiveAsync())
+                {
+                    _logger.LogWarning("Device deactivated. Sync aborted.");
+                    _deviceState.SetDeviceState(false);
+                    return;
+                }
                 await _syncService.SyncBranchesWithMasters();
                 await _syncService.SyncOtherMasters();
                 await _syncService.SyncItemData();
                 await _syncService.SyncItemParentChildData();
                 await _syncService.SyncBarItemCounterStock();
+                await _syncService.SyncBarItemGodownStock();
         }
 
             private async Task ProcessUploadsAsync(CancellationToken token)
@@ -173,6 +187,15 @@ namespace MAUIBLAZORHYBRID.Services
                 {
                     while (await _uploadTimer.WaitForNextTickAsync(token))
                     {
+
+
+                        if (!await _deviceStatus.IsDeviceActiveAsync(token))
+                        {
+                            _logger.LogWarning("Device deactivated. Uploads aborted.");
+                            _deviceState.SetDeviceState(false);
+                            continue;
+                        }
+
                         _logger.LogDebug("Checking for pending uploads...");
 
                     
@@ -201,7 +224,76 @@ namespace MAUIBLAZORHYBRID.Services
                 }
             }
 
-            public void Dispose()
+
+        public async Task QueueKOTUploadAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    if (!await _deviceStatus.IsDeviceActiveAsync())
+                    {
+                        _logger.LogWarning("Device deactivated. KOT upload aborted.");
+                        _deviceState.SetDeviceState(false);
+                        return;
+                    }
+
+                    _logger.LogInformation("Queueing immediate KOT upload...");
+                    await _uploadService.UploadPendingKOTsAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in immediate KOT upload");
+                }
+            });
+        }
+
+        public async Task QueueBillUploadAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    if (!await _deviceStatus.IsDeviceActiveAsync())
+                    {
+                        _logger.LogWarning("Device deactivated. Bill upload aborted.");
+                        _deviceState.SetDeviceState(false);
+                        return;
+                    }
+
+                    _logger.LogInformation("Queueing immediate bill upload...");
+                    await _uploadService.UploadPendingDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in immediate bill upload");
+                }
+            });
+        }
+
+        public async Task QueueStockTransferUploadAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    if (!await _deviceStatus.IsDeviceActiveAsync())
+                    {
+                        _logger.LogWarning("Device deactivated. Stock transfer upload aborted.");
+                        _deviceState.SetDeviceState(false);
+                        return;
+                    }
+
+                    _logger.LogInformation("Queueing immediate stock transfer upload...");
+                    await _uploadService.UploadPendingStockTransfersAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in immediate stock transfer upload");
+                }
+            });
+        }
+        public void Dispose()
             {
                 _cts?.Dispose();
                 _syncLock?.Dispose();

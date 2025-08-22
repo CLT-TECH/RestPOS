@@ -30,11 +30,11 @@
 
     protected override void OnInitialized()
     {
-        if (BackgroundDataService.IsInitialSyncComplete)
-        {
-            Navigation.NavigateTo("/");
-            return;
-        }
+        // if (BackgroundDataService.IsInitialSyncComplete)
+        // {
+        //     Navigation.NavigateTo("/");
+        //     return;
+        // }
 
         BackgroundDataService.InitialSyncCompleted += () => Navigation.NavigateTo("/");
         BackgroundDataService.InitialSyncFailed += ex => 

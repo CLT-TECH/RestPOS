@@ -357,6 +357,8 @@
                 var saveResult = await _HotKOTSaveService.SaveHotKOTAsync(hotKOTMaster);
                 if (saveResult.IsSuccess)
                 {
+                    BgService.QueueKOTUploadAsync();
+
                     Snackbar.Clear();
                     Snackbar.Add("Order Placed Successfully!!.", Severity.Success);
                     OrderedItems = new();

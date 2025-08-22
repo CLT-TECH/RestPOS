@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/pos"
 @page "/pos/{TableId:int?}"
 
 
@@ -483,6 +483,8 @@
             if (result.IsSuccess)
             {
                 Snackbar.Add("Bill generated successfully!", Severity.Success);
+
+                BgService.QueueBillUploadAsync();
 
                 OrderedItems = new();
                 kotInitData = new();

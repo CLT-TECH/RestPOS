@@ -53,45 +53,61 @@ namespace MAUIBLAZORHYBRID
             MainPage = new MainPage();
         }
 
-        protected override void OnStart()
+        protected override async void OnStart()
         {
             base.OnStart();
 
             try
             {
-                // Start background services
-                _backgroundDataService.StartBackgroundTasks();
+                var isRegistered = await SecureStorage.GetAsync("IsAppRegistered");
+                if (isRegistered == "true")
+                {
+                    _backgroundDataService.StartBackgroundTasks();
+                }
+                else
+                {
+                    Debug.WriteLine("App not registered. Background service not started.");
+                }
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error checking registration: {ex}");
             }
         }
 
-        protected override void OnSleep()
-        {
-            base.OnSleep();
+        //protected override void OnSleep()
+        //{
+        //    base.OnSleep();
 
-            try
-            {
-                // Stop background services when app sleeps
-                _backgroundDataService.StopBackgroundTasks();
-            }
-            catch (Exception ex)
-            {
-            }
-        }
+        //    try
+        //    {
+        //        // Stop background services when app sleeps
+        //        _backgroundDataService.StopBackgroundTasks();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //    }
+        //}
 
-        protected override void OnResume()
+        protected override async void OnResume()
         {
             base.OnResume();
 
             try
             {
-                // Restart background services when app resumes
-                _backgroundDataService.StartBackgroundTasks();
+                var isRegistered = await SecureStorage.GetAsync("IsAppRegistered");
+                if (isRegistered == "true")
+                {
+                    _backgroundDataService.StartBackgroundTasks();
+                }
+                else
+                {
+                    Debug.WriteLine("App not registered. Background service not started.");
+                }
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error resuming: {ex}");
             }
         }
 

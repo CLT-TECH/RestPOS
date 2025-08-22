@@ -245,5 +245,65 @@ namespace MAUIBLAZORHYBRID.Services.Sync
             }
 
         }
+
+        public async Task SaveToLocalDbBarItemStockGodown(DAGodownStockDTO stockdata, CancellationToken ct = default)
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync(ct);
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            try
+            {
+                foreach (var item in stockdata.BarItemStock ?? Enumerable.Empty<DABarItemStockGodown>())
+                {
+
+                    var barItemExists = await db.BarItems.AnyAsync(b => b.BarItemId == item.BarItemId, ct);
+
+                    var itemresult = new BarItemStockGodown
+                    {
+                        BarItemId = item.BarItemId,
+                        GodownId = item.GodownId,
+                        Stock = item.Stock,
+                    };
+                    var britemresult = await db.BarItemGodownStocks.FirstOrDefaultAsync(b => b.BarItemId == item.BarItemId, ct);
+
+                    if (britemresult == null)
+                    {
+                        await db.BarItemGodownStocks.AddAsync(itemresult, ct);
+                    }
+                    else
+                    {
+                        britemresult.Stock = item.Stock;
+                    }
+                }
+                await db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                await transaction.RollbackAsync(ct);
+                db.ChangeTracker.Clear();
+
+                // Check if it's a FK violation
+                if (dbEx.InnerException != null)
+                {
+                    var sqlEx = dbEx.InnerException;
+
+                    // For SQL Server, the message contains table/column info
+                    var message = sqlEx.Message;
+                    _logger.LogError(dbEx, "Foreign key violation detected: {Message}", message);
+
+                    // Optional: parse the message to extract table/column names
+                }
+
+                throw; // rethrow if needed
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(ct);
+                db.ChangeTracker.Clear(); // important: clear bad entities so they don't retry
+                _logger.LogError(ex, "Error saving ItemDataSyncService ,SaveToLocalDbBarItemStock batch");
+                throw;
+            }
+
+        }
     }
 }

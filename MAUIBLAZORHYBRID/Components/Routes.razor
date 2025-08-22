@@ -39,11 +39,11 @@
         try
         {
             // First check current state
-            if (BackgroundDataService.IsInitialSyncComplete)
-            {
-                isLoading = false;
-                return;
-            }
+            // if (BackgroundDataService.IsInitialSyncComplete)
+            // {
+            //     isLoading = false;
+            //     return;
+            // }
 
             // Register for state changes
             BackgroundDataService.InitialSyncCompleted += () =>
@@ -58,8 +58,7 @@
                 StateHasChanged();
             };
 
-            // Actively trigger sync if needed
-            await BackgroundDataService.EnsureInitialSyncAsync();
+             BackgroundDataService.StartBackgroundTasks();
         }
         catch
         {

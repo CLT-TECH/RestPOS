@@ -1,4 +1,5 @@
 ﻿using MAUIBLAZORHYBRID.Config;
+using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Data.DTO;
 using MAUIBLAZORHYBRID.DTO;
 using MAUIBLAZORHYBRID.Helpers;
@@ -22,7 +23,8 @@ namespace MAUIBLAZORHYBRID.Services.Sync
     OtherMasterSyncService otherMasterSyncService,
     ItemDataSyncService itemDataSyncService,
     AppState appState,
-    ILogger<SyncService> logger
+    ILogger<SyncService> logger,
+     IDbContextFactory<AppDbContext> dbFactory
 ) : ISyncService
     {
         private readonly DiningspaceSyncService _diningSpaceSync = diningSpaceSync;
@@ -33,6 +35,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
         private readonly AppState _appState = appState;
 
         private readonly ILogger<SyncService> _logger= logger;
+        private readonly IDbContextFactory<AppDbContext> _dbFactory = dbFactory;
 
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
@@ -55,6 +58,9 @@ namespace MAUIBLAZORHYBRID.Services.Sync
 
             var barStock = await SyncBarItemCounterStock(ct);
             progress?.Report(barStock);
+
+            var barStockGodown = await SyncBarItemGodownStock(ct);
+            progress?.Report(barStockGodown);
         }
 
 
@@ -69,7 +75,10 @@ namespace MAUIBLAZORHYBRID.Services.Sync
 
             try
             {
-                var response = await _http.GetAsync(ApiEndpoints.AppSync.BranchesWithMasters(_appState.BranchId),ct);
+
+                var machineId = await SecureStorage.GetAsync("AppMachineId");
+
+                var response = await _http.GetAsync(ApiEndpoints.AppSync.BranchesWithMasters(machineId),ct);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -367,6 +376,12 @@ namespace MAUIBLAZORHYBRID.Services.Sync
 
         public async Task<SyncResultDTO> SyncBarItemCounterStock(CancellationToken ct = default)
         {
+
+            await using var db = await _dbFactory.CreateDbContextAsync(ct);
+
+            var counterId = await db.BranchMasters.Select(c => c.CounterId).FirstAsync();
+
+
             _logger.LogInformation("Starting sync: SyncBarItemCounterStock");
             return await RetryHelper.RetryOnTransientErrors(async () =>
             {
@@ -375,7 +390,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
 
             try
             {
-                var response = await _http.GetAsync(ApiEndpoints.AppSync.StockForCounter(_appState.CounterId),ct);
+                var response = await _http.GetAsync(ApiEndpoints.AppSync.StockForCounter(counterId),ct);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -413,6 +428,75 @@ namespace MAUIBLAZORHYBRID.Services.Sync
             {
                 result.DurationMs = (int)sw.ElapsedMilliseconds;
             }
+                if (result.Success)
+                {
+                    _logger.LogInformation("Finished sync: SyncBarItemCounterStock - {Count} downloaded in {Duration}ms",
+                        result.CountDownloaded, result.DurationMs);
+                }
+                else
+                {
+                    _logger.LogError(result.Exception,
+                        "Sync failed: SyncBarItemCounterStock - ErrorCode={ErrorCode}, Message={Message}",
+                        result.ErrorCode, result.Message);
+                }
+                return result;
+            });
+        }
+
+        public async Task<SyncResultDTO> SyncBarItemGodownStock(CancellationToken ct = default)
+        {
+
+            await using var db = await _dbFactory.CreateDbContextAsync(ct);
+
+            var godownId = await db.BranchMasters.Select(c => c.GodownId).FirstAsync();
+
+
+            _logger.LogInformation("Starting sync: SyncBarItemgodownStock");
+            return await RetryHelper.RetryOnTransientErrors(async () =>
+            {
+                var sw = Stopwatch.StartNew();
+                var result = new SyncResultDTO { Source = "stockforgodown" };
+
+                try
+                {
+                    var response = await _http.GetAsync(ApiEndpoints.AppSync.StockForGodown(godownId), ct);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        result.Success = false;
+                        result.Message = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}";
+                        result.ErrorCode = response.StatusCode switch
+                        {
+                            System.Net.HttpStatusCode.BadRequest => "ClientError",
+                            System.Net.HttpStatusCode.Unauthorized => "AuthError",
+                            System.Net.HttpStatusCode.Forbidden => "AuthError",
+                            System.Net.HttpStatusCode.NotFound => "NotFound",
+                            >= System.Net.HttpStatusCode.InternalServerError => "ServerError",
+                            _ => "HttpError"
+                        };
+                        return result;
+                    }
+
+                    var dtoList = await response.Content.ReadFromJsonAsync<DAGodownStockDTO>(_jsonOptions, ct);
+                    if (dtoList is not null)
+                    {
+                        await _itemDataSyncService.SaveToLocalDbBarItemStockGodown(dtoList, ct);
+                        result.CountDownloaded = dtoList?.BarItemStock?.Count ?? 0;
+                    }
+                    result.Success = true;
+                    result.Message = "Sync successful.";
+                }
+                catch (Exception ex)
+                {
+                    result.Success = false;
+                    result.Message = ex.Message;
+                    result.Exception = ex;
+                    result.ErrorCode = "DbError";
+                }
+                finally
+                {
+                    result.DurationMs = (int)sw.ElapsedMilliseconds;
+                }
                 if (result.Success)
                 {
                     _logger.LogInformation("Finished sync: SyncBarItemCounterStock - {Count} downloaded in {Duration}ms",

@@ -1,8 +1,7 @@
 ﻿using Blazored.LocalStorage;
-using GlobalKeyboardCapture.Maui.Configuration;
 using MAUIBLAZORHYBRID.Data.Data;
-using MAUIBLAZORHYBRID.Data.Seed;
 using MAUIBLAZORHYBRID.Services;
+using MAUIBLAZORHYBRID.Services.Deactivate;
 using MAUIBLAZORHYBRID.Services.Interfaces;
 using MAUIBLAZORHYBRID.Services.Mappers;
 using MAUIBLAZORHYBRID.Services.Sync;
@@ -11,7 +10,6 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.LifecycleEvents;
-using Microsoft.UI.Windowing;
 using MudBlazor.Services;
 using MudExtensions.Services;
 
@@ -66,14 +64,14 @@ namespace MAUIBLAZORHYBRID
             builder.Logging.AddDebug();
 
             builder.Services.AddMauiBlazorWebView();
-
+            builder.Services.AddSingleton<DeviceStateService>();
+            builder.Services.AddSingleton<IDeviceStatusService, DeviceStatusService>();
 
 
             builder.Services.AddSingleton<LoginService>();
             builder.Services.AddSingleton<AppState>();
             builder.Services.AddSingleton<TaxCalculationService>();
 
-            //builder.Services.AddSingleton<BackgroundDataService>();
 
             builder.Services.AddScoped<PosPageService>();
             builder.Services.AddScoped<TablePageService>();
@@ -97,14 +95,14 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddSingleton<BackgroundDataService>();
 
 
-#if DEBUG
+             #if DEBUG
 
-            builder.Services.AddBlazorWebViewDeveloperTools();
-    		builder.Logging.AddDebug();
-#endif
+                builder.Services.AddBlazorWebViewDeveloperTools();
+    		    builder.Logging.AddDebug();
+            #endif
 
             builder.Services.AddDbContextFactory<AppDbContext>(options =>
-     options.UseSqlite(DbConfig.ConnectionString));
+                    options.UseSqlite(DbConfig.ConnectionString));
             builder.Services.AddSingleton<LoginService>();
             builder.Services.AddSingleton<SessionService>();
             builder.Services.AddSingleton<LoadingService>();

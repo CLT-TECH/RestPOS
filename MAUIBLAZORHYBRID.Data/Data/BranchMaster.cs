@@ -14,6 +14,8 @@ namespace MAUIBLAZORHYBRID.Data.Data
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int branchId { get; set; }
         public  string branchName { get; set; }
+        public int CounterId { get; set; }
+        public int GodownId { get; set; }
 
         public ICollection<BillStation> BillStations { get; set; }
 

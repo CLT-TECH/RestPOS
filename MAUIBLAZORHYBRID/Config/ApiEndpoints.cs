@@ -15,11 +15,14 @@ namespace MAUIBLAZORHYBRID.Config
             public const string Masters = "api/AppSync/masters";
             public const string ItemParentChild = "api/AppSync/itemparentchild";
             public const string BarItemStock = "api/AppSync/baritemcounterstock";
-            public static string BranchesWithMasters(int branchId) =>
-           $"api/AppSync/branches-with-masters/{branchId}";
+            public static string BranchesWithMasters(string machineID) =>
+           $"api/AppSync/branches-with-masters/{machineID}";
 
             public static string StockForCounter(int counterId) =>
             $"api/AppSync/stockforcounter/{counterId}";
+
+            public static string StockForGodown(int godownId) =>
+            $"api/AppSync/stockforgodown/{godownId}";
         }
     }
 }

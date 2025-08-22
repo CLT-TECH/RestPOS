@@ -3,6 +3,7 @@ using System;
 using MAUIBLAZORHYBRID.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MAUIBLAZORHYBRID.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250822034044_addappdetailstobranch")]
+    partial class addappdetailstobranch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
@@ -69,28 +72,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.HasIndex("CounterId");
 
                     b.ToTable("BarItemCounterStocks");
-                });
-
-            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItemStockGodown", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BarItemId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("GodownId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Stock")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BarItemId");
-
-                    b.ToTable("BarItemGodownStocks");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
@@ -998,17 +979,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("Counter");
                 });
 
-            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItemStockGodown", b =>
-                {
-                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BarItem", "BarItem")
-                        .WithMany("BarItemGodownStocks")
-                        .HasForeignKey("BarItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BarItem");
-                });
-
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.Category", "category")
@@ -1255,8 +1225,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItem", b =>
                 {
-                    b.Navigation("BarItemGodownStocks");
-
                     b.Navigation("BarItemStockCounters");
                 });
 

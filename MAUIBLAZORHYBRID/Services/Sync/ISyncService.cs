@@ -9,6 +9,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
         Task<SyncResultDTO> SyncItemData(CancellationToken ct = default);
         Task<SyncResultDTO> SyncItemParentChildData(CancellationToken ct = default);
         Task<SyncResultDTO> SyncBarItemCounterStock(CancellationToken ct = default);
+        Task<SyncResultDTO> SyncBarItemGodownStock(CancellationToken ct = default);
 
     }
 }

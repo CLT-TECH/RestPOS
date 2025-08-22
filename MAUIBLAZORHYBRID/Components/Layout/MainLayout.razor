@@ -1,49 +1,52 @@
 ﻿@inherits LayoutComponentBase
 
+@inject IJSRuntime JSRuntime
 
-<MudThemeProvider Theme="_posTheme" />
-
-
-<div class="page">
-
-    <main>
-        <div class="top-row px-4"> 
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-            <a class="nav-link" href="/">Login</a>
-            <a class="nav-link" href="/mudlogin">MudBlazor Login</a>
-            <a class="nav-link" href="/pos">POS</a>
-            <MudLink Href="/mudlogin">Mudlink Mudblazor Login</MudLink>
-        </div>
-
-        <a class="nav-link" href="/pos">pos</a>
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+<MudThemeProvider Theme="_posTheme" />  <!-- Keep this line -->
+<div style="width:100vw; height:100vh; margin:0; padding:0; overflow:hidden;">
+    @Body
 </div>
+
 
 @code {
 
+    [Inject] NavigationManager Nav { get; set; }
+
+    void NavigateTo(string path)
+    {
+        Nav.NavigateTo("/" + path);
+    }
+
+
+    private IJSObjectReference jsModule;
+    private bool IsNavVisible = false;
+    private void ShowNav() => IsNavVisible = true;
+    private void HideNav() => IsNavVisible = false;
+    private void ToggleNav() => IsNavVisible = !IsNavVisible;
+    private string NavBarWidthStyle => $"width: {(IsNavVisible ? "240px" : "40px")};";
+
+
     private MudTheme _posTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
         {
-            PaletteLight = new PaletteLight()
-            {
-                Primary = "#4CAF50",      // Light Green
-                Secondary = "#8BC34A",    // Light Green Secondary
-                Tertiary = "#CDDC39",     // Lime
-                AppbarBackground = "#388E3C", // Darker Green
-                DrawerBackground = "#F1F8E9", // Light Green Background
-                Success = "#2E7D32",    // Success Green
-                Background = "#F5F5F5",   // Page background
-                Surface = "#FFFFFF",      // Card backgrounds
-                TextPrimary = "#212121", // Primary text
-                TextSecondary = "#757575" // Secondary text
-            },
-            LayoutProperties = new LayoutProperties()
-            {
-                AppbarHeight = "64px",
-                DrawerWidthLeft = "70px", // Only left drawer width specified
-                DefaultBorderRadius = "4px"
-            }
-        };
+            Primary = "#66BB6A",        // Soft Leaf Green — good for branding & buttons
+            Secondary = "#81C784",      // Medium Mint — complementary to primary
+            Tertiary = "#C8E6C9",       // Light Mint — great for accents/highlights
+            AppbarBackground = "#66BB6A", // Darker Green — good contrast for top bar
+            DrawerBackground = "#E8F5E9", // Pale Green — subtle drawer background
+            Success = "#43A047",        // Strong Green — for success messages
+            Background = "#F9FFF9",     // Almost-white green tint — body background
+            Surface = "#FFFFFF",        // Panels/cards stay white
+            TextPrimary = "#1B5E20",    // Dark Green — ensures readability
+            TextSecondary = "#4E704F",  // Muted Green-Gray — for subtle text
+        },
+        LayoutProperties = new LayoutProperties()
+        {
+            AppbarHeight = "64px",
+            DrawerWidthLeft = "70px", // Only left drawer width specified
+            DefaultBorderRadius = "4px"
+        }
+    };
+
 }

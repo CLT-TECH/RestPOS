@@ -2,6 +2,7 @@
 using MAUIBLAZORHYBRID.Data.DTO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Windows.UI;
 
 namespace MAUIBLAZORHYBRID.Services.Sync
 {
@@ -23,7 +24,9 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                     var branch = new BranchMaster
                     {
                         branchId = branchDto.Id,
-                        branchName = branchDto.Name
+                        branchName = branchDto.Name,
+                        CounterId=branchDto.MachineCounterId,
+                        GodownId = branchDto.GodownId
                     };
 
                     if (branchDto.Id > 0)
@@ -50,8 +53,8 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                             }
                         }
 
-                        await db.BranchTaxSettings.ExecuteDeleteAsync(ct);
-                        await db.SaveChangesAsync(ct);
+                        //await db.BranchTaxSettings.ExecuteDeleteAsync(ct);
+                        //await db.SaveChangesAsync(ct);
 
                         foreach (var obj in branchDto.TaxSetting ?? Enumerable.Empty<BranchTaxSettingsDTO>())
                         {
@@ -63,7 +66,24 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                                 TaxId = obj.TaxId,
                                 TaxPer = obj.TaxPer
                             };
-                            db.BranchTaxSettings.Add(taxSetting);
+
+
+                            var taxSettingExist = await db.BranchTaxSettings
+                               .FirstOrDefaultAsync(t =>
+                                   t.BranchId == obj.BranchId &&
+                                   t.BillingType == obj.BillingType &&
+                                   t.ItemType == obj.ItemType &&
+                                   t.TaxId == obj.TaxId);
+
+
+                            if (taxSettingExist != null)
+                            {
+                                taxSettingExist.TaxPer = obj.TaxPer;
+                            }
+                            else
+                            {
+                                db.BranchTaxSettings.Add(taxSetting);
+                            }
                         }
                     }
                 }

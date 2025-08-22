@@ -14,7 +14,6 @@
 @inject IDataUploadService UploadService
 @inject BackgroundDataService BgService
 
-@inject HotkeyService KeyboardListener
 
 <MudPaper Class="pos-screen">
     <div class="">
@@ -27,12 +26,12 @@
                             <MudSelectItem Value="2">Counter</MudSelectItem>
                         </MudSelect>
                     </MudItem> *@
-                    <MudItem xs="3">
+@*                     <MudItem xs="3">
                         <MudSelect T="int" Label="To Type" @bind-Value="ToType" Dense Immediate>
                             <MudSelectItem Value="1" Disabled>Godown</MudSelectItem>
                             <MudSelectItem Value="2">Counter</MudSelectItem>
                         </MudSelect>
-                    </MudItem>
+                    </MudItem> *@
 
                   @*   @if (FromType == 1)
                     {
@@ -57,7 +56,7 @@
                         </MudItem>
                     } *@
 
-                    @if (ToType == 1)
+                  @*   @if (ToType == 1)
                     {
                         <MudItem xs="8">
                             <MudSelect T="int?" Label="To Godown" @bind-Value="ToGodownId">
@@ -78,7 +77,16 @@
                                 }
                             </MudSelect>
                         </MudItem>
-                    }
+                    } *@
+
+                    <MudItem xs="8">
+                        <MudSelect T="int?" Label="To Counter" @bind-Value="ToCounterId">
+                            @foreach (var counter in initData.Counters)
+                            {
+                                <MudSelectItem Value="@counter?.billStationId">@counter.billStationName</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
                 </MudGrid>
 
                 <MudGrid Class="mt-4">
@@ -146,7 +154,7 @@
 </MudPaper>
 
 @code {
-    public int FromType { get; set; } = 2;
+    public int FromType { get; set; } = 1;
     public int ToType { get; set; } = 2;
     private bool isLoading = false;
 
@@ -154,7 +162,7 @@
 
     public int? FromGodownId { get; set; } 
     public int? ToGodownId { get; set; }  
-    public int? FromCounterId { get; set; } = 1;
+    public int? FromCounterId { get; set; }
     public int? ToCounterId { get; set; } 
 
 
@@ -183,21 +191,11 @@
         try
         {
 
-            KeyboardListener.OnBarcodeScanned += barcode =>
-             {
-                 InvokeAsync(StateHasChanged);
-             };
-
-            KeyboardListener.OnHotkeyPressed += key =>
-            {
-                InvokeAsync(StateHasChanged);
-            };
-
             var resultkot = await UploadService.UploadPendingKOTsAsync();
             var result = await UploadService.UploadPendingDataAsync();
 
-            // var resultstock = await SyncService.
-            // SyncBarItemCounterStock();
+            var resultstock = await SyncService.
+            SyncBarItemGodownStock();
 
         }
         catch { }
@@ -267,31 +265,37 @@
 
             var totalStock = initData.barItems
                          .Where(b => b.BarItemId == selectedItem.BarItemId)
-                         .SelectMany(b => b.BarItemStockCounters)
+                         .SelectMany(b => b.BarItemGodownStocks)
                          .Sum(s => (int?)s.Stock) ?? 0;
 
-            // if (itemQuantity > totalStock)
-            // {
-            //     Snackbar.Add($"Only {totalStock} available .", Severity.Error);
-            //     TransferItems.Add(new StockTransferItemDTO
-            //     {
-            //         Main_Bar_Item_ID = selectedItem.MainBarItemID,
-            //         Unit_ID = selectedItem.BarItemBaseUnitId,
-            //         TR_Qty = totalStock,
-            //         ItemName = selectedItem.BarItemName
-            //     });
-            // }
-            // else
-            // {
-                
-            // }
-            TransferItems.Add(new StockTransferItemDTO
+            if (itemQuantity > totalStock)
+            {
+                Snackbar.Add($"Only {totalStock} available .", Severity.Error);
+                TransferItems.Add(new StockTransferItemDTO
+                    {
+                        Main_Bar_Item_ID = selectedItem.MainBarItemID,
+                        Unit_ID = selectedItem.BarItemBaseUnitId,
+                        TR_Qty = totalStock,
+                        ItemName = selectedItem.BarItemName
+                    });
+            }
+            else if (totalStock==0)
+            {
+                Snackbar.Add($"No Stock available .", Severity.Error);
+
+            }
+            else
+            {
+
+                TransferItems.Add(new StockTransferItemDTO
                     {
                         Main_Bar_Item_ID = selectedItem.MainBarItemID,
                         Unit_ID = selectedItem.BarItemBaseUnitId,
                         TR_Qty = itemQuantity ?? 0,
                         ItemName = selectedItem.BarItemName
                     });
+            }
+
 
             if (enterflag == 0)
             {
@@ -410,8 +414,8 @@
             BranchId = appState.BranchId,
             EmployeeId = appState.LoggedInUserId,
             Notes = "",
-            FromGodownId = FromGodownId??0,
-            FromCounterId = appState.CounterId,
+            FromGodownId = appState.GodownId,
+            FromCounterId = 0,
             ToGodownId = ToGodownId??0,
             ToCounterId = ToCounterId??0,
             StockTransferDetails = TransferItems.Select(x => new StockTransferItem
@@ -435,6 +439,7 @@
                 var saveResult = await saveService.SaveStockTransferAsync(save);
                 if (saveResult.IsSuccess)
                 {
+                    BgService.QueueStockTransferUploadAsync();
                     Snackbar.Clear();
                     Snackbar.Add("Stock Tranfer Saved Successfully!!.", Severity.Success);
                     TransferItems = new();

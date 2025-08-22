@@ -3,6 +3,7 @@ using System;
 using MAUIBLAZORHYBRID.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MAUIBLAZORHYBRID.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250822041706_addgodownstock")]
+    partial class addgodownstock
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
@@ -1001,7 +1004,7 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItemStockGodown", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.BarItem", "BarItem")
-                        .WithMany("BarItemGodownStocks")
+                        .WithMany()
                         .HasForeignKey("BarItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1255,8 +1258,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItem", b =>
                 {
-                    b.Navigation("BarItemGodownStocks");
-
                     b.Navigation("BarItemStockCounters");
                 });
 

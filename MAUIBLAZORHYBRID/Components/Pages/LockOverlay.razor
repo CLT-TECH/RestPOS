@@ -1,0 +1,58 @@
+@using MAUIBLAZORHYBRID.Services.Deactivate
+@inject DeviceStateService DeviceState
+
+@if (!isActive)
+{
+    <div class="lock-overlay">
+        <div class="lock-message">
+            <h2>App Deactivated</h2>
+            <p>No data is available. Please contact support.</p>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isActive = true;
+
+    protected override void OnInitialized()
+    {
+        isActive = DeviceState.IsActive;
+        DeviceState.OnDeviceStateChanged += HandleStateChange;
+    }
+
+    private void HandleStateChange(bool state)
+    {
+        isActive = state;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        DeviceState.OnDeviceStateChanged -= HandleStateChange;
+    }
+}
+<style>
+
+    .lock-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(20, 20, 20, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .lock-message {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 400px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+</style>
