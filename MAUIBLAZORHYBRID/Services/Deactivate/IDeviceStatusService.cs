@@ -48,7 +48,7 @@ namespace MAUIBLAZORHYBRID.Services.Deactivate
                 var deviceId = await SecureStorage.GetAsync("AppMachineName");
 
                 if (string.IsNullOrEmpty(appId) || string.IsNullOrEmpty(deviceId))
-                    return false; // Cannot validate without IDs
+                    return true; // Cannot validate without IDs
 
                 var request = new HttpRequestMessage(HttpMethod.Get, "api/appsync/status");
 
@@ -61,16 +61,15 @@ namespace MAUIBLAZORHYBRID.Services.Deactivate
                 if (response.IsSuccessStatusCode)
                 {
 
-                     var result = await response.Content.ReadFromJsonAsync<DeviceStatusResponse>(cancellationToken: token);
+                    var result = await response.Content.ReadFromJsonAsync<DeviceStatusResponse>(cancellationToken: token);
+                    if (result == null)
+                        return false;
 
-                if (result == null)
-                    return false;
-
-                if (!result.Status) // means inactive
-                {
-                    await SetPermanentlyDeactivatedAsync(); // 🔒 lock forever
-                    return false;
-                }
+                    if (!result.Status) // means inactive
+                    {
+                        await SetPermanentlyDeactivatedAsync(); // 🔒 lock forever
+                        return false;
+                    }
 
                 }
 

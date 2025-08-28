@@ -62,5 +62,6 @@ namespace MAUIBLAZORHYBRID.Services
                 return Result<StockTransferInitDTO>.Failure("Failed to load data. Please try again.");
             }
         }
+
     }
 }

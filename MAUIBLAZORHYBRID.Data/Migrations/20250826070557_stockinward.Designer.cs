@@ -3,6 +3,7 @@ using System;
 using MAUIBLAZORHYBRID.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MAUIBLAZORHYBRID.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250826070557_stockinward")]
+    partial class stockinward
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
@@ -709,6 +712,12 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 
                     b.Property<int>("BarItemId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("DetConversion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("InwardBaseQty")
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("InwardQty")
                         .HasColumnType("TEXT");

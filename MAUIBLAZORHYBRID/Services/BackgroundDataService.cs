@@ -80,7 +80,7 @@ namespace MAUIBLAZORHYBRID.Services
                 _cts = new CancellationTokenSource();
 
                 // Start upload timer (every 5 minutes)
-                _uploadTimer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+                _uploadTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
                 _ = Task.Run(() => ProcessUploadsAsync(_cts.Token));
 
                 // Perform initial sync if not already done
@@ -167,6 +167,13 @@ namespace MAUIBLAZORHYBRID.Services
 
             private async Task PerformSyncOperationsAsync()
             {
+                var appId = await SecureStorage.GetAsync("AppMachineId");
+                var deviceId = await SecureStorage.GetAsync("AppMachineName");
+
+                if (string.IsNullOrEmpty(appId) || string.IsNullOrEmpty(deviceId))
+                    return;
+
+
                 if (!await _deviceStatus.IsDeviceActiveAsync())
                 {
                     _logger.LogWarning("Device deactivated. Sync aborted.");
@@ -207,10 +214,13 @@ namespace MAUIBLAZORHYBRID.Services
                         {
                             await _uploadService.UploadPendingDataAsync();
                         }
-
                         if (await _uploadService.HasPendingUploadsStockTransferAsync())
                         {
                             await _uploadService.UploadPendingStockTransfersAsync();
+                        }
+                        if (await _uploadService.HasPendingUploadsStockInwardAsync())
+                        {
+                            await _uploadService.UploadPendingStockInwardsAsync();
                         }
                     }
                 }
@@ -286,6 +296,29 @@ namespace MAUIBLAZORHYBRID.Services
 
                     _logger.LogInformation("Queueing immediate stock transfer upload...");
                     await _uploadService.UploadPendingStockTransfersAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in immediate stock transfer upload");
+                }
+            });
+        }
+
+        public async Task QueueStockInwardUploadAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    if (!await _deviceStatus.IsDeviceActiveAsync())
+                    {
+                        _logger.LogWarning("Device deactivated. Stock transfer upload aborted.");
+                        _deviceState.SetDeviceState(false);
+                        return;
+                    }
+
+                    _logger.LogInformation("Queueing immediate stock transfer upload...");
+                    await _uploadService.UploadPendingStockInwardsAsync();
                 }
                 catch (Exception ex)
                 {

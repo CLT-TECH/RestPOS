@@ -236,7 +236,61 @@ namespace MAUIBLAZORHYBRID.Services
                 throw;
             }
         }
+        public async Task<bool> HasPendingUploadsStockInwardAsync()
+        {
+            return await _dbContext.StockInwardMasters
+                .AnyAsync(st => !st.IsSynced);
+        }
 
+        public async Task<UploadResult> UploadPendingStockInwardsAsync()
+        {
+            var result = new UploadResult();
+
+            try
+            {
+                var pendingTransfers = await _dbContext.StockInwardMasters
+                    .Include(st => st.StockInwardDetails)
+                    .Where(st => !st.IsSynced)
+                    .ToListAsync();
+
+                foreach (var transfer in pendingTransfers)
+                {
+                    var dto = _mappingService.MapToStockInwardDTO(transfer); // You must define this mapping
+
+                    var apiResponse = await _apiClient.PostStockInwardAsync(dto); // Ensure this method is in your IApiClient
+
+                    if (apiResponse.Success && apiResponse.Data != null)
+                    {
+                        transfer.IsSynced = true;
+                        transfer.SockInwardServerId = apiResponse.Data.ServerStockInwardId;
+                        transfer.StockInwardSqlDateTime = apiResponse.Data.ProcessedTime;
+                        result.SuccessCount++;
+                    }
+                    else
+                    {
+                        result.FailedCount++;
+
+                        var errorMessage = apiResponse.Message;
+                        if (apiResponse.Errors?.Any() == true)
+                        {
+                            errorMessage += " | " + string.Join(" | ",
+                                apiResponse.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                        }
+
+                        result.Errors.Add($"Transfer {transfer.StockInwardDocNo}: {errorMessage}");
+                        _logger.LogWarning("Stock transfer upload failed: {ErrorMessage}", errorMessage);
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading stock transfers");
+                throw;
+            }
+        }
 
     }
 }

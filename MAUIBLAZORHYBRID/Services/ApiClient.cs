@@ -156,5 +156,54 @@ namespace MAUIBLAZORHYBRID.Services
                 };
             }
         }
+    
+    
+        public async Task<ApiResponse<StockInwardUploadResponse>> PostStockInwardAsync(StockInwardDTO dto)
+        {
+            try
+            {
+                var json = JsonSerializer.Serialize(dto, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                Console.WriteLine(json); // Optional: For debugging
+
+                var response = await _httpClient.PostAsJsonAsync("/api/AppSync/SaveStockInward", dto);
+                var content = await response.Content.ReadFromJsonAsync<ApiResponse<StockInwardUploadResponse>>();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new ApiResponse<StockInwardUploadResponse>
+                    {
+                        Success = false,
+                        Message = content?.Message ?? "API request failed",
+                        Errors = content?.Errors ?? new List<ApiError> {
+                    new ApiError {
+                        Code = $"HTTP_{(int)response.StatusCode}",
+                        Description = "Unexpected API error"
+                    }
+                }
+                    };
+                }
+
+                return content!;
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<StockInwardUploadResponse>
+                {
+                    Success = false,
+                    Message = "Network error occurred",
+                    Errors = new List<ApiError> {
+                new ApiError {
+                    Code = "NETWORK_ERROR",
+                    Description = ex.Message
+                }
+            }
+                };
+            }
+        }
+
     }
 }

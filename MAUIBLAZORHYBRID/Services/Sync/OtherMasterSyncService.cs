@@ -7,10 +7,12 @@ namespace MAUIBLAZORHYBRID.Services.Sync
 {
     public class OtherMasterSyncService(
     IDbContextFactory<AppDbContext> dbFactory,
-    ILogger<OtherMasterSyncService> logger)
+    ILogger<OtherMasterSyncService> logger,
+    AppState appState)
     {
         private readonly IDbContextFactory<AppDbContext> _dbFactory = dbFactory;
         private readonly ILogger<OtherMasterSyncService> _logger = logger;
+        private readonly AppState _appState = appState;
 
 
         public async Task SaveToLocalDbAsync(OtherMasterDTO mastersothermastersdtos, CancellationToken ct = default)
@@ -74,6 +76,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                         noOfSeats = objtable.noofseats
                     };
 
+
                     var existingdining = await db.Tables.FindAsync(objtable.id, ct);
 
                     if (existingdining == null)
@@ -90,13 +93,22 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                         diningspaceId = objdstable.diningspaceid,
                         branchId = objdstable.branchid,
                     };
+                    var AppBranchId = await SecureStorage.GetAsync("AppBranchId");
 
-                    var existingdining = await db.TablesDiningSpaces.FindAsync(objdstable.id, ct);
+                    int value = int.TryParse(AppBranchId, out var temp) ? temp : 0;
 
-                    if (existingdining == null)
+                    if (objdstable.branchid== value)
                     {
-                        db.TablesDiningSpaces.Add(dstable);
+                        var existingdining = await db.TablesDiningSpaces.FindAsync(objdstable.id, ct);
+
+                        if (existingdining == null)
+                        {
+                            db.TablesDiningSpaces.Add(dstable);
+                        }
+
                     }
+
+                   
                 }
 
 
@@ -115,6 +127,20 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                     if (existingtax == null)
                     {
                         db.TaxMasters.Add(tax);
+                    }
+                }
+
+                foreach (var obj in mastersothermastersdtos.VendorMasters ?? Enumerable.Empty<VendorMasterDTO>())
+                {
+                    var vendor = new VendorMaster
+                    {
+                        VendorId = obj.VendorId,
+                        VendorName = obj.VendorName
+                    };
+                    var existingvendor = await db.VendorMasters.FindAsync(obj.VendorId, ct);
+                    if (existingvendor == null)
+                    {
+                        db.VendorMasters.Add(vendor);
                     }
                 }
                 await db.SaveChangesAsync(ct);  

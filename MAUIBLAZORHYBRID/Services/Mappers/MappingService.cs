@@ -157,6 +157,27 @@ namespace MAUIBLAZORHYBRID.Services.Mappers
             };
         }
 
-
+        public StockInwardDTO MapToStockInwardDTO(StockInwardMaster master)
+        {
+            return new StockInwardDTO
+            {
+                StockInwardDocNo = master.StockInwardDocNo,
+                StockInwardSlNo = master.StockInwardSlNo,
+                StockInwardPrefix = master.StockInwardPrefix,
+                StockInwardRefNo = master.StockInwardRefNo,
+                StockInwardDate = master.StockInwardDate,
+                StockInwardTime = master.StockInwardTime,
+                StockInwardNotes = master.StockInwardNotes,
+                BranchId = master.BranchId,
+                LoginEmpId = master.LoginEmpId,
+                VendorId = master.VendorId,
+                StockInwardDetails = master.StockInwardDetails.Select(d => new StockInwardDetailsDTO
+                {
+                    BarItemId = d.BarItemId,
+                    UnitId = d.UnitId,
+                    InwardQty = d.InwardQty
+                }).ToList()
+            };
+        }
     }
 }

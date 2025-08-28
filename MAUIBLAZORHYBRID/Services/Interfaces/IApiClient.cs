@@ -14,6 +14,7 @@ namespace MAUIBLAZORHYBRID.Services.Interfaces
         Task<ApiResponse<KOTUploadResponse>> PostKOTAsync(HotKOTMasterDTO kot);
         Task<ApiResponse<BillUploadResponse>> PostBillAsync(BillMasterDTO bill);
         Task<ApiResponse<StockTransferUploadResponse>> PostStockTransferAsync(StockTransferDTO dto);
+        Task<ApiResponse<StockInwardUploadResponse>> PostStockInwardAsync(StockInwardDTO dto);
 
     }
 }

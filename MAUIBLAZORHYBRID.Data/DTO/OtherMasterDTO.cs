@@ -15,6 +15,7 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         public List<TablesDTO> Tables { get; set; } = new();
         public List<DiningSpaceTablesDTO> DiningSpaceTables { get; set; } = new();
         public List<TaxMaster> TaxMasters { get; set; } = new();
+        public List<VendorMasterDTO> VendorMasters { get; set; } = new();
 
     }
 }

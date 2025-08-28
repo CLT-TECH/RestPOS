@@ -1,11 +1,13 @@
 ﻿@page "/pos"
 @page "/pos/{TableId:int?}"
 
+@inject IDataUploadService UploadService
 
 @using MAUIBLAZORHYBRID.Components.Data
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
 @using MAUIBLAZORHYBRID.Services.Sync
+@using MAUIBLAZORHYBRID.Services.Upload
 @using MudBlazor
 @using System.Globalization
 @using System.Diagnostics
@@ -37,7 +39,7 @@
                         <div class="header-details">
                             <div class="header-detail-item">
                                 <MudIcon Icon="@Icons.Material.Filled.Countertops" Size="Size.Small" Style="color:#3eb489;" />
-                                <span>Counter: <span id="diningspace"></span>@countername</span>
+                                <span>Counter: <span id="counter"></span>@countername</span>
                             </div>
                             <div class="header-detail-item">
                                 <MudIcon Icon="@Icons.Material.Filled.TableRestaurant" Size="Size.Small" Style="color:#3eb489;" />
@@ -45,7 +47,7 @@
                             </div>
                             <div class="header-detail-item">
                                 <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Style="color:#3eb489;" />
-                                <span> ADMIN</span>
+                                <span> @userName</span>
                             </div>
                         </div>
 
@@ -60,7 +62,9 @@
                         Dense="true"
                         ResetValueOnEmptyText="true"
                         @ref="productRef"
-                        Immediate="true">
+                        Immediate="true"
+                        MaxItems="50"
+                        >
                             <ItemTemplate>
                                 <div>@context.itemName</div>
                             </ItemTemplate>
@@ -187,7 +191,7 @@
                 </div>
 
                 <div id="scrollContainer" class="custom-ordered-items-list">
-                    <MudList T="object">
+                    <MudList T="object"  SelectionMode="SelectionMode.SingleSelection">
                         @if (OrderedItems == null || !OrderedItems.Any())
                         {
                             <MudText Typo="Typo.body1" Align="Align.Center" Class="custom-empty-order-text">
@@ -204,14 +208,14 @@
 
                                     <div class="custom-order-line2">
                                         <div class="order-controls">
-                                            <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
-                                            Style="color:#3eb489"
+                                            <MudIconButton Icon="@Icons.Material.Filled.AddCircle" tabindex="-1"
+                                                           Style="color:#3eb489"
                                             Size="Size.Small"
                                             Variant="Variant.Text"
                                             OnClick="@(() => AddItem(orderItem))" />
 
-                                            <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle"
-                                            Style="color:#3eb489"
+                                            <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" tabindex="-1"
+                                                           Style="color:#3eb489"
                                             Size="Size.Small"
                                             Variant="Variant.Text"
                                             OnClick="@(() => MinusItem(orderItem))" />
@@ -222,8 +226,8 @@
 
 
 
-                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
-                                    Class="delete-button-inside"
+                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" tabindex="-1"
+                                                   Class="delete-button-inside"
                                     Color="Color.Error"
                                     Size="Size.Small"
                                     Variant="Variant.Text"
@@ -484,7 +488,7 @@
             {
                 Snackbar.Add("Bill generated successfully!", Severity.Success);
 
-                BgService.QueueBillUploadAsync();
+                UploadService.UploadPendingDataAsync();
 
                 OrderedItems = new();
                 kotInitData = new();
@@ -553,22 +557,32 @@
 
     public string diningspacename { get; set; }
     public string countername { get; set; }
+    public string userName { get; set; } 
 
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            userName = await SecureStorage.GetAsync("AppUsername") ?? "";
+            var counterid = await SecureStorage.GetAsync("AppUsername") ?? "";
+
+
+
+
             dspace = await PosService.GetDiningSpaces();
             billstationsss = await PosService.GetBillStations();
 
+            var firstbill = billstationsss.FirstOrDefault(d => d.billStationId == appState.CounterId);
+            if (firstbill != null)
+                countername = firstbill.billStationName ?? "";
+
             var firstSpace = dspace.FirstOrDefault();
-            var firstbill = billstationsss.FirstOrDefault();
 
             if (firstSpace != null)
                 diningspacename = firstSpace.diningSpaceName ?? "";
-            if (firstbill != null)
-                countername = firstbill.billStationName ?? "";
+
+           
 
             categories = await PosService.GetCategoriesAsync();
 
@@ -712,6 +726,39 @@
         // Not yet implemented
     }
 
+
+    int focusStage = 0;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (selectedProduct == null)
+                await productRef.FocusAsync();
+        }
+        else
+        {
+            if (focusStage == 1)
+            {
+                itemQuantity = null;
+
+                await productRef.FocusAsync();
+            }
+            else if (focusStage == 2)
+            {
+                await unitRef.FocusAsync();
+            }
+            else if (focusStage == 3)
+            {
+                await quantityRef.FocusAsync();
+            }
+
+            focusStage = 0;
+
+        }
+    }
+
+
     public string qrCode { get; set; }
     public bool intermediateTime { get; set; } = true;
 
@@ -721,12 +768,16 @@
         if (args.Key == "Enter" || args.Code == "Enter")
         {
 
-
             var matchedItem = filteredMainFillItem
                 .FirstOrDefault(i => i.itemId == selectedItem.itemId);
             if (matchedItem != null)
             {
-                if (itemQuantity >= 0)
+                if (matchedItem.itemType == 2 && selectedUnit==null)
+                {
+                    Snackbar.Clear();
+                    Snackbar.Add("unit not selected!!.", Severity.Error);
+                }
+                else if (itemQuantity >= 0)
                 {
                     var unitId = selectedUnit?.unitId ?? 0;
 
@@ -734,22 +785,22 @@
 
 
                     itemQuantity = null;
-                    await quantityRef.ResetAsync(); // 👈 this clears the UI value
+                    await quantityRef.ResetAsync();
 
                     selectedItem = null;
-                    await productRef.ResetAsync(); // 👈 this clears the UI value
 
                     selectedUnit = null;
-                    await unitRef.ResetAsync(); // 👈 this clears the UI value
 
+
+                    focusStage = 1;
 
                     StateHasChanged();
 
 
                     // Re-focus the field to ensure visual update
-                    await Task.Delay(10); // Small delay for render cycle
 
-                    await JS.InvokeVoidAsync("eval", "document.body.setAttribute('tabindex', '0'); document.body.focus();");
+
+
                     // await productRef.FocusAsync();
                 }
                 else
@@ -805,14 +856,15 @@
                                 .ToList();
 
                 selectedUnit = null;
-                StateHasChanged();
+                itemQuantity = null;
 
-                await Task.Delay(100);
 
-                if (!(filteredunits.Any()))
-                    await quantityRef.FocusAsync();
+                if (selectedItem.itemType == 1)
+                    focusStage = 3;
                 else
-                    await unitRef.FocusAsync();
+                    focusStage = 2;
+
+
             }
         }
     }
@@ -821,8 +873,7 @@
         if (selectedUnit?.unitId != unitselect?.unitId && unitselect != null)
         {
             selectedUnit = unitselect;
-            await Task.Delay(100); // Let autocomplete settle
-            await quantityRef.FocusAsync(); // 👈 Move to NEXT field
+            focusStage = 3;
         }
     }
 
@@ -849,10 +900,41 @@
 
     private Task<IEnumerable<BillItem>> SearchProducts(string value, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return Task.FromResult<IEnumerable<BillItem>>(filteredMainFillItem);
 
-        var result = filteredMainFillItem
+        var rateOnlyItems = filteredMainFillItem
+        .Where(item =>
+        {
+            decimal rate = 0m;
+
+            if (item.itemType == 1)
+            {
+                rate = dsitemrate
+                    .FirstOrDefault(x => x.itemId == item.itemId && x.diningSpaceId == selectedDiningSpace)
+                    ?.itemRate ?? 0m;
+            }
+            else if (item.itemType == 2)
+            {
+                var children = parentchildrenitem
+                        .Where(x => x.parentItemId == item.itemId)
+                        .ToList();
+                if (children.Any())
+                {
+                    // Check if any child has a rate > 0
+                    rate = children
+                        .Select(child =>
+                            dsitemrate.FirstOrDefault(x => x.itemId == child.childItemId && x.diningSpaceId == selectedDiningSpace)?.itemRate ?? 0m
+                        )
+                        .FirstOrDefault(r => r > 0m);
+                }
+            }
+
+            return rate > 0;
+        });
+
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<BillItem>>(rateOnlyItems);
+
+        var result = rateOnlyItems
             .Where(p => p.itemName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
 
         return Task.FromResult(result);
@@ -945,7 +1027,7 @@
 
             int unitid = filtered.FirstOrDefault()?.unitId ?? 0;
             int parentItemId = filtered.FirstOrDefault()?.parentItemId ?? 0;
-            existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == parentItemId);
+            existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == parentItemId && o.UnitID == unitid);
         }
         if (existingOrder == null)
         {
@@ -988,7 +1070,12 @@
 
     private void AddToOrderHeader(BillItem item,int Qty,int unitid)
     {
+
         var existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == item.itemId);
+
+        if(unitid>0)
+             existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == item.itemId && o.UnitID==unitid);
+
 
         if (existingOrder == null)
         {
@@ -1009,7 +1096,7 @@
                     Snackbar.Add($"{item.itemName} added to order.", Severity.Success, config => { config.VisibleStateDuration = 1000; config.ShowCloseIcon = false; });
                 }
             }
-            else
+            else if(unitid>0)
             {
 
                 var filtered = parentchildrenitem

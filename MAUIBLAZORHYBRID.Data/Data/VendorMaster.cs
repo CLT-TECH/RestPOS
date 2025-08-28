@@ -8,15 +8,12 @@ using System.Threading.Tasks;
 
 namespace MAUIBLAZORHYBRID.Data.Data
 {
-    public class BranchMaster
+    public class VendorMaster
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int branchId { get; set; }
-        public  string branchName { get; set; }
-        public int CounterId { get; set; }
-        public int GodownId { get; set; }
-
-
+        public int VendorId { get; set; }
+        public string VendorCode { get; set; } = string.Empty;
+        public string VendorName { get; set; } = string.Empty;
     }
 }

@@ -17,22 +17,16 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public string RefNo { get; set; } = string.Empty;
         public DateTime TransferDate { get; set; }
         public DateTime TransferTime { get; set; }
-
         public int FromType { get; set; } // 1: Godown, 2: Counter
         public int ToType { get; set; }   // 1: Godown, 2: Counter
-
         public int FromGodownId { get; set; }
         public int FromCounterId { get; set; }
         public int ToGodownId { get; set; }
         public int ToCounterId { get; set; }
-
         public int BranchId { get; set; }
         public int EmployeeId { get; set; }
-
         public string Notes { get; set; } = string.Empty;
-
         public bool IsSynced { get; set; } = false;
-
         public virtual ICollection<StockTransferItem> StockTransferDetails { get; set; } = new List<StockTransferItem>();
 
     }

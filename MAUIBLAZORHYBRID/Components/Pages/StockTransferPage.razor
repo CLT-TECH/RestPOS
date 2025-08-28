@@ -152,7 +152,15 @@
         </div>
     </div>
 </MudPaper>
-
+@if (isLoading)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Primary">Loading....</MudText>
+        </div>
+    </div>
+}
 @code {
     public int FromType { get; set; } = 1;
     public int ToType { get; set; } = 2;
@@ -187,6 +195,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
 
         try
         {
@@ -198,9 +207,11 @@
             SyncBarItemGodownStock();
 
         }
-        catch { }
+        catch
+        {
+            
+        }
 
-        isLoading = true;
         try
         {
             var result = await pageService.GetInitData();
@@ -439,7 +450,7 @@
                 var saveResult = await saveService.SaveStockTransferAsync(save);
                 if (saveResult.IsSuccess)
                 {
-                    BgService.QueueStockTransferUploadAsync();
+                    UploadService.UploadPendingStockTransfersAsync();
                     Snackbar.Clear();
                     Snackbar.Add("Stock Tranfer Saved Successfully!!.", Severity.Success);
                     TransferItems = new();
@@ -474,7 +485,7 @@
         public int Main_Bar_Item_ID { get; set; }
         public int Unit_ID { get; set; }
         public decimal TR_Qty { get; set; }
-        public string ItemName { get; set; }
+        public string? ItemName { get; set; }
     }
 
     public class StockTransferDTO

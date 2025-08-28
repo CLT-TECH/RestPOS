@@ -15,7 +15,7 @@
     @if (_isRegistrationComplete)
     {
         <MudCard Class="pa-6">
-            <MudText Typo="Typo.h5" Class="mb-4">App Login</MudText>
+            <MudText Typo="Typo.h5" Class="mb-4">Login</MudText>
             <EditForm Model="_appLogin" OnValidSubmit="HandleAppLogin">
                 <DataAnnotationsValidator />
                 <MudTextField @bind-Value="_appLogin.Username"
@@ -49,14 +49,14 @@
                     @_appLoginMessage
                 </MudAlert>
             }
-
+@* 
             <MudButton Variant="Variant.Text"
                        Color="Color.Secondary"
                        FullWidth="true"
                        Class="mt-2"
                        OnClick="ResetRegistration">
                 Reset App Registration
-            </MudButton>
+            </MudButton> *@
         </MudCard>
     }
     else
@@ -66,26 +66,26 @@
                
                 <!-- Step 1: Online User Validation -->
                 <MudStep Label="User Validation">
-                    <MudText Typo="Typo.h5" Class="mb-4">Branch Registration</MudText>
+                    <MudText Typo="Typo.h5" Class="mb-4">Branch Activation</MudText>
                     <MudTextField Label="Username" @bind-Value="_userLogin.Username" FullWidth="true" />
                     <MudTextField Label="Password" @bind-Value="_userLogin.Password" InputType="InputType.Password" FullWidth="true" />
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleLogin">Authorize</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleLogin">Activate</MudButton>
                 </MudStep>
 
                 <!-- Step 2: Counter Selection -->
                 <MudStep Label="Counter">
-                    <MudText Typo="Typo.h5" Class="mb-4">Bill Station</MudText>
+                    <MudText Typo="Typo.h5" Class="mb-4">Billing Desk Activation</MudText>
                     <MudSelect T="BillStationDTO" Label="Bill Station" @bind-Value="_selectedCounter" FullWidth="true">
                         @foreach (var obj in counters)
                         {
                             <MudSelectItem Value="@obj">@obj.Name</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="RegisterMachine">Save Bill Station</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="RegisterMachine">Activate</MudButton>
                 </MudStep>
 
                 <MudStep Label="App Login">
-                    <MudText Typo="Typo.h5" Class="mb-4">App Login Registration</MudText>
+                    <MudText Typo="Typo.h5" Class="mb-4">User Registration</MudText>
                     <MudTextField Label="App Username" @bind-Value="_appRegister.Username" FullWidth="true" />
                     <MudTextField Label="Password" @bind-Value="_appRegister.Password" InputType="InputType.Password" FullWidth="true" />
                     <MudTextField Label="Confirm Password" @bind-Value="_appRegister.ConfirmPassword" InputType="InputType.Password" FullWidth="true" />
@@ -156,6 +156,8 @@
     private string _appLoginMessage = string.Empty;
     private AppLoginDto _appLogin = new();
 
+    public int appInitialisation { get; set; }
+
     private async Task HandleAppLogin()
     {
         if (isLoading) return;
@@ -186,6 +188,7 @@
                 // Navigate to homepage after a brief delay
 
                 await appstate.LoadAsync();
+
                 await Task.Delay(1000);
                 NavigateToHomepage();
             }
@@ -288,7 +291,7 @@
             case 0:
                 if (_step1Complete != true)
                 {
-                    await DialogService.ShowMessageBox("Error", "Manager Authorization Required");
+                    await DialogService.ShowMessageBox("Error", "Branch Activation Required");
                     arg.Cancel = true;
                 }
                 break;
@@ -309,14 +312,14 @@
             case 1:
                 if (_step1Complete != true)
                 {
-                    await DialogService.ShowMessageBox("Error.", "Manager Authorization Required.");
+                    await DialogService.ShowMessageBox("Error.", "Branch Activation Required.");
                     arg.Cancel = true;
                 }
                 break;
             case 2:
                 if (_step1Complete != true || _step2Complete != true)
                 {
-                    await DialogService.ShowMessageBox("Error.", "Bill Station Registration Not Completed.");
+                    await DialogService.ShowMessageBox("Error.", "Bill Station Activation Not Completed.");
                     arg.Cancel = true;
                 }
                 break;
@@ -351,7 +354,7 @@
                 counters = result.Counters ?? new();
                 LoginMessage = "Login successful!";
 
-                Snackbar.Add("Authorized", Severity.Success);
+                Snackbar.Add("Activated", Severity.Success);
 
                 await SecureStorage.SetAsync("AppManagerID", result.ManagerId.ToString());
                 await SecureStorage.SetAsync("AppBranchID", result.BranchId.ToString());
@@ -361,6 +364,10 @@
 
 
                 _userLogin = new();
+
+
+
+
             }
             else
             {
@@ -432,7 +439,7 @@
                 {
                     int machineId = result.Data.AppMachineId;
 
-                    Snackbar.Add("Bill Station Registered Successfully", Severity.Success);
+                    Snackbar.Add("Bill Station Activated Successfully", Severity.Success);
 
                     await SecureStorage.SetAsync("AppMachineId", machineId.ToString());
                     await SecureStorage.SetAsync("AppMachineName", dto.App_Machine_Name);
@@ -440,17 +447,29 @@
                     _activeStep = 2;
                     _step2Complete = true;
                     _selectedCounter = null;
+
+
+                    try
+                    {
+                        bgserviice.StartBackgroundTasks();
+                        appInitialisation = 1;
+                    }
+                    catch
+                    {
+
+                    }
+
                 }
                 else
                 {
-                    RegisterMessage = "Registration failed: " + (result?.Message ?? "Unknown error");
+                    RegisterMessage = "Activation failed: " + (result?.Message ?? "Unknown error");
                     Snackbar.Add(RegisterMessage, Severity.Error);
                 }
 
             }
             else
             {
-                RegisterMessage = "Machine registration failed.";
+                RegisterMessage = "Machine Activation failed.";
                 Snackbar.Add(RegisterMessage, Severity.Error);
             }
         }
@@ -481,10 +500,10 @@
 
             // Check password length
             if (string.IsNullOrWhiteSpace(_appRegister.Password) ||
-                _appRegister.Password.Length < 8 ||
-                _appRegister.Password.Length > 50)
+                _appRegister.Password.Length < 4 ||
+                _appRegister.Password.Length > 16)
             {
-                Snackbar.Add("Password must be between 8 and 50 characters.", Severity.Error);
+                Snackbar.Add("Password must be between 4 and 16 characters.", Severity.Error);
                 return;
             }
 
@@ -500,7 +519,7 @@
 
 
             _appRegister = new();
-            Snackbar.Add("App login registered successfully.", Severity.Success);
+            Snackbar.Add("User registered successfully.", Severity.Success);
             _isRegistrationComplete = true;
 
             var username = await SecureStorage.GetAsync("AppUsername");

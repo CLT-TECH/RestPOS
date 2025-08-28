@@ -20,6 +20,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
             try
             {
                 var icount = 0;
+                
                 foreach (var item in itemdata.items ?? Enumerable.Empty<ItemMasterDTO>())
                 {
 
@@ -35,7 +36,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                         category = categoryresult ?? new()
                     };
 
-                    if (itemresult.itemId > 0 && item.catid > 0)
+                    if (itemresult.itemId > 0)
                     {
                         var existingitem = await db.BillItems.FindAsync(itemresult.itemId, ct);
                         if (existingitem == null)
@@ -94,15 +95,26 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                             item = itemresult
                         };
 
-                        if (itemrateresult.id > 0)
-                        {
-                            var existingitemrate = await db.DiningSpaceItemRates.FindAsync(itemrateresult.id, ct);
-                            if (existingitemrate == null)
-                            {
-                                await db.DiningSpaceItemRates.AddAsync(itemrateresult, ct);
+                        var AppBranchId = await SecureStorage.GetAsync("AppBranchId");
 
+                        int value = int.TryParse(AppBranchId, out var temp) ? temp : 0;
+
+                        if(value== itemrate.branchid)
+                        {
+                            if (itemrateresult.id > 0)
+                            {
+                                var existingitemrate = await db.DiningSpaceItemRates.FindAsync(itemrateresult.id, ct);
+                                if (existingitemrate == null)
+                                {
+                                    await db.DiningSpaceItemRates.AddAsync(itemrateresult, ct);
+                                }
+                                else
+                                {
+                                    existingitemrate.itemRate = itemrate.rate;
+                                }
                             }
                         }
+                       
                     }
                 }
 

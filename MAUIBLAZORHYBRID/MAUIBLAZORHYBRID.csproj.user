@@ -7,7 +7,7 @@
     <SelectedPlatformGroup>PhysicalDevice</SelectedPlatformGroup>
     <UapAppxPackageBuildMode>SideloadOnly</UapAppxPackageBuildMode>
     <AppxShowAllApps>False</AppxShowAllApps>
-    <_LastSelectedProfileId>MSIX-win-x643.pubxml</_LastSelectedProfileId>
+    <_LastSelectedProfileId>MSIX-win-x642.pubxml</_LastSelectedProfileId>
     <PackageOptionalProjectsInIdeBuilds>False</PackageOptionalProjectsInIdeBuilds>
     <AppIconSource>C:\Users\admin\Downloads\MicrosoftEdgeDropFiles\Default\appimage.png</AppIconSource>
   </PropertyGroup>

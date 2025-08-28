@@ -78,11 +78,15 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddScoped<KOTService>();
             builder.Services.AddScoped<KOTBillService>();
             builder.Services.AddScoped<StockTransferService>();
+            builder.Services.AddScoped<StockInwardService>();
             
 
             builder.Services.AddScoped<IHotKOTSaveService, HotKOTSaveService>();
             builder.Services.AddScoped<IHotBillSaveService, HotBillSaveService>();
             builder.Services.AddScoped<IStockTransferSaveService, StockTransferSaveService>();
+            builder.Services.AddScoped<IStockInwardSaveService, StockInwardSaveService>();
+            
+
 
             builder.Services.AddSingleton<IApiClient, ApiClient>();
             builder.Services.AddScoped<IDataUploadService, DataUploadService>();

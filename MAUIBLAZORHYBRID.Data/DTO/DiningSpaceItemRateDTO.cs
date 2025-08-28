@@ -9,6 +9,8 @@ namespace MAUIBLAZORHYBRID.Data.DTO
     public class DiningSpaceItemRateDTO
     {
         public int id { get; set; }
+        public int branchid { get; set; }
+        
         public int itemid { get; set; }
         public int diningspaceid { get; set; }
         public decimal rate { get; set; }

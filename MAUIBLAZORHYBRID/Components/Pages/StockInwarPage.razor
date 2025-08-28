@@ -1,0 +1,475 @@
+﻿@page "/stockinward"
+@layout Components.Layout.POSLayout
+@using MAUIBLAZORHYBRID.Data.DTO
+@using MAUIBLAZORHYBRID.Data.Data
+@using MAUIBLAZORHYBRID.Services.Upload
+@using MudBlazor
+@inject ISnackbar Snackbar
+@inject StockInwardService pageService
+@inject IDataUploadService UploadService
+
+@inject AppState appState
+@inject IStockInwardSaveService saveService
+@inject BackgroundDataService BgService
+
+<PageTitle>Stock Inward</PageTitle>
+
+<MudPaper Class="pos-screen">
+
+    <div class="center-panel">
+
+    @* <MudText Typo="Typo.h5" Class="mb-4">Stock Inward</MudText> *@
+
+    <!-- Header Section -->
+    <MudGrid>
+        <MudItem xs="6" sm="6">
+            <MudTextField ReadOnly="true" Label="DOC#" @bind-Value="StockInward.DocNo" />
+        </MudItem>
+
+        <MudItem xs="6" sm="6">
+            <MudDatePicker Label="Date" @bind-Date="StockInward.DocDate" DateFormat="dd/MM/yyyy" />
+        </MudItem>
+
+        <MudItem xs="6" sm="6">
+            <MudSelect T="int?" Label="Supplier" @bind-Value="selectedVendor">
+                @foreach (var supplier in initData.Vendors)
+                {
+                    <MudSelectItem Value="@supplier?.VendorId">@supplier.VendorName</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="6" sm="6">
+            <MudTextField Label="Ref#" @bind-Value="StockInward.RefNo" />
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Class="mt-4">
+                    <MudItem xs="7">
+                        <MudAutocomplete T="BarItem" Label="Item" Value="selectedItem" ValueChanged="HandleProductSelected"
+                                         SearchFunc="SearchProducts"
+                                         @ref="productRef"
+                                         ToStringFunc="(p) => p?.BarItemName" Dense Immediate /> 
+                    </MudItem>
+
+                    <MudItem xs="3">
+                        <MudAutocomplete T="Unit" Label="Unit" Value="selectedUnit" ValueChanged="HandleUnitSelected"
+                                         @ref="unitRef" SearchFunc="SearchUnits"
+                                         ToStringFunc="(p) => p?.unitName" Dense Immediate />
+                    </MudItem>
+                    <MudItem xs="2">
+                        <MudTextField OnKeyUp="onEnteronItemQuantity" @ref="quantityRef" T="decimal?" Label="Qty" @bind-Value="itemQuantity" Dense />
+                    </MudItem>
+
+                    <MudItem xs="9">
+                    </MudItem>
+                    <MudItem xs="3" Class="pa-1" Style="text-align:right">
+                    <MudButton OnClick="AddItemToTransfer" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Size="Size.Small">Add</MudButton>
+
+                    </MudItem>
+                 
+        </MudGrid>
+    <MudGrid  >
+            <MudItem xs="12">
+                <MudTable Dense="true" Items="InwardItems" FixedHeader="true" Height="50vh">
+                    <HeaderContent>
+                        <MudTh Style="width:10%">SL#</MudTh>
+                        <MudTh Style="width:75%">Item</MudTh>
+                        <MudTh>Unit</MudTh>
+                        <MudTh>Qty</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@(InwardItems.IndexOf(context) + 1)</MudTd>
+                        <MudTd>@context.ItemName</MudTd>
+                        <MudTd>@context.UnitName</MudTd>
+                        <MudTd>@context.TR_Qty</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveItem(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+
+
+            </MudItem>
+            <MudItem xs="6">
+                <div style="margin-top:auto; padding-top:16px;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="HandleReset" FullWidth>
+                        <MudIcon Icon="@Icons.Material.Filled.Undo" /> Reset
+                    </MudButton>
+                </div>
+            </MudItem>
+
+            <MudItem xs="6">
+                <div style="margin-top:auto; padding-top:16px;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleStockInwardSave" FullWidth>
+                        <MudIcon Icon="@Icons.Material.Filled.Save" /> Save
+                    </MudButton>
+                </div>
+            </MudItem>
+        </MudGrid>
+
+
+
+
+
+
+    </div>
+
+</MudPaper>
+
+@if (isLoading)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Primary">Saving....</MudText>
+        </div>
+    </div>
+}
+
+@code {
+    private BarItem? selectedItem { get; set; }
+    private StockInwardModel StockInward = new();
+    private Unit? selectedUnit { get; set; }
+
+    public int? selectedVendor { get; set; }
+
+
+    // private int? selectedUnit { get; set; }
+    private List<Unit> filteredunits = new();
+    private MudAutocomplete<Unit> unitRef;
+    private MudTextField<decimal?> quantityRef;
+    private MudAutocomplete<BarItem> productRef;
+    List<BarItem> filteredMainFillItem = new();
+
+    private Task<IEnumerable<BarItem>> SearchProducts(string value, CancellationToken token)
+    {
+
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<BarItem>>(filteredMainFillItem);
+
+        var result = filteredMainFillItem
+            .Where(p => p.BarItemName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+
+        return Task.FromResult(result);
+    }
+
+    public int CaseUnit = 10;
+    private async Task HandleProductSelected(BarItem mainitemselect)
+    {
+        selectedUnit = null;
+        selectedItem = null;
+        if (selectedItem?.BarItemId != mainitemselect?.BarItemId && mainitemselect != null)
+        {
+            selectedItem = mainitemselect;
+
+            filteredunits = initData.Units
+            .Where(u => u.unitId == CaseUnit || u.unitId == mainitemselect.BarItemBaseUnitId)
+            .OrderBy(u => u.unitId == CaseUnit ? 0 : 1)  // ensures case comes first
+            .ToList();
+
+
+            selectedUnit = filteredunits.FirstOrDefault(u => u.unitId == CaseUnit);
+
+
+            await Task.Delay(100);
+            focusStage = 3;
+        }
+    }
+    private async Task HandleUnitSelected(Unit unitselect)
+    {
+        selectedUnit = null;
+        if (selectedUnit?.unitId != unitselect?.unitId && unitselect != null)
+        {
+            selectedUnit = unitselect;
+            await Task.Delay(100);
+            focusStage = 3;
+        }
+    }
+
+    private Task<IEnumerable<Unit>> SearchUnits(string value, CancellationToken token)
+    {
+
+        if (selectedItem == null) filteredunits = null;
+        if (selectedUnit != null) value = null;
+
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<Unit>>(filteredunits);
+
+        var result = (filteredunits ?? new List<Unit>())
+            .Where(p => p.unitName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+
+        return Task.FromResult(result);
+    }
+
+    private void AddNewItem()
+    {
+        InwardItems.Add(new InwardItemList());
+    }
+
+    private void RemoveItem(InwardItemList item)
+    {
+        InwardItems.Remove(item);
+    }
+
+    private async Task SaveStockInward()
+    {
+
+    }
+
+    public class StockInwardModel
+    {
+        public string DocNo { get; set; }
+        public DateTime? DocDate { get; set; } = DateTime.Now;
+        public string RefNo { get; set; }
+    }
+
+
+
+
+
+    public int enterflag { get; set; }
+    private decimal? itemQuantity { get; set; }
+    private async void onEnteronItemQuantity(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" || args.Code == "Enter")
+        {
+
+            if (itemQuantity > 0)
+            {
+                AddItemToTransfer();
+                selectedItem = null;
+                selectedUnit = null;
+                itemQuantity = null;
+
+                await quantityRef.ResetAsync(); // 👈 this clears the UI value
+                await productRef.ResetAsync(); // 👈 this clears the UI value
+                await unitRef.ResetAsync();
+
+                StateHasChanged();
+
+                focusStage = 1;
+
+                await Task.Delay(200);
+            }
+        }
+    }
+
+    public class InwardItemList
+    {
+        public int Main_Bar_Item_ID { get; set; }
+        public int Unit_ID { get; set; }
+        public decimal TR_Qty { get; set; }
+        public string? ItemName { get; set; }
+        public string? UnitName { get; set; }
+    }
+
+    List<InwardItemList> InwardItems = new();
+    StockInwardInitDTO initData = new();
+    StockInwardDocDTO docData = new();
+
+    private async void AddItemToTransfer()
+    {
+        if (selectedItem != null && itemQuantity > 0)
+        {
+            var existing = InwardItems.FirstOrDefault(x => x.Main_Bar_Item_ID == selectedItem.BarItemId && x.Unit_ID == selectedUnit.unitId);
+            if (existing != null)
+            {
+                InwardItems.Remove(existing);
+            }
+
+
+
+            InwardItems.Add(new InwardItemList
+            {
+                Main_Bar_Item_ID = selectedItem.BarItemId,
+                Unit_ID = selectedUnit.unitId,
+                TR_Qty = itemQuantity??0,
+                ItemName = selectedItem.BarItemName,
+                UnitName=selectedUnit.unitName
+            });
+
+
+
+            selectedItem = null;
+            selectedUnit = null;
+            itemQuantity = null;
+
+        }
+    }
+
+
+    async Task HandleReset()
+    {
+        StockInward.DocDate = DateTime.Now;
+        StockInward.RefNo = "";
+        await GenerateDocNumber();
+        selectedVendor = null;
+        InwardItems.Clear();
+    }
+
+    private bool isLoading = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        isLoading = true;
+        try
+        {
+            var result = await pageService.GetInitData();
+            if (result.IsSuccess)
+            {
+                initData = result.Data ?? new();
+
+
+                filteredMainFillItem = initData.barItems
+                   .Where(item => item.MainBarItem == 0)
+                   .ToList();
+
+                await GenerateDocNumber();
+            }
+            else
+            {
+                Console.WriteLine($"Initialisatiion failed: {result.ErrorMessage}");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Initialisation Error", Severity.Error);
+            Console.WriteLine($"Initialisatiion failed: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GenerateDocNumber()
+    {
+        var result = await pageService.GetStockInwardDoc();
+        if (result.IsSuccess)
+        {
+            docData = result.Data ?? new();
+            StockInward.DocNo = docData.DocNo;
+        }
+    }
+
+    int focusStage = 0;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+        }
+        else
+        {
+            if (focusStage == 1)
+            {
+                itemQuantity = null;
+
+                await productRef.FocusAsync();
+            }
+            else if (focusStage == 2)
+            {
+                await unitRef.FocusAsync();
+            }
+            else if (focusStage == 3)
+            {
+                await quantityRef.FocusAsync();
+            }
+
+            focusStage = 0;
+
+        }
+    }
+
+
+    async Task HandleStockInwardSave()
+    {
+        BgService.StopBackgroundTasks();
+        Snackbar.Clear();
+        var vendorId = 0;
+        if (selectedVendor.HasValue)
+            vendorId = selectedVendor.Value;
+        else
+        {
+            Snackbar.Add("Select Supplier", Severity.Error);
+            return;
+
+        }
+        if (docData.DocNo == null || !(docData.SLNO > 0))
+        {
+            Snackbar.Add("DOC number not available.", Severity.Error);
+            return;
+        }
+
+        var save = new StockInwardMaster
+        {
+            StockInwardPrefix = docData.Prefix,
+            StockInwardRefNo = StockInward.RefNo??"",
+            StockInwardSlNo = docData.SLNO,
+            StockInwardDocNo = docData.DocNo,
+
+            StockInwardDate = DateTime.UtcNow,
+            StockInwardTime = DateTime.UtcNow,
+
+            BranchId = appState.BranchId,
+            LoginEmpId = appState.LoggedInUserId,
+            IsSynced=false,
+            SockInwardServerId=0,
+            VendorId = vendorId,
+
+            StockInwardNotes = "",
+            StockInwardDetails = InwardItems.Select(x => new StockInwardDetail
+            {
+                BarItemId = x.Main_Bar_Item_ID,
+                UnitId = x.Unit_ID,
+                InwardQty = x.TR_Qty
+            }).ToList()
+        };
+
+
+
+        if (InwardItems.Any())
+        {
+            try
+            {
+                isLoading = true;
+
+                var saveResult = await saveService.SaveStockInwardAsync(save);
+                if (saveResult.IsSuccess)
+                {
+                    UploadService.UploadPendingStockInwardsAsync();
+                    Snackbar.Clear();
+                    Snackbar.Add("Stock Inward Saved Successfully!!.", Severity.Success);
+                    await HandleReset();
+                }
+                else
+                {
+                    Snackbar.Add("Stock Inwarde Error!!. \n" + saveResult.ErrorMessage, Severity.Error);
+                    // Console.WriteLine(saveResult.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Stock Inward Error!!. \n" + ex.Message, Severity.Error);
+
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+        else
+        {
+            Snackbar.Add("Inward Items Cannot Be Empty", Severity.Error);
+        }
+
+        BgService.StartBackgroundTasks();
+
+    }
+
+}

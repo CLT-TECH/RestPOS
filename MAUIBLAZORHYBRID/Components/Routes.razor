@@ -46,19 +46,19 @@
             // }
 
             // Register for state changes
-            BackgroundDataService.InitialSyncCompleted += () =>
-            {
-                isLoading = false;
-                StateHasChanged();
-            };
+            // BackgroundDataService.InitialSyncCompleted += () =>
+            // {
+            //     isLoading = false;
+            //     StateHasChanged();
+            // };
 
-            BackgroundDataService.InitialSyncFailed += (ex) =>
-            {
-                isLoading = false;
-                StateHasChanged();
-            };
+            // BackgroundDataService.InitialSyncFailed += (ex) =>
+            // {
+            //     isLoading = false;
+            //     StateHasChanged();
+            // };
 
-            BackgroundDataService.StartBackgroundTasks();
+            // BackgroundDataService.StartBackgroundTasks();
         }
         catch
         {

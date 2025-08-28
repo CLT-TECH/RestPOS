@@ -30,6 +30,36 @@
         <!-- First part: 75-80% width -->
         <div class="left-panel">
 
+             <div class="header-part">
+                 <MudGrid >
+                   
+                    <MudItem sm="3">
+                        <MudAutocomplete T="Table"
+                        Label="Table"
+                        Value="selectedTable"
+                        ValueChanged="HandleTableSelected"
+                        SearchFunc="SearchTable"
+                        ToStringFunc="(p) => p?.tableName"
+                        Dense="true"
+                        ResetValueOnEmptyText="true"
+                        Clearable="true"
+                        Immediate="true"
+                        MaxItems="100"
+                        @ref="tableref"
+
+
+                        >
+                            <ItemTemplate>
+                                <div>@context.tableName</div>
+                            </ItemTemplate>
+                        </MudAutocomplete>
+                    </MudItem>
+                    
+
+                </MudGrid>
+
+            </div>
+
             <!-- Body: category list left and item cards right -->
             <div class="body-part">
 
@@ -57,7 +87,7 @@
                         @foreach (var table in filteredtabels) // Assuming 'Tabless' is your list of tables
                         {
                             bool isPending = pendingIds.Contains(table.tableId);
-                            <MudItem xs="6" sm="4" md="1" lg="1" Class="pa-0">
+                            <MudItem xs="6" sm="4" md="@SmSize" lg="@SmSize" Class="pa-0">
                                 <MudCard Class="@(isPending ? "name-card pending" : "name-card")" @onclick="async () => {
                                     if(!isPending)
                                     {  GoToKot(table.tableId);}
@@ -233,15 +263,60 @@
 
 
 @code {
+    private Table selectedTable;
+
+    private MudAutocomplete<Table> tableref;
+
+
+     int focusStage = 0;
+     
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (selectedTable == null)
+                await tableref.FocusAsync();
+        }
+    }
+
+    private async Task HandleTableSelected(Table? tableSelect)
+    {
+        selectedTable = tableSelect;
+        if (selectedTable != null)
+        {
+            GoToKot(selectedTable.tableId);
+        }
+
+        await Task.Delay(1);
+    }
+
+      private Task<IEnumerable<Table>> SearchTable(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<Table>>(pageinitdata.Tables);
+
+        var result = pageinitdata.Tables
+            .Where(p => p.tableName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+
+        return Task.FromResult(result);
+    }
+
+
     public bool ShowBilling { get; set; } = false;
     public OrderDetailsDTO no = new();
 
+    private int SmSize { get; set; } = 1;
 
     async Task ShowOrderDetails(Table table)
     {
         OrderedItems =new();
         TableId = 0;
         ShowBilling = false;
+
+        SmSize = 1;
+
+
         var options = new DialogOptions { MaxWidth = MaxWidth.Small, CloseButton = true, FullWidth = false };
         var dialog = DialogService.Show<OrderDetailsDialog>($"Order Detais:- "+table.tableName, new DialogParameters { ["TableId"] = table.tableId }, options);
 
@@ -353,6 +428,9 @@
     {
 
         ShowBilling = true;
+
+        SmSize = 2;
+
         TableId = tableId;
         if (TableId > 0)
         {
@@ -589,6 +667,9 @@
             {
                 Snackbar.Add("Bill generated successfully!", Severity.Success);
                 ShowBilling = false;
+
+                SmSize = 1;
+
                 OrderedItems = new();
                 kotInitData = new();
                 TableId = new();

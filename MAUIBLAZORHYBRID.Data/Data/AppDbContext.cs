@@ -18,11 +18,9 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public DbSet<SubCategory> SubCategories { get; set; }
         public DbSet<MainItem> MainItems { get; set; }
         public DbSet<Unit> Units { get; set; }
-
         public DbSet<BranchMaster> BranchMasters { get; set; }
         public DbSet<BillStation> BillStations { get; set; }
         public DbSet<DiningSpace> DiningSpaces { get; set; }
-
         public DbSet<BillItem> BillItems { get; set; }
         public DbSet<BillItemUnit> BillItemUnits { get; set; }
         public DbSet<DiningSpaceItemRate> DiningSpaceItemRates { get; set; }
@@ -46,6 +44,9 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public DbSet<SyncHistory> SyncHistories { get; set; }
         public DbSet<BarItemStockCounter> BarItemCounterStocks { get; set; }
         public DbSet<BarItemStockGodown> BarItemGodownStocks { get; set; }
+        public DbSet<VendorMaster> VendorMasters { get; set; }
+        public DbSet<StockInwardMaster> StockInwardMasters { get; set; }
+        public DbSet<StockInwardDetail> StockInwardDetails { get; set; }
 
         
         static AppDbContext()

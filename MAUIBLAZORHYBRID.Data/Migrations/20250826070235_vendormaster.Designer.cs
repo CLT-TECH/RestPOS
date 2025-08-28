@@ -3,6 +3,7 @@ using System;
 using MAUIBLAZORHYBRID.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MAUIBLAZORHYBRID.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250826070235_vendormaster")]
+    partial class vendormaster
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
@@ -701,93 +704,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.ToTable("MainItems");
                 });
 
-            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockInwardDetail", b =>
-                {
-                    b.Property<int>("StockInwardDetId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BarItemId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("InwardQty")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("StockInwardId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("UnitId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("StockInwardDetId");
-
-                    b.HasIndex("BarItemId");
-
-                    b.HasIndex("StockInwardId");
-
-                    b.HasIndex("UnitId");
-
-                    b.ToTable("StockInwardDetails");
-                });
-
-            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockInwardMaster", b =>
-                {
-                    b.Property<int>("StockInwardId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BranchId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsSynced")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("LoginEmpId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SockInwardServerId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("StockInwardDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StockInwardDocNo")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StockInwardNotes")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StockInwardPrefix")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StockInwardRefNo")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("StockInwardSlNo")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("StockInwardSqlDateTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("StockInwardTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("VendorId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("StockInwardId");
-
-                    b.HasIndex("BranchId");
-
-                    b.HasIndex("VendorId");
-
-                    b.ToTable("StockInwardMasters");
-                });
-
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransfer", b =>
                 {
                     b.Property<int>("Id")
@@ -1317,52 +1233,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("Unit");
                 });
 
-            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockInwardDetail", b =>
-                {
-                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BillItem", "BarItem")
-                        .WithMany()
-                        .HasForeignKey("BarItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.StockInwardMaster", "StockInward")
-                        .WithMany("StockInwardDetails")
-                        .HasForeignKey("StockInwardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.Unit", "Unit")
-                        .WithMany()
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BarItem");
-
-                    b.Navigation("StockInward");
-
-                    b.Navigation("Unit");
-                });
-
-            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockInwardMaster", b =>
-                {
-                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BranchMaster", "Branch")
-                        .WithMany()
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.VendorMaster", "Vendor")
-                        .WithMany()
-                        .HasForeignKey("VendorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
-
-                    b.Navigation("Vendor");
-                });
-
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransferItem", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.StockTransfer", "StkTr")
@@ -1447,11 +1317,6 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.MainItem", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockInwardMaster", b =>
-                {
-                    b.Navigation("StockInwardDetails");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransfer", b =>

@@ -3,6 +3,7 @@
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
 @using MAUIBLAZORHYBRID.Services.Sync
+@using MAUIBLAZORHYBRID.Services.Upload
 @using MudBlazor
 @using System.Globalization
 @using System.Diagnostics
@@ -18,6 +19,7 @@
 @inject NavigationManager Nav
 @inject BackgroundDataService BgService
 
+@inject IDataUploadService UploadService
 
 <MudPaper Class="pos-screen">
     <div class="main-layout">
@@ -65,7 +67,10 @@
                         Dense="true"
                         ResetValueOnEmptyText="true"
                         @ref="productRef"
-                        Immediate="true">
+                        Immediate="true"
+                        MaxItems="50"
+                        Clearable="true"
+                        >
                             <ItemTemplate>
                                 <div>@context.itemName</div>
                             </ItemTemplate>
@@ -358,8 +363,7 @@
                 var saveResult = await _HotKOTSaveService.SaveHotKOTAsync(hotKOTMaster);
                 if (saveResult.IsSuccess)
                 {
-                    BgService.QueueKOTUploadAsync();
-
+                    UploadService.UploadPendingKOTsAsync();
                     Snackbar.Clear();
                     Snackbar.Add("Order Placed Successfully!!.", Severity.Success);
                     OrderedItems = new();
@@ -487,7 +491,7 @@
             Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomStart;
 
 
-            selectedTable = initData.Tables.FirstOrDefault(t => t.tableId == TableId)??new();
+            selectedTable = initData.Tables.FirstOrDefault(t => t.tableId == TableId) ?? new();
             if (selectedTable != null)
             {
                 diningspaceid = initData.TablesDiningSpaces
@@ -502,17 +506,51 @@
                     diningspacename = dspace
       .Where(tm => tm.diningSpaceId == diningspaceid)
       .Select(tm => tm.diningSpaceName)
-      .FirstOrDefault()??"";
+      .FirstOrDefault() ?? "";
                 }
 
             }
+            // await productRef.FocusAsync();
 
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Initialisatiion failed: {ex.Message}");
         }
-        isLoading = false;
+        finally 
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    int focusStage = 0;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if(selectedProduct==null)
+                await productRef.FocusAsync();
+        }
+        else
+        {
+            if (focusStage == 1)
+            {
+                await productRef.FocusAsync();
+            }
+            else if(focusStage==2)
+            {
+                await unitRef.FocusAsync();
+            }
+            else if (focusStage == 3)
+            {
+                await quantityRef.FocusAsync();
+            }
+
+            focusStage = 0;
+
+        }
     }
 
     void ApplyDiscount()
@@ -526,7 +564,6 @@
     }
 
     public string qrCode { get; set; }
-    public bool intermediateTime { get; set; } = true;
 
 
     private async void onEnteronItemQuantity(KeyboardEventArgs args)
@@ -539,7 +576,13 @@
                 .FirstOrDefault(i => i.itemId == selectedItem.itemId);
             if (matchedItem != null)
             {
-                if (itemQuantity >= 0)
+
+                if (matchedItem.itemType == 2 && selectedUnit == null)
+                {
+                    Snackbar.Clear();
+                    Snackbar.Add("unit not selected!!.", Severity.Error);
+                }
+                else if(itemQuantity > 0)
                 {
                     var unitId = selectedUnit?.unitId ?? 0;
 
@@ -557,6 +600,8 @@
 
 
                     StateHasChanged();
+
+                    focusStage = 1;
 
                     await Task.Delay(10); // Small delay for render cycle
 
@@ -582,47 +627,45 @@
     public int? itemQuantity { get; set; }
     private async Task HandleProductSelected(BillItem mainitemselect)
     {
-        if (intermediateTime)
+        selectedItem = null;
+        if (selectedItem?.itemId != mainitemselect?.itemId && mainitemselect != null)
         {
-            if (selectedItem?.itemId != mainitemselect?.itemId && mainitemselect != null)
-            {
-                selectedItem = mainitemselect;
+            selectedItem = mainitemselect;
 
-                filteredunits = filteredMainFillItem
-                    .Where(i => i.itemId == selectedItem.itemId && i.ItemUnits != null)
-                    .SelectMany(i => i.ItemUnits!) // Flatten the list
-                    .Where(iu => iu.Unit != null) // Avoid null Unit references
-                    .Select(iu => iu.Unit)
-                    .Distinct()
-                    .ToList();
+            filteredunits = filteredMainFillItem
+                .Where(i => i.itemId == selectedItem.itemId && i.ItemUnits != null)
+                .SelectMany(i => i.ItemUnits!) // Flatten the list
+                .Where(iu => iu.Unit != null) // Avoid null Unit references
+                .Select(iu => iu.Unit)
+                .Distinct()
+                .ToList();
 
-                filteredunits = filteredunits
-                                .Where(unit =>
-                                {
-                                    var child = parentchildrenitem
-                                        .FirstOrDefault(x => x.parentItemId == selectedItem.itemId && x.unitId == unit.unitId);
+            filteredunits = filteredunits
+                            .Where(unit =>
+                            {
+                                var child = parentchildrenitem
+                                    .FirstOrDefault(x => x.parentItemId == selectedItem.itemId && x.unitId == unit.unitId);
 
-                                    if (child == null)
-                                        return false;
+                                if (child == null)
+                                    return false;
 
-                                    var rate = dsitemrate.FirstOrDefault(x =>
-                                        x.itemId == child.childItemId &&
-                                        x.diningSpaceId == selectedDiningSpace);
+                                var rate = dsitemrate.FirstOrDefault(x =>
+                                    x.itemId == child.childItemId &&
+                                    x.diningSpaceId == selectedDiningSpace);
 
-                                    return rate != null && rate.itemRate > 0;
-                                })
-                                .ToList();
+                                return rate != null && rate.itemRate > 0;
+                            })
+                            .ToList();
 
-                selectedUnit = null;
-                StateHasChanged();
+            selectedUnit = null;
 
-                await Task.Delay(100);
+            if (selectedItem.itemType == 1)
+                focusStage = 3;
+            else
+                focusStage = 2;
 
-                if (!(filteredunits.Any()))
-                    await quantityRef.FocusAsync();
-                else
-                    await unitRef.FocusAsync();
-            }
+            StateHasChanged();
+
         }
     }
 
@@ -655,11 +698,11 @@
 
     private async Task HandleUnitSelected(Unit unitselect)
     {
+        selectedUnit = null;
         if (selectedUnit?.unitId != unitselect?.unitId && unitselect != null)
         {
             selectedUnit = unitselect;
-            await Task.Delay(100); // Let autocomplete settle
-            await quantityRef.FocusAsync(); // 👈 Move to NEXT field
+            focusStage = 3;
         }
     }
     private MainItem selectedProduct;
@@ -690,10 +733,42 @@
 
     private Task<IEnumerable<BillItem>> SearchProducts(string value, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return Task.FromResult<IEnumerable<BillItem>>(filteredMainFillItem);
 
-        var result = filteredMainFillItem
+
+        var rateOnlyItems = filteredMainFillItem
+        .Where(item =>
+        {
+            decimal rate = 0m;
+
+            if (item.itemType == 1)
+            {
+                rate = dsitemrate
+                    .FirstOrDefault(x => x.itemId == item.itemId && x.diningSpaceId == selectedDiningSpace)
+                    ?.itemRate ?? 0m;
+            }
+            else if (item.itemType == 2)
+            {
+                var children = parentchildrenitem
+                        .Where(x => x.parentItemId == item.itemId)
+                        .ToList();
+                if (children.Any())
+                {
+                    // Check if any child has a rate > 0
+                    rate = children
+                        .Select(child =>
+                            dsitemrate.FirstOrDefault(x => x.itemId == child.childItemId && x.diningSpaceId == selectedDiningSpace)?.itemRate ?? 0m
+                        )
+                        .FirstOrDefault(r => r > 0m);
+                }
+            }
+
+            return rate > 0;
+        });
+
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<BillItem>>(rateOnlyItems);
+
+        var result = rateOnlyItems
             .Where(p => p.itemName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
 
         return Task.FromResult(result);
@@ -797,7 +872,7 @@
 
             int unitid = filtered.FirstOrDefault()?.unitId ?? 0;
             int parentItemId = filtered.FirstOrDefault()?.parentItemId ?? 0;
-            existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == parentItemId);
+            existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == parentItemId && o.UnitID == unitid);
         }
 
         if (existingOrder == null)
@@ -841,6 +916,11 @@
     private void AddToOrderHeader(BillItem item,int Qty,int unitid)
     {
         var existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == item.itemId);
+        if(unitid>0)
+             existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == item.itemId && o.UnitID==unitid);
+
+
+        
         if (existingOrder == null)
         {
 
