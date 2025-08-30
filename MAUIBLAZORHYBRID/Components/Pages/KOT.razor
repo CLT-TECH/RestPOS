@@ -15,11 +15,15 @@
 @inject ISyncService SyncService
 @inject HttpClient Http
 @using System.Text.Json;
+@using SharpHook.Data
 @inject AppState appState
 @inject NavigationManager Nav
 @inject BackgroundDataService BgService
 
 @inject IDataUploadService UploadService
+
+@inject IKeyboardListenerService KeyboardListener
+@implements IDisposable
 
 <MudPaper Class="pos-screen">
     <div class="main-layout">
@@ -188,7 +192,9 @@
                 </div>
 
                 <div id="scrollContainer" class="custom-ordered-items-list">
-                    <MudList T="object">
+                    <MudList T="string?" SelectionMode="SelectionMode.SingleSelection"
+                             SelectedValueChanged="@((string? item)=>
+                                                     OnSelectedItemChanged(item))" SelectedValue="selectedListItem">
                         @if (OrderedItems == null || !OrderedItems.Any())
                         {
                             <MudText Typo="Typo.body1" Align="Align.Center" Class="custom-empty-order-text">
@@ -199,7 +205,7 @@
                         {
                             @foreach (var orderItem in OrderedItems.AsEnumerable().Reverse())
                             {
-                                <MudListItem Style="padding: 0;" Class="custom-ordered-list-item">
+                                <MudListItem Class="@GetItemClass(orderItem)" Value="orderItem?.Name" id="@($"listItem{orderItem.ItemId}{orderItem.UnitID}")" Style="padding: 0;"  @onkeydown="(e) => HandleKeyDown(e, orderItem)" @onfocus="(e) => HandleFocusListItem(e, orderItem.Name)">
 
                                     <MudGrid Style="width: 100%; align-items: stretch;" Spacing="0" Class="ma-0 pa-0">
 
@@ -363,11 +369,12 @@
                 var saveResult = await _HotKOTSaveService.SaveHotKOTAsync(hotKOTMaster);
                 if (saveResult.IsSuccess)
                 {
-                    UploadService.UploadPendingKOTsAsync();
                     Snackbar.Clear();
                     Snackbar.Add("Order Placed Successfully!!.", Severity.Success);
                     OrderedItems = new();
                     NumberOfGuests = null;
+
+                    _=UploadService.UploadPendingKOTsAsync();
 
 
                     await Task.Delay(1000);
@@ -378,6 +385,7 @@
                     Snackbar.Add("Order Place Error!!. \n"+ saveResult.ErrorMessage , Severity.Error);
                     // Console.WriteLine(saveResult.ErrorMessage);
                 }
+
             }
             else
                 Snackbar.Add("Nothing to order", Severity.Error);
@@ -389,6 +397,179 @@
         }
     }
 
+
+    private string lastKey = "";
+    private string combo = "";
+    private string barcode = "";
+    private List<Services.Interfaces.KeyboardEventData> keyEvents = new();
+
+
+    private IDisposable? _keyEventSubscription;
+    private IDisposable? _barcodeSubscription;
+    private async Task InitializeKeyboardListener()
+    {
+
+        KeyboardListener.StartListening();
+
+        _keyEventSubscription=KeyboardListener.KeyEvents.Subscribe(async evt =>
+        {
+            lastKey = evt.KeyName;
+            keyEvents.Insert(0, evt);
+            combo = DetectCombo(evt);
+
+            switch (combo)
+            {
+                case "Ctrl + S":
+                    Debug.WriteLine("Saved");
+                    break;
+                case "F1":
+                    await HandleSave();
+                    break;
+                case "F11":
+                    ResetData();
+                    break;
+                case "F4":
+                    await HandleF4Key();
+                    break;
+                default:
+                    Debug.WriteLine("Everything else");
+                    break;
+            }
+
+            // Call StateHasChanged if needed for UI updates
+        });
+
+        _barcodeSubscription=KeyboardListener.BarcodeStream.Subscribe(code =>
+        {
+            barcode = code;
+            AddBarCodeItem(barcode);
+            InvokeAsync(StateHasChanged);
+        });
+        await InvokeAsync(StateHasChanged);
+
+    }
+    private void AddBarCodeItem(string barCode)
+    {
+
+        var filtered = parentchildrenitem
+                             .Where(x => x.BarCode.ToLower() == barCode.ToLower())
+                           .ToList();
+
+        int childItemId = filtered.FirstOrDefault()?.childItemId ?? 0;
+
+
+        if (childItemId > 0)
+        {
+            var filteredbillitem = BillItems
+                            .Where(item => item.itemId == childItemId)
+                            .ToList();
+
+            var baritem = filteredbillitem.FirstOrDefault();
+
+            if (baritem != null)
+                AddToOrderBillItem(baritem);
+        }
+    }
+
+    private void ResetData()
+    {
+        OrderedItems = new();
+        NumberOfGuests = null;
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    public string focusIdString { get; set; } = string.Empty;
+    public string? selectedListItem { get; set; }
+    private async Task HandleF4Key()
+    {
+        selectedItem = null;
+        selectedUnit = null;
+        _ = productRef?.CloseMenuAsync();
+
+        var focusedId = await JS.InvokeAsync<string>("getFocusedElementId");
+        await JS.InvokeVoidAsync("removeFocus", focusedId);
+
+        if (selectedListItem == "" && OrderedItems.Any())
+        {
+            var itemId = OrderedItems.LastOrDefault();
+
+            selectedListItem = itemId.Name;
+            if (itemId != null)
+                focusIdString = "listItem" + itemId.ItemId + itemId.UnitID;
+        }
+        else
+        {
+            selectedListItem = "";
+            focusStage = 1;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task HandleKeyDown(KeyboardEventArgs args, ItemOrder order)
+    {
+        if (order != null && selectedListItem == "")
+        {
+            selectedListItem = order.Name;
+            return;
+        }
+        else if (order.Name != selectedListItem)
+        {
+            selectedListItem = order.Name;
+            return;
+        }
+
+        int currentIndex = OrderedItems.IndexOf(order);
+
+        var nextItem = currentIndex < OrderedItems.Count - 1
+            ? OrderedItems[currentIndex + 1]
+            : null;
+
+        var previousItem = currentIndex > 0
+            ? OrderedItems[currentIndex - 1]
+            : null;
+        if (args.Key == "Delete")
+        {
+            DeleteItem(order);
+        }
+        else if (args.Key == "+")
+        {
+            AddItem(order);
+        }
+        else if (args.Key == "-")
+        {
+            if (order.Quantity > 1)
+                MinusItem(order);
+            else
+                DeleteItem(order);
+        }
+        else if (args.Key == "ArrowDown")
+        {
+            if (previousItem != null)
+            {
+                var id = $"listItem{previousItem.ItemId}{previousItem?.UnitID:0}";
+                await JS.InvokeVoidAsync("focusElementById", id);
+
+            }
+        }
+        else if (args.Key == "ArrowUp")
+        {
+            if (nextItem != null)
+            {
+                var id = $"listItem{nextItem.ItemId}{nextItem?.UnitID:0}";
+                await JS.InvokeVoidAsync("focusElementById", id);
+            }
+        }
+
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    void HandleFocusListItem(FocusEventArgs e, string? item)
+    {
+        selectedListItem = item; // Update the bound variable
+    }
 
 
     public int selectedDiningSpace { get; set; } = 0;
@@ -510,7 +691,8 @@
                 }
 
             }
-            // await productRef.FocusAsync();
+
+            await InitializeKeyboardListener();
 
         }
         catch (Exception ex)
@@ -546,6 +728,11 @@
             else if (focusStage == 3)
             {
                 await quantityRef.FocusAsync();
+            }
+            else if (focusIdString != "")
+            {
+                await JS.InvokeVoidAsync("focusElementById", focusIdString);
+                focusIdString = "";
             }
 
             focusStage = 0;
@@ -1007,9 +1194,39 @@
 
 
     }
-    private void DeleteItem(ItemOrder deleteItem)
+    private async void DeleteItem(ItemOrder deleteItem)
     {
+        var focusedId = await JS.InvokeAsync<string>("getFocusedElementId");
+        await JS.InvokeVoidAsync("removeFocus", focusedId);
+        selectedListItem = "";
+
+
+        int currentIndex = OrderedItems.IndexOf(deleteItem);
         OrderedItems.Remove(deleteItem);
+
+        var nextItem = currentIndex < OrderedItems.Count
+            ? OrderedItems[currentIndex]
+            : null;
+
+        var previousItem = currentIndex > 0
+            ? OrderedItems[currentIndex - 1]
+            : null;
+
+        if (previousItem != null)
+        {
+            var id = $"listItem{previousItem.ItemId}{previousItem?.UnitID:0}";
+            focusIdString = id;
+        }
+        else if (nextItem != null)
+        {
+            var id = $"listItem{nextItem.ItemId}{nextItem?.UnitID:0}";
+            focusIdString = id;
+        }
+        else
+        {
+            focusStage = 1;
+        }
+        await InvokeAsync(StateHasChanged);
     }
 
     private List<Item> FilteredItems = new();
@@ -1036,6 +1253,51 @@
     }
 
 
+    private string DetectCombo(Services.Interfaces.KeyboardEventData evt)
+    {
+        if (evt.EventType != EventType.KeyPressed) return "";
+
+        return evt.KeyCode switch
+        {
+            KeyCode.VcF1 => "F1",
+            KeyCode.VcF2 => "F2",
+            KeyCode.VcF3 => "F3",
+            KeyCode.VcF4 => "F4",
+            KeyCode.VcF5 => "F5",
+            KeyCode.VcF6 => "F6",
+            KeyCode.VcF7 => "F7",
+            KeyCode.VcF8 => "F8",
+            KeyCode.VcF9 => "F9",
+            KeyCode.VcF10 => "F10",
+            KeyCode.VcF11 => "F11",
+            KeyCode.VcF12 => "F12",
+            KeyCode.VcS when evt.IsCtrlPressed => "Ctrl + S",
+            KeyCode.VcEnter when evt.IsCtrlPressed => "Ctrl + Enter",
+            KeyCode.VcDelete when evt.IsCtrlPressed => "Ctrl + Delete",
+            KeyCode.VcTab when evt.IsCtrlPressed => "TabOrderAndItem",
+            KeyCode.VcEquals => "+",
+            KeyCode.VcMinus => "-",
+            _ => ""
+        };
+    }
    
+    private async Task OnSelectedItemChanged(string? item)
+    {
+        selectedListItem = item; // Update the bound variable
+        Console.WriteLine($"Selected: {item}"); // Example action
+        await Task.CompletedTask; // Explicit async return
+    }
+    private string GetItemClass(ItemOrder item)
+    {
+        return item.Name == selectedListItem
+            ? "custom-ordered-list-item custom-ordered-list-item-selected"
+            : "custom-ordered-list-item";
+    }
+    public void Dispose()
+    {
+        KeyboardListener?.StopListening();
+        _keyEventSubscription?.Dispose();
+        _barcodeSubscription?.Dispose();
+    }
 }
 

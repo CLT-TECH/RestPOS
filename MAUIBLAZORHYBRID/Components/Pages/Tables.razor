@@ -4,6 +4,7 @@
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
 @using MAUIBLAZORHYBRID.Services.Sync
+@using MAUIBLAZORHYBRID.Services.Upload
 @using MudBlazor
 @using System.Globalization
 @using System.Diagnostics
@@ -22,6 +23,7 @@
 @inject TaxCalculationService TaxService
 @inject KOTBillService KOTService
 @inject BackgroundDataService BgService
+@inject IDataUploadService UploadService
 
 
 
@@ -634,7 +636,7 @@
                 HotBillItemDetails = OrderedItems.Select(item => new HotBillItemDetail
                 {
                     ItemId = item.ItemId,
-                    BarCode =   string.Empty,
+                    BarCode =   item.Empty,
                     Qty = item.Quantity,
                     UnitId = item.UnitID,
                     DetRate = item.Price,
@@ -687,6 +689,7 @@
                 selectedDiningSpaceId = 0;
 
                 Recalculate();
+                _= UploadService.UploadPendingDataAsync();
 
             }
             else

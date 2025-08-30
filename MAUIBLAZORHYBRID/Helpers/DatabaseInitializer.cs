@@ -10,7 +10,7 @@ namespace MAUIBLAZORHYBRID.Helpers
 {
     public class DatabaseInitializer
     {
-        private const string DbInitKey = "DbInitializedv0.3.2";
+        private const string DbInitKey = "DbInitializedv0.3.3";
 
 
 

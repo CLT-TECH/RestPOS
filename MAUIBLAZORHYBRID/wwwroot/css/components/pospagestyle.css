@@ -459,11 +459,9 @@
     overflow: hidden;
 }
 
-/*  .custom-ordered-list-item:hover {
-            background-color: var(--mint-green);
-            color: white;
-        } */
-
+.custom-ordered-list-item-selected {
+    border: 1px solid var(--mint-green);
+}
 .custom-order-line1 {
     font-weight: bold;
     font-size: 1rem;

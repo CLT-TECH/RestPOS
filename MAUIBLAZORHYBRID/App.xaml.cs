@@ -6,6 +6,8 @@ using MAUIBLAZORHYBRID.Helpers;
 using Microsoft.EntityFrameworkCore;
 using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Services;
+using MAUIBLAZORHYBRID.Services.Interfaces;
+
 
 
 
@@ -20,7 +22,8 @@ namespace MAUIBLAZORHYBRID
     public partial class App : Application
     {
         private readonly BackgroundDataService _backgroundDataService;
-        public App(AppDbContext dbContext, BackgroundDataService backgroundDataService)
+        private readonly IKeyboardListenerService _keyboardlistner;
+        public App(AppDbContext dbContext, BackgroundDataService backgroundDataService, IKeyboardListenerService keyboardListener)
         {
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
@@ -49,6 +52,7 @@ namespace MAUIBLAZORHYBRID
             InitializeDatabase(dbContext);
 
             _backgroundDataService = backgroundDataService;
+            _keyboardlistner = keyboardListener;
 
             MainPage = new MainPage();
         }
@@ -75,19 +79,19 @@ namespace MAUIBLAZORHYBRID
             }
         }
 
-        //protected override void OnSleep()
-        //{
-        //    base.OnSleep();
+        protected override void OnSleep()
+        {
+            base.OnSleep();
 
-        //    try
-        //    {
-        //        // Stop background services when app sleeps
-        //        _backgroundDataService.StopBackgroundTasks();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //    }
-        //}
+            try
+            {
+                // Stop background services when app sleeps
+                //_backgroundDataService.StopBackgroundTasks();
+            }
+            catch (Exception ex)
+            {
+            }
+        }
 
         protected override async void OnResume()
         {
@@ -104,11 +108,14 @@ namespace MAUIBLAZORHYBRID
                 {
                     Debug.WriteLine("App not registered. Background service not started.");
                 }
+
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error resuming: {ex}");
             }
+
+           
         }
 
 

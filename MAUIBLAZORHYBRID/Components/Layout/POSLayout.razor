@@ -56,27 +56,7 @@
     private string NavBarWidthStyle => $"width: {(IsNavVisible ? "240px" : "40px")};";
 
 
-    private MudTheme _posTheme = new MudTheme()
-    {
-        PaletteLight = new PaletteLight()
-        {
-            Primary = "#66BB6A",        // Soft Leaf Green — good for branding & buttons
-            Secondary = "#81C784",      // Medium Mint — complementary to primary
-            Tertiary = "#C8E6C9",       // Light Mint — great for accents/highlights
-            AppbarBackground = "#66BB6A", // Darker Green — good contrast for top bar
-            DrawerBackground = "#E8F5E9", // Pale Green — subtle drawer background
-            Success = "#43A047",        // Strong Green — for success messages
-            Background = "#F9FFF9",     // Almost-white green tint — body background
-            Surface = "#FFFFFF",        // Panels/cards stay white
-            TextPrimary = "#1B5E20",    // Dark Green — ensures readability
-            TextSecondary = "#4E704F",  // Muted Green-Gray — for subtle text
-        },
-        LayoutProperties = new LayoutProperties()
-        {
-            AppbarHeight = "64px",
-            DrawerWidthLeft = "70px", // Only left drawer width specified
-            DefaultBorderRadius = "4px"
-        }
-    };
+    private MudTheme _posTheme = new MudTheme();
+
 
 }

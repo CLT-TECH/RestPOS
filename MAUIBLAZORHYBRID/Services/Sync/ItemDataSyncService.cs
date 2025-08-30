@@ -163,22 +163,32 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                     var unitmaster = await db.Units.FindAsync(item.unitid, ct);
                     var categoryresult = await db.Categories.FindAsync(item.catid, ct);
 
-                    var itemresult = new VWItemParentChild
-                    {
-                        parentItemId = item.parentitemid,
-                        childItemId = item.childitemid,
-                        parentItemname = item.parentitemname,
-                        parentItemcode = item.parentitemcode,
-                        childItemname = item.childitemname,
-                        childItemcode = item.childitemcode,
-                        itemtype = item.itemtype,
-                        unitId = item.unitid,
-                        Unit = unitmaster,
-                        CatId = item.catid,
-                        category = categoryresult??new()
-                    };
+                    var itemchild = await db.ItemParentChilds.FindAsync(item.id, ct);
 
-                    await db.ItemParentChilds.AddAsync(itemresult, ct);
+
+                    if (itemchild != null)
+                    {
+                        var itemresult = new VWItemParentChild
+                        {
+                            Id = item.id,
+                            parentItemId = item.parentitemid,
+                            childItemId = item.childitemid,
+                            parentItemname = item.parentitemname,
+                            parentItemcode = item.parentitemcode,
+                            childItemname = item.childitemname,
+                            childItemcode = item.childitemcode,
+                            itemtype = item.itemtype,
+                            unitId = item.unitid,
+                            Unit = unitmaster,
+                            CatId = item.catid,
+                            BarCode = item.barcode,
+                            category = categoryresult ?? new()
+
+                        };
+                        await db.ItemParentChilds.AddAsync(itemresult, ct);
+                    }
+
+
                 }
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);

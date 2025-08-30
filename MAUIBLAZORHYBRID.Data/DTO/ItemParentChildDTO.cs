@@ -27,5 +27,7 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         public int itemtype { get; set; }
 
         public int catid { get; set; }
+        public string barcode { get; set; } = string.Empty;
+
     }
 }

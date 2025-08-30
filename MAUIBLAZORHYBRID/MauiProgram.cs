@@ -47,7 +47,7 @@ namespace MAUIBLAZORHYBRID
             //var dbContext = builder.Services.GetService<AppDbContext>();
             //dbContext?.Database.Migrate(); 
 
-            
+            builder.Services.AddSingleton<IKeyboardListenerService, KeyboardListenerService>();
 
             builder.Services.AddTransient<ISyncService, SyncService>();
 

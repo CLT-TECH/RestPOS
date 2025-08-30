@@ -11,6 +11,8 @@ namespace MAUIBLAZORHYBRID.Data.Data
     public class VWItemParentChild
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+
         public int Id { get; set; }
 
         public int childItemId { get; set; }
@@ -29,6 +31,7 @@ namespace MAUIBLAZORHYBRID.Data.Data
 
         public string childItemname { get; set; } = null!;
 
+        public string BarCode { get; set; } = string.Empty;
         public int itemtype { get; set; }
 
         [ForeignKey(nameof(Category))]
