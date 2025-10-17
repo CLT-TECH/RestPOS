@@ -68,7 +68,15 @@ namespace MAUIBLAZORHYBRID.Services.Interfaces
 
         public void StopListening()
         {
-            _hook?.Dispose();
+            try
+            {
+                _hook?.Dispose();
+            }
+            catch(Exception)
+            {
+                
+            }
+
             _hook = null;
         }
 
@@ -87,7 +95,7 @@ namespace MAUIBLAZORHYBRID.Services.Interfaces
                 {
                     KeyCode = e.Data.KeyCode,
                     KeyName = e.Data.KeyCode.ToString(),
-                    Timestamp = DateTime.Now,
+                    Timestamp = DateTime.UtcNow,
                     EventType = e.RawEvent.Type,
                     IsCtrlPressed = _ctrlPressed
                 };
@@ -124,25 +132,25 @@ namespace MAUIBLAZORHYBRID.Services.Interfaces
 
         private void HandleBarcodeInput(KeyCode keyCode)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var elapsed = (now - _lastKeyPressTime).TotalMilliseconds;
             if (elapsed > BarcodeTimeoutMs && _barcodeBuffer.Length > 0)
             {
-                Debug.Write("buffer clear");
+                //Debug.Write("buffer clear");
 
                 _barcodeBuffer.Clear();
             }
 
-            Debug.Write("Code"+ _barcodeBuffer.Length + _barcodeBuffer.ToString());
+            //Debug.Write("Code"+ _barcodeBuffer.Length + _barcodeBuffer.ToString());
 
 
             if (keyCode == KeyCode.VcEnter || keyCode == KeyCode.VcNumPadEnter)
             {
-                Debug.Write("barcode enter");
+                //Debug.Write("barcode enter");
 
                 if (_barcodeBuffer.Length > 0)
                 {
-                    Debug.Write("barcode subject");
+                    //Debug.Write("barcode subject");
 
                     
                     _barcodeSubject.OnNext(_barcodeBuffer.ToString());

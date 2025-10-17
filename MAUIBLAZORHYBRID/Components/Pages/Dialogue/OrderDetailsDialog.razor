@@ -6,9 +6,6 @@
 
 <MudDialog Class="pa-0">
     <DialogContent >
-
-
-
         <MudTable Items="tableOrders.Orders" Dense="true" Elevation="0" FixedFooter="true" Height="@tableHeight">
                 <RowTemplate >
                     <MudTd Style="width:30%;background-color: #ffeb3b; color: #000;">SL# : @(tableOrders.Orders.IndexOf(context) + 1)</MudTd>

@@ -32,11 +32,22 @@
         <!-- First part: 75-80% width -->
         <div class="left-panel">
 
+            
              <div class="header-part">
                  <MudGrid >
+                    <MudItem sm="1">
+                        <div class="header-details">
+                        <div class="header-detail-item">
+                            <span style="font-size:16px;font-weight:bold;color:saddlebrown">@appState.BranchName.ToUpper()</span>
+                        </div>
+                    </div>
+
+
+                    </MudItem>
                    
-                    <MudItem sm="3">
+                    <MudItem sm="3" Style="padding-bottom:0">
                         <MudAutocomplete T="Table"
+                            ShrinkLabel
                         Label="Table"
                         Value="selectedTable"
                         ValueChanged="HandleTableSelected"
@@ -293,7 +304,7 @@
         await Task.Delay(1);
     }
 
-      private Task<IEnumerable<Table>> SearchTable(string value, CancellationToken token)
+    private Task<IEnumerable<Table>> SearchTable(string value, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(value))
             return Task.FromResult<IEnumerable<Table>>(pageinitdata.Tables);
@@ -636,7 +647,7 @@
                 HotBillItemDetails = OrderedItems.Select(item => new HotBillItemDetail
                 {
                     ItemId = item.ItemId,
-                    BarCode =   item.Empty,
+                    BarCode =   string.Empty,
                     Qty = item.Quantity,
                     UnitId = item.UnitID,
                     DetRate = item.Price,

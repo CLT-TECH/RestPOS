@@ -46,22 +46,13 @@ namespace MAUIBLAZORHYBRID.Services
             _deviceStatus = deviceStatus;
               _deviceState = deviceState;
 
-            // Load initial sync state
-            //IsInitialSyncComplete = _preferences.Get(SyncStateKey, false);
             }
 
         public async Task EnsureInitialSyncAsync()
         {
-            //if (IsInitialSyncComplete || _initialSyncStarted)
-            //    return;
-
             await _initLock.WaitAsync();
             try
             {
-                //if (IsInitialSyncComplete || _initialSyncStarted)
-                //    return;
-
-                _initialSyncStarted = true;
                 await PerformInitialSyncAsync(_cts.Token);
             }
             finally
@@ -79,15 +70,10 @@ namespace MAUIBLAZORHYBRID.Services
 
                 _cts = new CancellationTokenSource();
 
-                // Start upload timer (every 5 minutes)
                 _uploadTimer = new PeriodicTimer(TimeSpan.FromMinutes(5));
                 _ = Task.Run(() => ProcessUploadsAsync(_cts.Token));
 
-                // Perform initial sync if not already done
                     _ = Task.Run(() => PerformInitialSyncAsync(_cts.Token));
-                //if (!IsInitialSyncComplete)
-                //{
-                //}
             }
             catch (Exception ex)
             {
@@ -118,19 +104,13 @@ namespace MAUIBLAZORHYBRID.Services
 
             private async Task PerformInitialSyncAsync(CancellationToken token)
             {
-                //if (IsInitialSyncComplete) return;
 
                 await _syncLock.WaitAsync(token);
                 try
                 {
-                    //if (!IsInitialSyncComplete) // Double-check
-                    //{
                         _logger.LogInformation("Performing initial sync...");
                         await PerformSyncOperationsAsync();
 
-                        // Mark as complete
-                        //IsInitialSyncComplete = true;
-                    //_preferences.Set(SyncStateKey, true);
 
 
                     if (InitialSyncCompleted != null)
@@ -222,6 +202,20 @@ namespace MAUIBLAZORHYBRID.Services
                         {
                             await _uploadService.UploadPendingStockInwardsAsync();
                         }
+                        if (await _uploadService.HasPendingStockTransferCancelAsync())
+                        {
+                            await _uploadService.UploadPendingStockTranferCancelsAsync();
+                        }
+                        if (await _uploadService.HasPendingBillCashierCancelAsync())
+                        {
+                            await _uploadService.UploadPendingBillCashierCancelsAsync();
+                        }
+
+                        if (await _uploadService.HasPendingHotBillCancelAsync())
+                        {
+                            await _uploadService.UploadPendingHotBillCancelsAsync();
+                        }
+
                     }
                 }
                 catch (OperationCanceledException)

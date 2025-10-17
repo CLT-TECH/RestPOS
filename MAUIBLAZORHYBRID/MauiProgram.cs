@@ -55,7 +55,10 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddTransient<MasterDataSyncService>();
             builder.Services.AddTransient<OtherMasterSyncService>();
             builder.Services.AddTransient<ItemDataSyncService>();
+            builder.Services.AddTransient<StockReportService>();
 
+            builder.Services.AddSingleton<IReceiptPrinterService, ReceiptPrinterService>();
+            builder.Services.AddScoped<BillPrintService>();
 
             builder.Services.AddSingleton<IErrorBoundaryLogger, MauiErrorBoundaryLogger>();
 
@@ -102,7 +105,6 @@ namespace MAUIBLAZORHYBRID
 #if DEBUG
 
             builder.Services.AddBlazorWebViewDeveloperTools();
-    		builder.Logging.AddDebug();
 #endif
 
             builder.Services.AddDbContextFactory<AppDbContext>(options =>
@@ -112,11 +114,20 @@ namespace MAUIBLAZORHYBRID
             builder.Services.AddSingleton<LoadingService>();
             builder.Services.AddSingleton<MappingService>();
 
+#if WINDOWS
+            builder.Services.AddSingleton<IShortcutService, WindowsShortcutService>();
+#else
+        builder.Services.AddSingleton<IShortcutService, DummyShortcutService>();
+#endif
+
             builder.Services.AddScoped(sp =>
             new HttpClient
             {
-                //BaseAddress = new Uri("http://localhost:5108") // Your API base URL
-                BaseAddress = new Uri("https://hotelerp.azurewebsites.net") // Your API base URL
+                #if DEBUG
+                    BaseAddress = new Uri("http://localhost:5108/") // Local API for debugging
+                #else
+                    BaseAddress = new Uri("https://hotelerp.azurewebsites.net") // Your API base URL
+                #endif
             });
                 //BaseAddress = new Uri("http://hotelerp.azurewebsites.net") // Your API base URL
 
@@ -126,5 +137,11 @@ namespace MAUIBLAZORHYBRID
             
             return app;
         }
+    }
+
+    public class DummyShortcutService : IShortcutService
+    {
+        public void CreateDesktopShortcut() { }
+        public bool ShortcutExists() => false;
     }
 }

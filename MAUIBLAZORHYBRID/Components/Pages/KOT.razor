@@ -22,6 +22,8 @@
 
 @inject IDataUploadService UploadService
 
+
+
 @inject IKeyboardListenerService KeyboardListener
 @implements IDisposable
 
@@ -35,8 +37,13 @@
 
 
                 <MudGrid >
-                    <MudItem  sm="2">
+                    <MudItem  sm="3">
                         <div class="header-details">
+                            <div class="header-detail-item">
+                                <span style="font-size:16px;font-weight:bold;color:saddlebrown">@appState.BranchName.ToUpper()</span>
+    
+                            </div>
+                            <MudFlexBreak></MudFlexBreak>
                             <div class="header-detail-item">
                                 <MudIcon Icon="@Icons.Material.Filled.TableRestaurant" Size="Size.Small" Style="color:#3eb489;" />
                                 <span>Dining Space: <span id="diningspace">@diningspacename</span></span>
@@ -44,7 +51,7 @@
                         </div>
 
                     </MudItem>
-                    <MudItem sm="3">
+                    <MudItem sm="2">
                         <MudAutocomplete T="Table"
                             ReadOnly="true"
                         Label="Table"
@@ -172,7 +179,7 @@
                     <MudChip T="string" Class="status-chip">Vacant Tables: 8</MudChip>
                 </div>
                 <div class="footer-right">
-                    <MudText Typo="Typo.subtitle2">@DateTime.Now.ToString("hh:mm tt")</MudText>
+                    <MudText Typo="Typo.subtitle2">@DateTime.UtcNow.ToLocalTime().ToString("hh:mm tt")</MudText>
                 </div>
             </div>
         </div>
@@ -374,7 +381,9 @@
                     OrderedItems = new();
                     NumberOfGuests = null;
 
-                    _=UploadService.UploadPendingKOTsAsync();
+                    _ = UploadService.UploadPendingKOTsAsync();
+
+                    _ = SyncService.SyncBarItemCounterStock();
 
 
                     await Task.Delay(1000);

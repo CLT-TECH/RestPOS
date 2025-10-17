@@ -1,5 +1,6 @@
 ﻿using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Data.DTO;
+using MAUIBLAZORHYBRID.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +37,9 @@ namespace MAUIBLAZORHYBRID.Services.Mappers
                 Hot_Bill_Time=bill.HotBillTime,
                 Items = bill.HotBillItemDetails.Select(MapToItemDetailDTO).ToList(),
                 KOTs = bill.HotBillAgainstKots.Select(MapToKotDTO).ToList(),
-                TaxDetails = bill.HotBillTaxDetails.Select(MapToTaxDetailDTO).ToList()
+                TaxDetails = bill.HotBillTaxDetails.Select(MapToTaxDetailDTO).ToList(),
+                BillCashiers = bill.BillCashiers.Select(MapToBillCahierDTO).ToList()
+                
             };
         }
 
@@ -179,5 +182,78 @@ namespace MAUIBLAZORHYBRID.Services.Mappers
                 }).ToList()
             };
         }
+
+        public HotBillCashierDTO MapToBillCahierDTO(BillCashier billcash)
+        {
+            return new HotBillCashierDTO
+            {
+                Paymode = billcash.PaymentMode,
+                TotalAmount = billcash.TotalAmount,
+                HotBillCashPrefix = billcash.HotBillCashPrefix,
+                HotBillCashNo = billcash.HotBillCashNo,
+                HotBillCashRefNo = billcash.HotBillCashRefNo
+            };
+        }
+
+
+        public StockTransferCancelDTO MapToStockTransferCancelDTO(StockTransferCancel master)
+        {
+            return new StockTransferCancelDTO
+            {
+                StkTrId = master.StockTransfer!.ServerTransferId,
+                CancelledBy=master.CancelledByEmpId,
+                CancelDate = master.CancelDate,
+                CancelReason = master.CancelReason,
+                CancelTime = master.CancelTime
+
+            };
+
+        }
+        public BillCashierCancelDTO MapToBillCashierCancelDTO(BillCashierCancel master)
+        {
+            return new BillCashierCancelDTO
+            {
+                HotBillCashId = master.BillCashier!.ServerHotBillCashId,
+                CancelReason = master.CancelReason,
+                CancelDate = master.CancelDate,
+                CancelTime = master.CancelTime,
+                CancelledBy = master.CancelledByEmpId
+            };
+
+        }
+
+        public HotBillCancelDTO MapToHotBillCancelDTO(HotBillCancel master)
+        {
+            return new HotBillCancelDTO
+            {
+                HotBillId = master.HotBill!.ServerHotBillId,
+                CancelReason = master.CancelReason,
+                CancelDate = master.CancelDate,
+                CancelTime = master.CancelTime,
+                CancelledBy = master.CancelledByEmpId
+            };
+
+        }
+        
+
+        public HotBillCashierCancelRequest MapToBillCashierCancelAllDTO(int hotBillId, BillCashierCancel master)
+        {
+            return new HotBillCashierCancelRequest
+            {
+                HotBillId = hotBillId,
+                CashierCancels = new List<BillCashierCancelDTO>
+                {
+                    new BillCashierCancelDTO
+                    {
+                        HotBillCashId = master.BillCashierId,
+                        CancelReason = master.CancelReason,
+                        CancelDate = master.CancelDate,
+                        CancelTime = master.CancelTime,
+                        CancelledBy = master.CancelledByEmpId
+                    }
+                }
+            };
+        }
+
     }
 }

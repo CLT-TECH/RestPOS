@@ -78,5 +78,10 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         [JsonPropertyName("taxDetails")]
         public List<HotBillTaxDetailDTO> TaxDetails { get; set; } = new();
 
+        [JsonPropertyName("billCashiers")]
+
+        public List<HotBillCashierDTO> BillCashiers { get; set; } = new();
+
+
     }
 }

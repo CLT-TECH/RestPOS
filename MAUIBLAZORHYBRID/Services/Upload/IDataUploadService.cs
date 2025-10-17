@@ -14,12 +14,19 @@ namespace MAUIBLAZORHYBRID.Services.Upload
         Task<bool> HasPendingUploadsBillsAsync();
         Task<bool> HasPendingUploadsKOTAsync();
         Task<bool> HasPendingUploadsBillKOTAsync();
-
-
         Task<UploadResult> UploadPendingStockTransfersAsync();
         Task<bool> HasPendingUploadsStockTransferAsync();
-
         Task<UploadResult> UploadPendingStockInwardsAsync();
         Task<bool> HasPendingUploadsStockInwardAsync();
+        Task<bool> HasPendingStockTransferCancelAsync();
+        Task<UploadResult> UploadPendingStockTranferCancelsAsync();
+        Task<bool> HasPendingBillCashierCancelAsync();
+        Task<UploadResult> UploadPendingBillCashierCancelsAsync();
+        Task<bool> HasPendingHotBillCancelAsync();
+        Task<UploadResult> UploadPendingHotBillCancelsAsync();
+
+        Task<bool> HasPendingHotBillCashierAsync();
+        Task<UploadResult> UploadPendingHotBillCashiersAsync();
+        
     }
 }

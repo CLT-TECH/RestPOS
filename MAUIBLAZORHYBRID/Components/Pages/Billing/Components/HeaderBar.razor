@@ -7,7 +7,7 @@
         </MudItem>
         <MudItem xs="6" Class="text-right">
             <MudText Typo="Typo.body2">Cashier: @CashierName</MudText>
-            <MudText Typo="Typo.body2">Time: @DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss")</MudText>
+            <MudText Typo="Typo.body2">Time: @DateTime.UtcNow.ToString("MM/dd/yyyy HH:mm:ss")</MudText>
         </MudItem>
     </MudGrid>
 </MudPaper>

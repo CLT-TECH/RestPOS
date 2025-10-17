@@ -36,22 +36,44 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                         {
                             await db.BranchMasters.AddAsync(branch, ct);
                         }
-                        foreach (var billstatDto in branchDto.BillStation ?? Enumerable.Empty<BillStationDTO>())
+                        else 
                         {
-                            var billstation = new BillStation
+                            existing.BranchGodownId = branchDto.BranchGodownId;
+                        }
+                            foreach (var billstatDto in branchDto.BillStation ?? Enumerable.Empty<BillStationDTO>())
                             {
-                                billStationId = billstatDto.Id,
-                                billStationName = billstatDto.Name,
-                                branchId = branchDto.Id
+                                var billstation = new BillStation
+                                {
+                                    billStationId = billstatDto.Id,
+                                    billStationName = billstatDto.Name,
+                                    branchId = branchDto.Id
+                                };
+
+                                var existingsatation = await db.BillStations.FindAsync(billstation.billStationId, ct);
+
+                                if (existingsatation == null)
+                                {
+                                    db.BillStations.Add(billstation);
+                                }
+                            }
+
+                        foreach (var obj in branchDto.GodownMasters ?? Enumerable.Empty<GodownMasterDTO>())
+                        {
+                            var godown = new GodownMaster
+                            {
+                                GodownId = obj.GodownId,
+                                GodownName = obj.GodownName,
                             };
 
-                            var existingsatation = await db.BillStations.FindAsync(billstation.billStationId, ct);
+                            var existingsatation = await db.GodownMasters.FindAsync(godown.GodownId, ct);
 
                             if (existingsatation == null)
                             {
-                                db.BillStations.Add(billstation);
+                                db.GodownMasters.Add(godown);
                             }
                         }
+
+
 
                         //await db.BranchTaxSettings.ExecuteDeleteAsync(ct);
                         //await db.SaveChangesAsync(ct);

@@ -34,6 +34,9 @@ namespace MAUIBLAZORHYBRID.Services
                 var countertask = _db.BillStations
                                 .AsNoTracking()
                                  .ToListAsync();
+                var godownstask = _db.GodownMasters
+                             .AsNoTracking()
+                              .ToListAsync();
 
                 var itemparentchildtask = _db.ItemParentChilds
                 .Include(u => u.Unit)
@@ -45,7 +48,7 @@ namespace MAUIBLAZORHYBRID.Services
                               .AsNoTracking()
                                .ToListAsync();
 
-                await Task.WhenAll(billItemTask, countertask, itemparentchildtask, baritemtask);
+                await Task.WhenAll(billItemTask, countertask, itemparentchildtask, baritemtask,godownstask);
 
                 var result = new StockTransferInitDTO
                 {
@@ -53,6 +56,7 @@ namespace MAUIBLAZORHYBRID.Services
                     Counters=countertask.Result,
                     VWParentItemChilds=itemparentchildtask.Result,
                     barItems=baritemtask.Result,
+                    Godowns= godownstask.Result,
                 };
                 return Result<StockTransferInitDTO>.Success(result);
             }
@@ -63,5 +67,64 @@ namespace MAUIBLAZORHYBRID.Services
             }
         }
 
+
+        public async Task<Result<List<StockTransfer>>> GetStockTransferMastersAsync()
+        {
+            try
+            {
+                // Fetch only the master records — no includes unless required
+                var stockTransferMaster = await _db.StockTransfers
+                    .Include(d => d.CancelInfo)
+                    .Where(d => d.CancelInfo == null)
+                    .AsNoTracking()
+                    .OrderByDescending(m => m.TransferDate)
+                    .ToListAsync();
+
+                return Result<List<StockTransfer>>.Success(stockTransferMaster);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetStockInwardMastersAsync failed: {ex.Message}");
+                return Result<List<StockTransfer>>.Failure("Failed to load stock inward master data. Please try again.");
+            }
+        }
+
+        public async Task<Result<List<StockTransferItem>>> GetStockTransferDetailsById(int transferID)
+        {
+            try
+            {
+                // Load only the detail rows for the given master ID
+                var details = await _db.StockTransferItems
+                    .Where(d => d.StkTr.Id == transferID)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                if (details == null || details.Count == 0)
+                    return Result<List<StockTransferItem>>.Failure("No details found for this inward entry.");
+
+                return Result<List<StockTransferItem>>.Success(details);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetStockInwardDetailsById failed: {ex.Message}");
+                return Result<List<StockTransferItem>>.Failure("Failed to load inward details. Please try again.");
+            }
+        }
+
+        public async Task<Result<bool>> SaveStockTransferCancelAsync(StockTransferCancel cancel)
+        {
+            try
+            {
+                await _db.StockTransferCancels.AddAsync(cancel);
+                await _db.SaveChangesAsync();
+
+                return Result<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SaveStockTransferCancelAsync failed: {ex.Message}");
+                return Result<bool>.Failure("Failed to save cancellation. Please try again.");
+            }
+        }
     }
 }

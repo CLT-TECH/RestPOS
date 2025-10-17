@@ -1,0 +1,191 @@
+@using System.Globalization
+@using MAUIBLAZORHYBRID.Data.Data
+@inject MudBlazor.IDialogService DialogService
+
+@inject PosPageService _billService
+@inject ISnackbar Snackbar
+
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Bill History</MudText>
+    </TitleContent>
+    <DialogContent>
+        <!-- Filter Section -->
+        <MudGrid Spacing="2" Justify="Justify.FlexStart" Class="mb-4">
+            <MudItem xs="12" sm="4" md="2">
+                <MudDatePicker @bind-Date="FromDate"
+                              Label="From Date"
+                              Variant="Variant.Text"
+                              DateFormat="yyyy-MM-dd" />
+            </MudItem>
+            <MudItem xs="12" sm="4" md="2">
+                <MudDatePicker @bind-Date="ToDate"
+                              Label="To Date"
+                               Variant="Variant.Text"
+                              DateFormat="yyyy-MM-dd" />
+            </MudItem>
+            <MudItem xs="12" sm="12" md="4" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled"
+                          Color="Color.Primary"
+                          StartIcon="Icons.Material.Filled.Search"
+                          OnClick="FilterHistory"
+                          Class="mr-2">
+                    Filter
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                          Color="Color.Secondary"
+                          OnClick="ResetFilters">
+                    Reset
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+
+        <!-- History List -->
+        <MudPaper Class="pa-4" Style="overflow:scroll">
+            @if (_billhistory.Any())
+            {
+                <MudTable FixedHeader="true" Items="_billhistory" Dense="true" Hover="true" Bordered="true" Height="50vh">
+                    <HeaderContent>
+                        <MudTh>SL#</MudTh>
+                        <MudTh>Date</MudTh>
+                        <MudTh>Time</MudTh>
+                        <MudTh>No of Items</MudTh>
+                        <MudTh>Cash</MudTh>
+                        <MudTh>Bank</MudTh>
+                        <MudTh>Total Amount</MudTh>
+                        <MudTh>Action</MudTh>
+                    </HeaderContent>
+
+                    <RowTemplate>
+                        <MudTd>@context.HotBillNo</MudTd>
+                        <MudTd>@context.HotBillDate.ToLocalTime().ToString("dd-MM-yyyy")</MudTd>
+                        <MudTd>@context.HotBillTime.ToLocalTime().ToString("HH:mm")</MudTd>
+                        <MudTd>@context.HotBillItemDetails.Count</MudTd>
+
+                        <MudTd>
+                            @context.BillCashiers.FirstOrDefault(c => c.PaymentMode == 0)?.TotalAmount.ToString("F2") 
+                        </MudTd>
+
+                        <!-- Show amount where payment mode = 2 -->
+                        <MudTd>
+                            @context.BillCashiers.FirstOrDefault(c => c.PaymentMode == 1)?.TotalAmount.ToString("F2") 
+                        </MudTd>
+
+
+                        <MudTd>@context.HotBillNeTAmt.ToString("F2")</MudTd>
+                        <MudTd>
+                            <MudButton Color="Color.Primary"
+                                       Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       OnClick="@(() => Submit(context.HotBillId))">
+                                <MudIcon Icon="@Icons.Material.Filled.Visibility" /> Details
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+
+            }
+            else
+            {
+                <MudText Typo="Typo.body1" Color="Color.Secondary" Class="text-center">
+                    No bills found for the selected period.
+                </MudText>
+            }
+        </MudPaper>
+    </DialogContent>
+@*     <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" 
+                  Color="Color.Primary" 
+                  OnClick="Submit"
+                  Disabled="@(selectedSaleId == null)">
+            Select Bill
+        </MudButton>
+    </DialogActions> *@
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    // Filter parameters
+    private DateTime? FromDate { get; set; }
+    private DateTime? ToDate { get; set; }
+    private string? selectedSaleId;
+
+    public List<HotBillMaster> _billhistory { get; set; } = new();
+    protected override async void OnInitialized()
+    {
+        FromDate = DateTime.Today;
+        ToDate = DateTime.Today;
+
+        var result = await _billService.GetHotBillListAsync(FromDate, ToDate);
+
+        if (!result.IsSuccess)
+        {
+            Snackbar.Add(result!.ErrorMessage??"error fetching data", Severity.Warning);
+            return;
+        }
+
+        _billhistory = result!.Data ?? new();
+
+    }
+
+
+    private async void ResetFilters()
+    {
+        FromDate = DateTime.Today;
+        ToDate = DateTime.Today;
+
+        var result = await _billService.GetHotBillListAsync(FromDate, ToDate);
+
+        if (!result.IsSuccess)
+        {
+            Snackbar.Add(result!.ErrorMessage ?? "error fetching data", Severity.Warning);
+            return;
+        }
+
+        _billhistory = result!.Data ?? new();
+
+    }
+
+    private void SelectBill(string saleId)
+    {
+        selectedSaleId = saleId;
+        StateHasChanged();
+    }
+    private void Submit(int id)
+    {
+        if (id>0)
+        {
+            MudDialog.Close(DialogResult.Ok(id));
+        }
+    }
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async void FilterHistory()
+    {
+        var from = FromDate ?? DateTime.MinValue;
+        var to = ToDate?.AddDays(1).AddSeconds(-1) ?? DateTime.MaxValue; // Include entire ToDate
+
+        var result = await _billService.GetHotBillListAsync(FromDate, ToDate);
+
+        if (!result.IsSuccess)
+        {
+            Snackbar.Add(result!.ErrorMessage ?? "error fetching data", Severity.Warning);
+            return;
+        }
+
+        _billhistory = result!.Data ?? new();
+
+
+      
+
+        selectedSaleId = null;
+        StateHasChanged();
+    }
+
+}

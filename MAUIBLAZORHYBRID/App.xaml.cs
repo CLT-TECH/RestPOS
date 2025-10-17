@@ -8,6 +8,9 @@ using MAUIBLAZORHYBRID.Data.Data;
 using MAUIBLAZORHYBRID.Services;
 using MAUIBLAZORHYBRID.Services.Interfaces;
 
+using Windows.ApplicationModel;
+using System.Reflection;
+
 
 
 
@@ -32,6 +35,8 @@ namespace MAUIBLAZORHYBRID
                     e.ExceptionObject.ToString());
             };
 
+            CreateDesktopShortcut();
+
             InitializeComponent();
 
             
@@ -53,6 +58,8 @@ namespace MAUIBLAZORHYBRID
 
             _backgroundDataService = backgroundDataService;
             _keyboardlistner = keyboardListener;
+
+          
 
             MainPage = new MainPage();
         }
@@ -148,6 +155,46 @@ namespace MAUIBLAZORHYBRID
             // Consider writing to a separate crash log file here
         }
 
+        private void CreateDesktopShortcut()
+        {
+            if (!OperatingSystem.IsWindows()) return;
 
+            try
+            {
+                // Add reference to Windows Script Host Object Model
+                // 1. Right-click References → Add Reference
+                // 2. COM → Windows Script Host Object Model
+                var shell = new IWshRuntimeLibrary.WshShell();
+
+
+                string appName = "POS Application";
+
+                
+
+                string shortcutPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    $"{appName}.lnk");
+
+                // Only create if it doesn't exist
+                if (!System.IO.File.Exists(shortcutPath))
+                {
+                    IWshRuntimeLibrary.IWshShortcut shortcut =
+                        (IWshRuntimeLibrary.IWshShortcut)shell.CreateShortcut(shortcutPath);
+
+                    string packageFamilyName = Package.Current.Id.FamilyName + "!App";
+
+                    shortcut.TargetPath = $"shell:appsFolder\\{packageFamilyName}";
+                    shortcut.Description = "";
+                    shortcut.Save();
+
+                    Console.WriteLine("Desktop shortcut created successfully");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't crash the app
+                Console.WriteLine($"Shortcut creation failed: {ex.Message}");
+            }
+        }
     }
 }

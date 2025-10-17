@@ -1,0 +1,249 @@
+@page "/stock-report"
+@using MAUIBLAZORHYBRID.Data.DTO
+@inject StockReportService StockService
+@inject AppState appState
+@layout Components.Layout.POSLayout
+
+<MudPaper Class="pa-4 pos-screen">
+    <div class="center-panel-stock">
+        @if (isLoading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+        @if (HasGodown)
+        {
+            <MudTabs @bind-ActivePanelIndex="activeTabIndex">
+                <MudTabPanel Text="Counter Stock">
+                    @* Counter stock table *@
+                        <MudTable Items="filteredStockCounter" Hover="true" FixedHeader="true" Height="72vh">
+                            <ToolBarContent>
+                                <MudSpacer />
+                                 <MudTextField Immediate="true"   @bind-Value="searchStringCounter" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"  IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                            </ToolBarContent>
+
+                            <HeaderContent>
+                                <MudTh>Item Name</MudTh>
+                                <MudTh>Stock</MudTh>
+                                <MudTh>Pending Transfer</MudTh>
+                                <MudTh>Pending Bills</MudTh>
+                                <MudTh>Final Stock</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.ItemName</MudTd>
+                                <MudTd Style="text-align:right">@context.Stock</MudTd>
+                                <MudTd Style="text-align:right">@context.TransferStock</MudTd>
+                                <MudTd Style="text-align:right">@context.BillStock</MudTd>
+                                <MudTd Style="text-align:right">@context.FinalStock</MudTd>
+                            </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+
+                <MudTabPanel Text="Godown Stock">
+                    @* Godown stock table *@
+                        <MudTable Items="filteredStockGodown" Hover="true" FixedHeader="true" Height="72vh">
+                            <ToolBarContent>
+                                <MudSpacer />
+                                 <MudTextField Immediate="true" @bind-Value="searchStringGodown" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                            </ToolBarContent>
+                            
+                            
+                            <HeaderContent>
+                            <MudTh>Item Name</MudTh>
+                                <MudTh>Stock</MudTh>
+                                <MudTh>Pending Inward</MudTh>
+                                <MudTh>Pending Transfer</MudTh>
+                                <MudTh>Final Stock</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.ItemName</MudTd>
+                                <MudTd Style="text-align:right">@context.Stock</MudTd>
+                                <MudTd Style="text-align:right">@context.BillStock</MudTd>
+                                <MudTd Style="text-align:right">@context.TransferStock</MudTd>
+                                <MudTd Style="text-align:right">@context.FinalStock</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+            </MudTabs>
+        }
+        else
+        {
+            <MudText Typo="Typo.h6">Counter Stock</MudText>
+                <MudTable Items="filteredStockCounter" Hover="true" FixedHeader="true" Height="72vh">
+
+                    <ToolBarContent>
+                        <MudSpacer />
+                         <MudTextField Immediate="true" @bind-Value="searchStringCounter" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
+                    <MudTh>Item Name</MudTh>
+                    <MudTh>Stock</MudTh>
+                    <MudTh>Pending Transfer</MudTh>
+                    <MudTh>Pending Bills</MudTh>
+                    <MudTh>Final Stock</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.ItemName</MudTd>
+                    <MudTd Style="text-align:right">@context.Stock</MudTd>
+                    <MudTd Style="text-align:right">@context.TransferStock</MudTd>
+                    <MudTd Style="text-align:right">@context.BillStock</MudTd>
+                    <MudTd Style="text-align:right">@context.FinalStock</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        }
+    </div>
+</MudPaper>
+
+@code {
+    private string searchStringGodown = string.Empty;
+    private string searchStringCounter = string.Empty;
+    
+    private IEnumerable<StockReportFinalDTO> filteredStockGodown =>
+    finalStockGodown.Where(item =>
+        string.IsNullOrWhiteSpace(searchStringGodown) ||
+        (item.ItemName?.Contains(searchStringGodown, StringComparison.OrdinalIgnoreCase) == true)
+    ).ToList();
+    private IEnumerable<StockReportFinalDTO> filteredStockCounter =>
+    finalStock.Where(item =>
+        string.IsNullOrWhiteSpace(searchStringCounter) ||
+        (item.ItemName?.Contains(searchStringCounter, StringComparison.OrdinalIgnoreCase) == true)
+    ).ToList();
+    
+    private bool isLoading = true;
+
+    private List<StockReportDTO> counterStock = new();
+    private List<StockReportDTO> godownStock = new();
+    private List<PendingStockDTO> pendingBills = new();
+    private List<PendingStockDTO> pendingTransfers = new();
+    private List<PendingStockDTO> pendingTransfersCancelled = new();
+    private List<PendingStockDTO> pendingTransfersOut = new();
+    private List<PendingStockDTO> pendingTransfersOutCancelled = new();
+
+    private List<PendingStockDTO> pendingTransfersIn = new();
+    private List<PendingStockDTO> pendingTransfersInCancelled = new();
+
+
+    private List<PendingStockDTO> pendingInward = new();
+    private bool HasGodown => appState.GodownId>0;
+    private int activeTabIndex = 0;
+
+    private List<StockReportFinalDTO> finalStock = new();
+    private List<StockReportFinalDTO> finalStockGodown = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStock();
+
+    }
+
+    private async Task LoadStock()
+    {
+        try
+        {
+            isLoading = true;
+            var counterResult = await StockService.GetCounterStockAsync(appState.CounterId);
+            var godownResult = await StockService.GetGodownStockAsync(appState.GodownId);
+            var billsResult = await StockService.GetPendingBillsAsync();
+            var transfersResult = await StockService.GetPendingTransfersAsyncByCounter(appState.CounterId);
+            var transfersResultCancelled = await StockService.GetCancelledPendingSyncByCounterAsync(appState.CounterId);
+
+
+            
+            var inwardResult = await StockService.GetPendingInwardsAsync();
+            var trandferOut = await StockService.GetPendingTransfersAsync();
+
+            var trandferIN = await StockService.GetPendingTransfersToGodownAsync();
+            var trandferINCancelled = await StockService.GetCancelledPendingSyncToGodownAsync();
+
+            pendingTransfersIn = trandferIN.IsSuccess ? trandferIN.Data ?? new() : new();
+            pendingTransfersInCancelled = trandferINCancelled.IsSuccess ? trandferINCancelled.Data ?? new() : new();
+
+
+
+            var trandferOutCancelled = await StockService.GetCancelledPendingSyncAsync();
+            pendingTransfersOutCancelled = trandferOutCancelled.IsSuccess ? trandferOutCancelled.Data ?? new() : new();
+            
+
+            pendingTransfersOut = trandferOut.IsSuccess ? trandferOut.Data ?? new() : new();
+            pendingInward = inwardResult.IsSuccess ? inwardResult.Data ?? new() : new();
+
+            
+
+            counterStock = counterResult.IsSuccess ? counterResult.Data ?? new() : new();
+            pendingBills = billsResult.IsSuccess ? billsResult.Data ?? new() : new();
+            pendingTransfers = transfersResult.IsSuccess ? transfersResult.Data ?? new() : new();
+            pendingTransfersCancelled = transfersResultCancelled.IsSuccess ? transfersResultCancelled.Data ?? new() : new();
+            godownStock = godownResult.IsSuccess ? godownResult.Data ?? new() : new();
+
+
+            // Now calculate final stock (example: counter - bills - transfers)
+            finalStock = counterStock
+                .Select(c =>
+                {
+                    var billQty = pendingBills.FirstOrDefault(b => b.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+                    var transferQty = pendingTransfers.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+                    var transferQtyCancel = pendingTransfersCancelled.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+                    
+                    var transferToGodown = pendingTransfersIn.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+                    var transferToGodownCancelled = pendingTransfersInCancelled.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+
+
+                    return new StockReportFinalDTO
+                    {
+                        ItemId = c.ItemId,
+                        ItemName = c.ItemName,
+                        Stock=c.Stock,
+                        BillStock = (int)billQty,
+                        TransferStock = (int)transferQty - (int)transferQtyCancel - (int)transferToGodown + (int)transferToGodownCancelled,
+                        FinalStock = c.Stock - (int)billQty + (int)transferQty - (int)transferQtyCancel - (int)transferToGodown + (int)transferToGodownCancelled
+                    };
+                })
+                .ToList();
+
+
+            finalStockGodown = godownStock
+           .Select(c =>
+           {
+               var inwardQty = pendingInward.FirstOrDefault(b => b.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+               var transferQty = pendingTransfersOut.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+
+               var transferToGodown = pendingTransfersIn.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+               var transferToGodownCancelled = pendingTransfersInCancelled.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+
+               var transferQtyCancelled = pendingTransfersOutCancelled.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+
+               return new StockReportFinalDTO
+               {
+                   ItemId = c.ItemId,
+                   ItemName = c.ItemName,
+                   Stock = c.Stock,
+                   BillStock = (int)inwardQty,
+                   TransferStock = (int)transferQty,
+                   FinalStock = c.Stock + (int)inwardQty - (int)transferQty + (int)transferQtyCancelled+(int)transferToGodown-(int)transferToGodownCancelled
+               };
+           })
+           .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading stock: {ex.Message}");
+            counterStock = new();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class StockReportFinalDTO
+    {
+        public int ItemId { get; set; }
+        public string ItemName { get; set; } = string.Empty;
+        public int Stock { get; set; }        // Original counter stock
+        public int BillStock { get; set; }    // Stock reserved in bills
+        public int TransferStock { get; set; } // Stock reserved in transfers
+        public int FinalStock { get; set; }   // Stock - BillStock - TransferStock
+    }
+}

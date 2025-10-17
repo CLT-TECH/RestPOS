@@ -1,0 +1,138 @@
+@using MudBlazor
+@inject IDialogService DialogService
+
+<MudDialog OnKeyUp="OnDialogueKey">
+    <DialogContent>
+        <MudTextField Immediate="true" @ref="cashRef" Value="@Cash" ValueChanged="@OnCashChanged" T="decimal?" Format="F2" Label="Cash" Variant="Variant.Text" />
+        <MudTextField Immediate="true" @ref="bankRef" Value="@Bank" ValueChanged="@OnBankChanged" T="decimal?" Format="F2" Label="Bank" Variant="Variant.Text" />
+
+        <MudText Class="mt-2" Color="Color.Secondary">
+            Remaining: @((Balance)?.ToString("F2"))
+        </MudText>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Success" OnClick="Submit" Variant="Variant.Filled">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public decimal Total { get; set; }
+
+    private decimal? _cash;
+    private decimal? Cash
+    {
+        get => _cash;
+        set
+        {
+            if (value != _cash)
+            {
+                _cash = value > Total ? Total : value;
+                // Ensure Bank is updated when Cash changes
+                Bank = Total - (_cash ?? 0);
+            }
+        }
+    }
+
+    private decimal? _bank;
+    private decimal? Bank
+    {
+        get => _bank;
+        set
+        {
+            if (value != _bank)
+            {
+                _bank = value > Total ? Total : value;
+                // Ensure Cash is updated when Bank changes
+                Cash = Total - (_bank ?? 0);
+
+            }
+
+        }
+    }
+
+    private decimal? Balance => Total - ((Cash ?? 0) + (Bank ?? 0));
+
+    private MudTextField<decimal?> cashRef;
+    private MudTextField<decimal?> bankRef;
+
+    private void OnCashChanged(decimal? value)
+    {
+        if (value > Total)
+        {
+            Cash = Total;
+            OnBankChanged(0);
+        }
+        else
+        {
+            Cash = value;
+        }
+    }
+
+    int focusStage = 0;
+
+
+    private void OnBankChanged(decimal? value)
+    {
+        if (value > Total)
+        {
+            Bank = Total;
+            OnBankChanged(0);
+        }
+        else
+        {
+            Bank = value;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(200);
+            await cashRef.FocusAsync();
+        }
+        else
+        {
+
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Initialize with Total in Cash and 0 in Bank
+        Cash = Total;
+        Bank = 0;
+    }
+
+    private void Submit()
+    {
+        var result = new { Cash, Bank };
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+
+    private async void OnDialogueKey(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" || args.Code == "Enter" )
+        {
+            Submit();
+        }
+        else if (args.Key == "F1" || args.Code == "F1")
+        {
+            Submit();
+        }
+        else if (args.Key == "Escape" || args.Code == "Escape")
+        {
+            Cancel();
+        }
+    }
+
+}

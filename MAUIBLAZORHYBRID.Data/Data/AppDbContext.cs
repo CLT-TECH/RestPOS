@@ -35,11 +35,13 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public DbSet<BranchTaxSetting> BranchTaxSettings { get; set; }
         public DbSet<TaxMaster> TaxMasters { get; set; }
         public DbSet<HotBillMaster> HotBillMasters { get; set; }
+        public DbSet<HotBillCancel> HotBillCancels { get; set; }
         public DbSet<HotBillItemDetail> HotBillItemDetail { get; set; }
         public DbSet<HotBillTaxDetail> HotBillTaxDetails { get; set; }
         public DbSet<HotBillAgainstKot> HotBillAgainstKots { get; set; }
         public DbSet<StockTransfer> StockTransfers { get; set; }
         public DbSet<StockTransferItem> StockTransferItems { get; set; }
+        public DbSet<StockTransferCancel> StockTransferCancels { get; set; }
         public DbSet<BarItem> BarItems { get; set; }
         public DbSet<SyncHistory> SyncHistories { get; set; }
         public DbSet<BarItemStockCounter> BarItemCounterStocks { get; set; }
@@ -47,14 +49,20 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public DbSet<VendorMaster> VendorMasters { get; set; }
         public DbSet<StockInwardMaster> StockInwardMasters { get; set; }
         public DbSet<StockInwardDetail> StockInwardDetails { get; set; }
+        public DbSet<BillCashier> BillCashiers { get; set; }
+        public DbSet<BillCashierCancel> BillCashierCancels { get; set; }
+        public DbSet<GodownMaster> GodownMasters { get; set; }
+        public DbSet<AppRegistrationDetail> AppRegistrationDetails { get; set; }
 
         
         static AppDbContext()
         {
+
         }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
+
         }
     }
 }

@@ -1,0 +1,442 @@
+@page "/stock-report-legacy"
+@using MAUIBLAZORHYBRID.Data.DTO
+@using MAUIBLAZORHYBRID.Data.Data
+@inject StockReportService StockService
+@inject AppState appState
+@layout Components.Layout.POSLayout
+
+<MudPaper Class="pa-4 pos-screen" Style="overflow:scroll"> 
+    <div class="center-panel-full">
+        <MudText Typo="Typo.h5" Class="mb-4">
+            <span style="color:saddlebrown">@appState.BranchName.ToUpper() -</span>
+            - Stock Report
+        </MudText>
+        @if (isLoading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            @if (HasGodown)
+            {
+                <MudTabs @bind-ActivePanelIndex="activeTabIndex">
+                    <MudTabPanel Text="Counter Stock">
+                        @* Counter stock table *@
+                        <MudTable HeaderClass="my-header-class bg-secondary  " Items="filteredStockCounter.Where(item => item.UnitStocks.Values.Any(s => s != 0))" Hover="true" Height="65vh" Dense="true">
+                            <ToolBarContent>
+                                <MudSpacer />
+                                <MudTextField Immediate="true" @bind-Value="searchStringCounter" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                            </ToolBarContent>
+
+                            <HeaderContent>
+                                <MudTh Style="color:whitesmoke">Item Name</MudTh>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTh Style="color:whitesmoke">@unit.unitName</MudTh>
+                                }
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.ItemName</MudTd>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTd Style="text-align:right">@context.UnitStocks[unit.unitId]</MudTd>
+                                }
+                            </RowTemplate>
+
+                            <FooterContent>
+                                <MudTd><b>Total</b></MudTd>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTd Style="text-align:right">
+                                        <b>@filteredStockCounter.Sum(x => x.UnitStocks.ContainsKey(unit.unitId) ? x.UnitStocks[unit.unitId] : 0)</b>
+                                    </MudTd>
+                                }
+                            </FooterContent>
+                        </MudTable>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Godown Stock">
+                        @* Godown stock table *@
+                        <MudTable HeaderClass="my-header-class bg-secondary  " Items="filteredStockGodown.Where(item => item.UnitStocks.Values.Any(s => s != 0))" Hover="true" FixedFooter="true" Height="50vh" Dense="true">
+                            <ToolBarContent>
+                                <MudSpacer />
+                                <MudTextField Immediate="true" @bind-Value="searchStringGodown" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                            </ToolBarContent>
+
+
+                            <HeaderContent>
+                                <MudTh Style="color:whitesmoke">Item Name</MudTh>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTh Style="color:whitesmoke">@unit.unitName</MudTh>
+                                }
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.ItemName</MudTd>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTd Style="text-align:right">@context.UnitStocks[unit.unitId]</MudTd>
+                                }
+                            </RowTemplate>
+                            <FooterContent>
+                                <MudTd><b>Total</b></MudTd>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTd Style="text-align:right">
+                                        <b>@filteredStockGodown.Sum(x => x.UnitStocks.ContainsKey(unit.unitId) ? x.UnitStocks[unit.unitId] : 0)</b>
+                                    </MudTd>
+                                }
+                            </FooterContent>
+                        </MudTable>
+
+                        <MudTable HeaderClass="my-header-class bg-secondary  " Items="filteredStockGodown.Where(item => item.UnitStocks.Values.Any(s => s != 0))" Hover="true" FixedFooter="true" Height="50vh" Dense="true">
+                            <HeaderContent>
+                                <MudTh Style="color:whitesmoke">Item Name</MudTh>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTh Style="color:whitesmoke">@unit.unitName</MudTh>
+                                }
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.ItemName</MudTd>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTd Style="text-align:right">@context.BottleStocks[unit.unitId]</MudTd>
+                                }
+                            </RowTemplate>
+                            <FooterContent>
+                                <MudTd><b>Total</b></MudTd>
+                                @foreach (var unit in units)
+                                {
+                                    <MudTd Style="text-align:right">
+                                        <b>@filteredStockGodown.Sum(x => x.BottleStocks.ContainsKey(unit.unitId) ? x.BottleStocks[unit.unitId] : 0)</b>
+                                    </MudTd>
+                                }
+                            </FooterContent>
+                        </MudTable>
+                    </MudTabPanel>
+                </MudTabs>
+            }
+            else
+            {
+                <MudTable HeaderClass="my-header-class bg-secondary  " Bordered="true" Items="filteredStockCounter.Where(item => item.UnitStocks.Values.Any(s => s != 0))" Height="65vh">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Counter Stock</MudText>
+                        <MudSpacer />
+                        <MudTextField Immediate="true" @bind-Value="searchStringCounter" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh Style="color:whitesmoke">Item</MudTh>
+                        @foreach (var unit in units)
+                        {
+                            <MudTh Style="color:whitesmoke">@unit.unitName</MudTh>
+                        }
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.ItemName</MudTd>
+                        @foreach (var unit in units)
+                        {
+                            <MudTd Style="text-align:right">@context.UnitStocks[unit.unitId]</MudTd>
+                        }
+                    </RowTemplate>
+                    <FooterContent>
+                        <MudTd><b>Total</b></MudTd>
+                        @foreach (var unit in units)
+                        {
+                            <MudTd Style="text-align:right">
+                                <b>@filteredStockCounter.Sum(x => x.UnitStocks.ContainsKey(unit.unitId) ? x.UnitStocks[unit.unitId] : 0)</b>
+                            </MudTd>
+                        }
+                    </FooterContent>
+                </MudTable>
+            }
+        }
+    </div>
+</MudPaper>
+
+@code {
+    private string searchStringGodown = string.Empty;
+    private string searchStringCounter = string.Empty;
+
+    private IEnumerable<StockReportLegacyDTO> filteredStockGodown =>
+    stockReportGodown.Where(item =>
+        string.IsNullOrWhiteSpace(searchStringGodown) ||
+        (item.ItemName?.Contains(searchStringGodown, StringComparison.OrdinalIgnoreCase) == true)
+    ).ToList();
+
+    private IEnumerable<StockReportLegacyDTO> filteredStockCounter =>
+    stockReport.Where(item =>
+        string.IsNullOrWhiteSpace(searchStringCounter) ||
+        (item.ItemName?.Contains(searchStringCounter, StringComparison.OrdinalIgnoreCase) == true)
+    ).ToList();
+
+    private bool isLoading = true;
+
+    private List<StockReportDTO> counterStock = new();
+    private List<StockReportDTO> godownStock = new();
+    private List<PendingStockDTO> pendingBills = new();
+    private List<PendingStockDTO> pendingTransfers = new();
+    private List<PendingStockDTO> pendingTransfersCancelled = new();
+    
+    private List<PendingStockDTO> pendingTransfersOut = new();
+    private List<PendingStockDTO> pendingTransfersOutCancelled = new();
+
+    private List<PendingStockDTO> pendingInward = new();
+    private List<Unit> units = new();
+    private List<VWItemParentChild> itemchild = new();
+
+    private List<BillItemUnit> billItemUnits = new();
+
+    private List<BillItem> billItems = new();
+    private bool HasGodown => appState.GodownId > 0;
+    // private bool HasGodown = false;
+    private int activeTabIndex = 0;
+
+    private List<StockReportFinalDTO> finalStock = new();
+    private List<StockReportFinalDTO> finalStockGodown = new();
+
+    private List<PendingStockDTO> pendingTransfersIn = new();
+    private List<PendingStockDTO> pendingTransfersInCancelled = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStock();
+
+    }
+
+    private async Task LoadStock()
+    {
+        try
+        {
+            isLoading = true;
+
+            var billunitResult = await StockService.GetBillItemUnitsAsync();
+            billItemUnits = billunitResult.IsSuccess ? billunitResult.Data ?? new() : new();
+
+            var unitReseult = await StockService.GetUnitsAsync();
+            units = unitReseult.IsSuccess ? unitReseult.Data ?? new() : new();
+            var billItemsresult = await StockService.GetBillItemsAsync();
+            billItems = billItemsresult.IsSuccess ? billItemsresult.Data ?? new() : new();
+
+            var itemchildResult = await StockService.GetItemParentChildAsync();
+            itemchild = itemchildResult.IsSuccess ? itemchildResult.Data ?? new() : new();
+
+            var counterResult = await StockService.GetCounterStockAsync(appState.CounterId);
+            var billsResult = await StockService.GetPendingBillsAsync();
+            var transfersResult = await StockService.GetPendingTransfersAsyncByCounter(appState.CounterId);
+           
+            var transfersResultCancelled = await StockService.GetCancelledPendingSyncByCounterAsync(appState.CounterId);
+
+            counterStock = counterResult.IsSuccess ? counterResult.Data ?? new() : new();
+            pendingBills = billsResult.IsSuccess ? billsResult.Data ?? new() : new();
+            pendingTransfers = transfersResult.IsSuccess ? transfersResult.Data ?? new() : new();
+            pendingTransfersCancelled = transfersResultCancelled.IsSuccess ? transfersResultCancelled.Data ?? new() : new();
+
+
+            var trandferIN = await StockService.GetPendingTransfersToGodownAsync();
+            var trandferINCancelled = await StockService.GetCancelledPendingSyncToGodownAsync();
+
+            pendingTransfersIn = trandferIN.IsSuccess ? trandferIN.Data ?? new() : new();
+            pendingTransfersInCancelled = trandferINCancelled.IsSuccess ? trandferINCancelled.Data ?? new() : new();
+
+
+            finalStock = counterStock
+                .Select(c =>
+                {
+                    var billQty = pendingBills.FirstOrDefault(b => b.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+                    var transferQty = pendingTransfers.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+                    var transferQtyCancel = pendingTransfersCancelled.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+
+                    var transferToGodown = pendingTransfersIn.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+                    var transferToGodownCancelled = pendingTransfersInCancelled.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+
+
+
+                    return new StockReportFinalDTO
+                    {
+                        ItemId = c.ItemId,
+                        ItemName = c.ItemName,
+                        Stock = c.Stock,
+                        BillStock = (int)billQty,
+                        TransferStock = (int)transferQty,
+                        FinalStock = c.Stock - (int)billQty + (int)transferQty - (int)transferQtyCancel - (int)transferToGodown + (int)transferToGodownCancelled
+                    };
+                })
+                .ToList();
+
+            BuildStockMatrix(units, billItems, itemchild, finalStock);
+
+            var godownResult = await StockService.GetGodownStockAsync(appState.GodownId);
+            godownStock = godownResult.IsSuccess ? godownResult.Data ?? new() : new();
+
+            var inwardResult = await StockService.GetPendingInwardsAsync();
+            var trandferOut = await StockService.GetPendingTransfersAsync();
+
+
+
+            pendingTransfersOut = trandferOut.IsSuccess ? trandferOut.Data ?? new() : new();
+            pendingInward = inwardResult.IsSuccess ? inwardResult.Data ?? new() : new();
+
+
+            var trandferOutCancelled = await StockService.GetCancelledPendingSyncAsync();
+            pendingTransfersOutCancelled = trandferOutCancelled.IsSuccess ? trandferOutCancelled.Data ?? new() : new();
+
+
+
+            finalStockGodown = godownStock
+          .Select(c =>
+          {
+              var inwardQty = pendingInward.FirstOrDefault(b => b.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+              var transferQty = pendingTransfersOut.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+              var transferQtyCancel = pendingTransfersOutCancelled.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+
+              var transferToGodown = pendingTransfersIn.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+              var transferToGodownCancelled = pendingTransfersInCancelled.FirstOrDefault(t => t.MainBarItemId == c.ItemId)?.Quantity ?? 0;
+
+
+              return new StockReportFinalDTO
+              {
+                  ItemId = c.ItemId,
+                  ItemName = c.ItemName,
+                  Stock = c.Stock,
+                  BillStock = (int)inwardQty,
+                  TransferStock = (int)transferQty,
+                  FinalStock = c.Stock + (int)inwardQty - (int)transferQty + (int)transferQtyCancel + (int)transferToGodown - (int)transferToGodownCancelled
+              };
+          })
+          .ToList();
+
+            BuildStockGdownMatrix(units, billItems, itemchild, finalStockGodown);
+
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading stock: {ex.Message}");
+            counterStock = new();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class StockReportFinalDTO
+    {
+        public int ItemId { get; set; }
+        public string ItemName { get; set; } = string.Empty;
+        public int Stock { get; set; }        // Original counter stock
+        public int BillStock { get; set; }    // Stock reserved in bills
+        public int TransferStock { get; set; } // Stock reserved in transfers
+        public int FinalStock { get; set; }   // Stock - BillStock - TransferStock
+    }
+
+    private List<StockReportLegacyDTO> stockReport = new();
+    private List<StockReportLegacyDTO> stockReportGodown = new();
+
+
+    private void BuildStockMatrix(List<Unit> units, List<BillItem> billItems,
+                               List<VWItemParentChild> itemchild, List<StockReportFinalDTO> counterStock)
+    {
+        stockReport = billItems.Select(billItem =>
+        {
+            var dto = new StockReportLegacyDTO
+            {
+                ItemId = billItem.itemId,
+                ItemName = billItem.itemName
+            };
+
+            foreach (var unit in units)
+            {
+                // find child item for (mainItem + unit)
+                var child = itemchild.FirstOrDefault(p =>
+                    p.parentItemId == billItem.itemId &&
+                    p.unitId == unit.unitId);
+
+                int stock = 0;
+                if (child != null)
+                {
+                    stock = counterStock
+                        .Where(c => c.ItemId == child.childItemId)
+                        .Select(c => c.FinalStock)
+                        .FirstOrDefault();
+                }
+
+                dto.UnitStocks[unit.unitId] = stock;
+            }
+
+            return dto;
+        }).ToList();
+    }
+
+    private void BuildStockGdownMatrix(List<Unit> units, List<BillItem> billItems,
+                               List<VWItemParentChild> itemchild, List<StockReportFinalDTO> counterStock)
+    {
+        stockReportGodown = billItems.Select(billItem =>
+        {
+            var dto = new StockReportLegacyDTO
+            {
+                ItemId = billItem.itemId,
+                ItemName = billItem.itemName
+            };
+
+            foreach (var unit in units)
+            {
+                // find child item for (mainItem + unit)
+                var child = itemchild.FirstOrDefault(p =>
+                    p.parentItemId == billItem.itemId &&
+                    p.unitId == unit.unitId);
+
+
+
+                int stock = 0;
+                int caseValue = 0;
+                int extraBottles = 0;
+
+                if (child != null)
+                {
+                    stock = counterStock
+                        .Where(c => c.ItemId == child.childItemId)
+                        .Select(c => c.FinalStock)
+                        .FirstOrDefault();
+
+                    var billItemUnit = billItemUnits.FirstOrDefault(bu =>
+                        bu.itemId == child.childItemId && bu.unitId == unit.unitId);
+
+
+
+                    if (billItemUnit != null && billItemUnit.caseContains > 1 && stock>0) // Case unit
+                    {
+
+                        int caseSize = (int)billItemUnit.caseContains;
+
+                         caseValue = stock / caseSize;
+                         extraBottles = stock % caseSize;
+
+                    }
+                    else
+                    {
+                        extraBottles = stock;
+                        caseValue = 0;
+
+                    }
+                }
+
+                dto.UnitStocks[unit.unitId] = caseValue;
+                dto.BottleStocks[unit.unitId] = extraBottles;
+            }
+
+            return dto;
+        }).ToList();
+    }
+}
+
+
+<style>
+    .my-header-class {
+        position: sticky;
+        z-index: 2;
+        top: 0;
+    }
+
+</style>

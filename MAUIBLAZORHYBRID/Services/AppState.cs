@@ -11,11 +11,14 @@ namespace MAUIBLAZORHYBRID.Services
     public class AppState
     {
         public int BranchId { get; set; } 
-        public int LoggedInUserId { get; set; } = 1;
+        public int LoggedInUserId { get; set; }
         public int MachineId { get; set; } 
         public int CounterId { get; set; } 
         public int BearerId { get; set; } = 1;
         public int GodownId { get; set; } 
+        public string BranchName { get; set; }
+        public string AppUserName { get; set; }
+        public int defaultBranchGodown { get; set; }
 
 
         private readonly AppDbContext _db;
@@ -42,6 +45,10 @@ namespace MAUIBLAZORHYBRID.Services
                 .Select(b => b.branchId)
                 .FirstOrDefaultAsync();
 
+            BranchName = await _db.BranchMasters
+               .Select(b => b.branchName)
+               .FirstOrDefaultAsync()??"";
+
             CounterId = await _db.BranchMasters
                 .Select(c => c.CounterId)
                 .FirstOrDefaultAsync();
@@ -50,6 +57,18 @@ namespace MAUIBLAZORHYBRID.Services
               .Select(c => c.GodownId)
               .FirstOrDefaultAsync();
 
+
+            defaultBranchGodown = await _db.BranchMasters
+              .Select(c => c.BranchGodownId)
+              .FirstOrDefaultAsync();
+
+            var AppManagerID=await SecureStorage.GetAsync("AppManagerID");
+            var AppUsernameValue = await SecureStorage.GetAsync("AppUsername");
+
+
+            
+            LoggedInUserId = Convert.ToInt32(AppManagerID);
+            AppUserName = AppUsernameValue;
         }
     }
 }

@@ -2,146 +2,388 @@
 @layout Components.Layout.POSLayout
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
+@using MAUIBLAZORHYBRID.Helpers
+@using MAUIBLAZORHYBRID.Services.Sync
 @using MAUIBLAZORHYBRID.Services.Upload
 @using MudBlazor
+@using System.Diagnostics
+@using SharpHook.Data
 @inject ISnackbar Snackbar
 @inject StockInwardService pageService
 @inject IDataUploadService UploadService
+@inject ISyncService SyncService
+@inject IJSRuntime JSRuntime
+
 
 @inject AppState appState
 @inject IStockInwardSaveService saveService
 @inject BackgroundDataService BgService
 
+
+@inject IKeyboardListenerService KeyboardListener
+@implements IDisposable
+
 <PageTitle>Stock Inward</PageTitle>
 
-<MudPaper Class="pos-screen">
 
-    <div class="center-panel">
+@if (!_isAuthenticated)
+{
 
-    @* <MudText Typo="Typo.h5" Class="mb-4">Stock Inward</MudText> *@
+    <div class="d-flex justify-center align-center" style="height: 100vh;background-color:#eaf6f4">
+        <MudPaper Class="pa-6" Elevation="8" Style="width: 350px; text-align: center; border-radius: 16px;">
+            <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Primary">
+                🔒 Manager Access Required
+            </MudText>
 
-    <!-- Header Section -->
-    <MudGrid>
-        <MudItem xs="6" sm="6">
-            <MudTextField ReadOnly="true" Label="DOC#" @bind-Value="StockInward.DocNo" />
-        </MudItem>
+            <MudTextField @bind-Value="_enteredPassword"
+                          Label="Enter Password"
+                          InputType="InputType.Password"
+                          Variant="Variant.Text"
+                          @ref="passwordRef"
+                          OnKeyUp="HandleKeyUpPassword"
+                          Class="mb-4"/>
 
-        <MudItem xs="6" sm="6">
-            <MudDatePicker Label="Date" @bind-Date="StockInward.DocDate" DateFormat="dd/MM/yyyy" />
-        </MudItem>
 
-        <MudItem xs="6" sm="6">
-            <MudSelect T="int?" Label="Supplier" @bind-Value="selectedVendor">
-                @foreach (var supplier in initData.Vendors)
+            <MudButton OnClick="VerifyAccessAsync"
+                       Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       FullWidth="true"
+                       Size="Size.Medium">
+                Unlock
+            </MudButton>
+
+            @if (_errorVisible)
+            {
+                <MudAlert Severity="Severity.Error"
+                Class="mt-4 text-center">
+                Invalid Password. Please try again.
+            </MudAlert>
+            }
+        </MudPaper>
+    </div>
+}
+else
+{
+
+    <MudPaper Class="pos-screen" Style="overflow:scroll">
+
+
+        <div class="center-panel-stock" >
+
+            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+                <!-- Left: Page Title -->
+                <MudText Typo="Typo.h5" Class="fw-bold">
+                    <span style="color:saddlebrown">@appState.BranchName.ToUpper() -</span>
+                    - Stock Inward
+                </MudText>
+
+                <!-- Center: Branch Name -->
+          
+
+                <!-- Right: View List Button -->
+                @if (listSaved)
                 {
-                    <MudSelectItem Value="@supplier?.VendorId">@supplier.VendorName</MudSelectItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(() => listSaved = false)" >
+                        <MudIcon Icon="@Icons.Material.Filled.Close" Class="me-1" />
+                        List
+                    </MudButton>
                 }
-            </MudSelect>
-        </MudItem>
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadSavedList">
+                        <MudIcon Icon="@Icons.Material.Filled.List" Class="me-1" />
+                        List
+                    </MudButton>
+                }
+          
+            </MudStack>
 
-        <MudItem xs="6" sm="6">
-            <MudTextField Label="Ref#" @bind-Value="StockInward.RefNo" />
-        </MudItem>
-    </MudGrid>
 
-    <MudGrid Class="mt-4">
-                    <MudItem xs="7">
-                        <MudAutocomplete T="BarItem" Label="Item" Value="selectedItem" ValueChanged="HandleProductSelected"
-                                         SearchFunc="SearchProducts"
-                                         @ref="productRef"
-                                         ToStringFunc="(p) => p?.BarItemName" Dense Immediate /> 
+
+        <!-- Header Section -->
+            @if (listSaved)
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <div tabindex="0" @ref="elementModRef" @onkeydown="HandleKeyDownMod" class="keyboard-wrapper">
+                            <MudTable Dense="true" RowClassFunc="GetRowClassMod" Hover="true" Items="SavedStockInwardList" FixedHeader="true" Height="90vh">
+                                <HeaderContent>
+                                    <MudTh Class="pa-1">DOC #</MudTh>
+                                    <MudTh Class="pa-1" Style="width:120px">REF #</MudTh>
+                                    <MudTh Class="pa-1">Date</MudTh>
+                                    <MudTh Style="width:60%">Vendor </MudTh>
+                                    <MudTh Class="pa-1"></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.StockInwardDocNo</MudTd>
+                                    <MudTd>@context.StockInwardRefNo</MudTd>
+                                    <MudTd>@context.StockInwardDate.ToShortDateString()</MudTd>
+                                    <MudTd>@context.Vendor.VendorName</MudTd>
+                                    <MudTd Class="pa-1">
+                                        <MudIconButton tabindex="-1" Icon="@Icons.Material.Filled.ArrowRightAlt" Color="Color.Info" OnClick="() => ViewSavedDetails(context)" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </div>
+                    </MudItem>
+                </MudGrid>
+        
+        
+        
+        
+            }
+            else
+            {
+                <MudGrid>
+                    <MudItem xs="2" sm="2">
+                        <MudTextField ReadOnly="true" Label="DOC#" @bind-Value="StockInward.DocNo" />
                     </MudItem>
 
-                    <MudItem xs="3">
-                        <MudAutocomplete T="Unit" Label="Unit" Value="selectedUnit" ValueChanged="HandleUnitSelected"
+                    <MudItem xs="2" sm="2">
+                        <MudDatePicker Label="Date" @bind-Date="StockInward.DocDate" DateFormat="dd/MM/yyyy" />
+                    </MudItem>
+                    <MudItem xs="2" sm="2">
+                        <MudTextField Label="Ref#" @bind-Value="StockInward.RefNo" @ref="refnoRef" />
+                    </MudItem>
+                    <MudItem xs="4" sm="4">
+                        @*  <MudSelect T="int?" Label="Supplier" @bind-Value="selectedVendor">
+                    @foreach (var supplier in initData.Vendors)
+                    {
+                        <MudSelectItem Value="@supplier?.VendorId">@supplier.VendorName</MudSelectItem>
+                    }
+                </MudSelect>
+     *@
+                        <MudAutocomplete T="int?" Label="Supplier" @ref="supplierRef"
+                                         Value="selectedVendor"
+                                         ValueChanged="OnVendorChanged"
+                                         ToStringFunc="@(id => GetVendorName(id))"
+                                         SearchFunc="SearchVendors">
+                        </MudAutocomplete>
+
+                    </MudItem>
+
+
+                </MudGrid>
+
+                @if(modId==0)
+                {
+                    <MudGrid Class="mt-4">
+                    <MudItem xs="5">
+                        <MudAutocomplete T="BillItem" OnKeyUp="OnKeyDownHandler" Label="Item" Value="selectedItem" ValueChanged="HandleItemSelected"
+                                         SearchFunc="SearchItems"
+                                         @ref="productRef"
+                                         ToStringFunc="(p) => p?.itemName" Dense Immediate />
+                    </MudItem>
+
+                    <MudItem xs="2">
+                        <MudAutocomplete T="Unit" OnKeyUp="OnKeyDownHandlerUnitT" Label="Unit Type" Value="selectedUnit" ValueChanged="HandleUnitSelected"
                                          @ref="unitRef" SearchFunc="SearchUnits"
                                          ToStringFunc="(p) => p?.unitName" Dense Immediate />
+                    </MudItem>
+                    <MudItem xs="2">
+                        <MudAutocomplete OnKeyUp="OnKeyDownHandlerUnit"
+                                         T="int?"
+                                         Label="Unit"
+                                         Value="selectedPacking"
+                                         ValueChanged="OnPackingChanged"
+                                         @ref="packingRef"
+                                         CoerceText="false"
+                                         SearchFunc="@SearchPackingTypes"
+                                         ToStringFunc="@GetPackingDisplayName"
+                                         Variant="Variant.Text" Dense Immediate>
+                        </MudAutocomplete>
+
                     </MudItem>
                     <MudItem xs="2">
                         <MudTextField OnKeyUp="onEnteronItemQuantity" @ref="quantityRef" T="decimal?" Label="Qty" @bind-Value="itemQuantity" Dense />
                     </MudItem>
 
-                    <MudItem xs="9">
+
+                    <MudItem xs="1" Style="text-align:right;padding-left:0;padding-bottom:zero;margin-top:auto">
+                        <MudButton OnClick="AddItemToTransfer" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Size="Size.Small">Add</MudButton>
                     </MudItem>
-                    <MudItem xs="3" Class="pa-1" Style="text-align:right">
-                    <MudButton OnClick="AddItemToTransfer" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Size="Size.Small">Add</MudButton>
 
+                </MudGrid>
+                }
+                <MudGrid>
+                    <MudItem xs="12">
+                        <div tabindex="0" @ref="elementRef" @onkeydown="HandleKeyDown" class="keyboard-wrapper">
+                            <MudTable Dense="true" RowClassFunc="GetRowClass" Hover="true" Items="InwardItems" FixedHeader="true" Height="50vh">
+                                <HeaderContent>
+                                    <MudTh Class="pa-1">SL#</MudTh>
+                                    <MudTh Style="width:60%">Item</MudTh>
+                                    <MudTh Style="width:15%">Unit Type</MudTh>
+                                    <MudTh Style="width:10%">Unit</MudTh>
+                                    <MudTh Style="width:10%">Qty</MudTh>
+                                    <MudTh Class="pa-1"></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd Class="pa-1">@(InwardItems.IndexOf(context) + 1)</MudTd>
+                                    <MudTd>@context.ItemName</MudTd>
+                                    <MudTd>@context.UnitName</MudTd>
+                                    <MudTd>@context.PackName</MudTd>
+                                    <MudTd>@context.TR_Qty</MudTd>
+
+                                    @if (modId==0)
+                                    {
+                                        <MudTd Class="pa-1">
+                                            <MudIconButton tabindex="-1" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveItem(context)" />
+                                        </MudTd>
+                                    }
+                              
+                                </RowTemplate>
+                            </MudTable>
+                        </div>
                     </MudItem>
-                 
-        </MudGrid>
-    <MudGrid  >
-            <MudItem xs="12">
-                <MudTable Dense="true" Items="InwardItems" FixedHeader="true" Height="50vh">
-                    <HeaderContent>
-                        <MudTh Style="width:10%">SL#</MudTh>
-                        <MudTh Style="width:75%">Item</MudTh>
-                        <MudTh>Unit</MudTh>
-                        <MudTh>Qty</MudTh>
-                        <MudTh></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@(InwardItems.IndexOf(context) + 1)</MudTd>
-                        <MudTd>@context.ItemName</MudTd>
-                        <MudTd>@context.UnitName</MudTd>
-                        <MudTd>@context.TR_Qty</MudTd>
-                        <MudTd>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveItem(context)" />
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+                    <MudItem xs="3">
+                        <div style="margin-top:auto; padding-top:16px;">
+                            <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="HandleReset" FullWidth>
+                                <MudIcon Icon="@Icons.Material.Filled.Undo" /> Reset
+                            </MudButton>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="6">
+                    </MudItem>
 
+                    @if (modId == 0)
+                    {
+                        <MudItem xs="3">
+                            <div style="margin-top:auto; padding-top:16px;">
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleStockInwardSave" FullWidth>
+                                    <MudIcon Icon="@Icons.Material.Filled.Save" />  Save
+                                </MudButton>
+                            </div>
+                        </MudItem>
+                    }
+                </MudGrid>
 
-            </MudItem>
-            <MudItem xs="6">
-                <div style="margin-top:auto; padding-top:16px;">
-                    <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="HandleReset" FullWidth>
-                        <MudIcon Icon="@Icons.Material.Filled.Undo" /> Reset
-                    </MudButton>
-                </div>
-            </MudItem>
-
-            <MudItem xs="6">
-                <div style="margin-top:auto; padding-top:16px;">
-                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleStockInwardSave" FullWidth>
-                        <MudIcon Icon="@Icons.Material.Filled.Save" /> Save
-                    </MudButton>
-                </div>
-            </MudItem>
-        </MudGrid>
+            }
 
 
 
 
-
-
-    </div>
-
-</MudPaper>
-
-@if (isLoading)
-{
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Primary">Saving....</MudText>
         </div>
-    </div>
+
+    </MudPaper>
+
+    @if (isLoading)
+    {
+        <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Primary">Saving....</MudText>
+            </div>
+        </div>
+    }
+
 }
 
+
+
+
 @code {
-    private BarItem? selectedItem { get; set; }
+
+    private MudAutocomplete<int?> packingRef;
+    private int? selectedPacking;
+
+
+    private async Task OnPackingChanged(int? value)
+    {
+        selectedPacking = value;
+        focusStage = 4;
+    }
+
+
+    private async Task<IEnumerable<int?>> SearchPackingTypes(string value,CancellationToken ct)
+    {
+        // Return all options when empty or filter based on input
+        if (string.IsNullOrEmpty(value))
+        {
+            return new int?[] { 10, 0 };
+        }
+
+        var options = new List<int?>();
+
+        if ("case".Contains(value, StringComparison.OrdinalIgnoreCase) ||
+            "10".Contains(value, StringComparison.OrdinalIgnoreCase))
+        {
+            options.Add(10);
+        }
+
+        if ("bottle".Contains(value, StringComparison.OrdinalIgnoreCase) ||
+            "0".Contains(value, StringComparison.OrdinalIgnoreCase))
+        {
+            options.Add(0);
+        }
+
+        return options;
+    }
+
+    private string GetPackingDisplayName(int? value)
+    {
+        return value switch
+        {
+            10 => "Case",
+            0 => "Bottle",
+            _ => string.Empty
+        };
+    }
+
+    private void HandlePackingClosed()
+    {
+    }
+
+    private BillItem? selectedItem { get; set; }
+    // private BarItem? selectedItem { get; set; }
     private StockInwardModel StockInward = new();
     private Unit? selectedUnit { get; set; }
 
-    public int? selectedVendor { get; set; }
+
+
+    private MudAutocomplete<int?> supplierRef;
+    private int? selectedVendor;
+
+    private void OnVendorChanged(int? newValue)
+    {
+        if (newValue != selectedVendor)
+            selectedVendor = newValue;
+
+        focusStage = 1;
+    }
+
+    // Converts vendor id -> display text
+    private string GetVendorName(int? id)
+    {
+        return initData.Vendors.FirstOrDefault(v => v.VendorId == id)?.VendorName ?? string.Empty;
+    }
+
+    // Called when user types: returns filtered list
+    private Task<IEnumerable<int?>> SearchVendors(string value,CancellationToken ct)
+    {
+        IEnumerable<int?> query;
+
+        if (string.IsNullOrWhiteSpace(value))
+            query = initData.Vendors.Select(v => (int?)v.VendorId);
+        else
+            query = initData.Vendors
+                .Where(v => v.VendorName.Contains(value, StringComparison.OrdinalIgnoreCase))
+                .Select(v => (int?)v.VendorId);
+
+        return Task.FromResult(query);
+    }
 
 
     // private int? selectedUnit { get; set; }
     private List<Unit> filteredunits = new();
     private MudAutocomplete<Unit> unitRef;
     private MudTextField<decimal?> quantityRef;
-    private MudAutocomplete<BarItem> productRef;
+    private MudTextField<string?> refnoRef;
+
+
+
+    private MudAutocomplete<BillItem> productRef;
     List<BarItem> filteredMainFillItem = new();
+    List<BillItem> filteredStockInward = new();
 
     private Task<IEnumerable<BarItem>> SearchProducts(string value, CancellationToken token)
     {
@@ -155,28 +397,96 @@
         return Task.FromResult(result);
     }
 
-    public int CaseUnit = 10;
-    private async Task HandleProductSelected(BarItem mainitemselect)
+    int fromKeyDown = 0; 
+    private void OnKeyDownHandler(KeyboardEventArgs keyboardArgs)
     {
-        selectedUnit = null;
-        selectedItem = null;
-        if (selectedItem?.BarItemId != mainitemselect?.BarItemId && mainitemselect != null)
+        if (keyboardArgs.Key == "Enter" || keyboardArgs.Code == "Enter" )
         {
-            selectedItem = mainitemselect;
-
-            filteredunits = initData.Units
-            .Where(u => u.unitId == CaseUnit || u.unitId == mainitemselect.BarItemBaseUnitId)
-            .OrderBy(u => u.unitId == CaseUnit ? 0 : 1)  // ensures case comes first
-            .ToList();
-
-
-            selectedUnit = filteredunits.FirstOrDefault(u => u.unitId == CaseUnit);
-
-
-            await Task.Delay(100);
+            focusStage = 2;
+        }
+    }
+    private void OnKeyDownHandlerUnitT(KeyboardEventArgs keyboardArgs)
+    {
+        if (keyboardArgs.Key == "Enter" || keyboardArgs.Code == "Enter")
+        {
             focusStage = 3;
         }
     }
+    private void OnKeyDownHandlerUnit(KeyboardEventArgs keyboardArgs)
+    {
+        if (keyboardArgs.Key == "Enter" || keyboardArgs.Code == "Enter")
+        {
+            focusStage = 4;
+        }
+    }
+
+
+
+    private Task<IEnumerable<BillItem>> SearchItems(string value, CancellationToken token)
+    {
+
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult<IEnumerable<BillItem>>(filteredStockInward);
+
+        var result = filteredStockInward
+            .Where(p => p.itemName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+
+        return Task.FromResult(result);
+    }
+
+
+    public int CaseUnit = 10;
+    // private async Task HandleProductSelected(BarItem mainitemselect)
+    // {
+    //     selectedUnit = null;
+    //     selectedItem = null;
+    //     if (selectedItem?.BarItemId != mainitemselect?.BarItemId && mainitemselect != null)
+    //     {
+    //         selectedItem = mainitemselect;
+
+    //         filteredunits = initData.Units
+    //         .Where(u => u.unitId == CaseUnit || u.unitId == mainitemselect.BarItemBaseUnitId)
+    //         .OrderBy(u => u.unitId == CaseUnit ? 0 : 1)  // ensures case comes first
+    //         .ToList();
+
+
+    //         selectedUnit = filteredunits.FirstOrDefault(u => u.unitId == CaseUnit);
+
+
+    //         await Task.Delay(100);
+    //         focusStage = 3;
+    //     }
+    // }
+
+
+
+    private async Task HandleItemSelected(BillItem mainitemselect)
+    {
+        selectedUnit = null;
+        selectedItem = null;
+        if (selectedItem?.itemId != mainitemselect?.itemId && mainitemselect != null)
+        {
+            selectedItem = mainitemselect;
+
+
+
+            filteredunits = filteredStockInward
+               .Where(i => i.itemId == selectedItem.itemId && i.ItemUnits != null)
+               .SelectMany(i => i.ItemUnits!) // Flatten the list
+               .Where(iu => iu.Unit != null) // Avoid null Unit references
+               .Select(iu => iu.Unit)
+               .Distinct()
+               .ToList();
+
+            selectedUnit = null;
+
+
+            await Task.Delay(1);
+            focusStage = 2;
+        }
+    }
+
+
     private async Task HandleUnitSelected(Unit unitselect)
     {
         selectedUnit = null;
@@ -217,11 +527,86 @@
     {
 
     }
+    private string GetRowClassMod(StockInwardMaster item, int rowIndex)
+    {
+        return rowIndex == focusedRowIndex ? "focused-row" : "";
+    }
+    public int modId { get; set; }
+    public bool listSaved { get; set; }
+    List<StockInwardMaster> SavedStockInwardList = new();
+    List<StockInwardInDetailDTO> SaveInwardDetails = new();
+
+    private async Task LoadSavedList()
+    {
+        await HandleReset();
+        SavedStockInwardList = new();
+        listSaved = !listSaved;
+
+        var result = await pageService.GetStockInwardMastersAsync();
+        if (result.IsSuccess)
+        {
+            SavedStockInwardList = result.Data ?? new();
+        }
+        else
+        {
+            Console.WriteLine($"Initialisatiion failed: {result.ErrorMessage}");
+
+            Snackbar.Add("Error Fetchin", Severity.Error);
+        }
+
+    }
+
+
+    private async Task ViewSavedDetails(StockInwardMaster stockInwardMaster)
+    {
+
+
+
+        var result = await pageService.GetStockInwardDetailsById(stockInwardMaster.StockInwardId);
+        if (result.IsSuccess)
+        {
+            SaveInwardDetails = result.Data ?? new();
+
+            listSaved = false;
+
+            modId = stockInwardMaster.StockInwardId;
+
+            StockInward.DocNo = stockInwardMaster.StockInwardDocNo;
+            StockInward.RefNo = stockInwardMaster.StockInwardRefNo;
+            StockInward.DocDate = stockInwardMaster.StockInwardDate;
+            selectedVendor = stockInwardMaster.VendorId;
+
+
+
+            InwardItems.AddRange(SaveInwardDetails.Select(d => new InwardItemList
+            {
+                Main_Bar_Item_ID = 0,         // map field-to-field
+                Item_ID = 0,
+                Unit_Type_ID = 0,
+                Unit_ID = 0,
+                TR_Qty = d.Qty,
+                ItemName = d.ItemName,
+                UnitName = d.ItemUnit,
+                PackName = d.UnitType == 10 ? "Case" : "Bottle"
+            }));
+
+            StateHasChanged();
+
+
+        }
+        else
+        {
+            Console.WriteLine($"Initialisatiion failed: {result.ErrorMessage}");
+
+            Snackbar.Add("Error Fetchin", Severity.Error);
+        }
+
+    }
 
     public class StockInwardModel
     {
         public string DocNo { get; set; }
-        public DateTime? DocDate { get; set; } = DateTime.Now;
+        public DateTime? DocDate { get; set; } = DateTime.UtcNow;
         public string RefNo { get; set; }
     }
 
@@ -259,54 +644,98 @@
     public class InwardItemList
     {
         public int Main_Bar_Item_ID { get; set; }
+        public int Item_ID { get; set; }
+        public int Unit_Type_ID { get; set; }
         public int Unit_ID { get; set; }
         public decimal TR_Qty { get; set; }
         public string? ItemName { get; set; }
         public string? UnitName { get; set; }
+        public string? PackName { get; set; }
     }
 
     List<InwardItemList> InwardItems = new();
     StockInwardInitDTO initData = new();
     StockInwardDocDTO docData = new();
 
+    private List<VWItemParentChild> parentchildrenitem = new();
+
+
     private async void AddItemToTransfer()
     {
-        if (selectedItem != null && itemQuantity > 0)
+        if (selectedItem != null && itemQuantity > 0 && selectedUnit != null && selectedPacking != null)
         {
-            var existing = InwardItems.FirstOrDefault(x => x.Main_Bar_Item_ID == selectedItem.BarItemId && x.Unit_ID == selectedUnit.unitId);
-            if (existing != null)
+
+
+            var filtered = parentchildrenitem
+                              .Where(x => x.parentItemId == selectedItem.itemId && x.unitId == selectedUnit.unitId)
+                              .ToList();
+
+            if (filtered != null)
             {
-                InwardItems.Remove(existing);
+                var unitId = 10;
+                if (selectedPacking.Value >= 0)
+                {
+                    unitId = selectedPacking.Value;
+                }
+                int childItemId = filtered.FirstOrDefault()?.childItemId ?? 0;
+                string childItemName = filtered.FirstOrDefault()?.childItemname ?? "";
+
+                var existing = InwardItems.FirstOrDefault(x => x.Main_Bar_Item_ID == selectedItem.itemId && x.Unit_Type_ID == selectedUnit.unitId && x.Item_ID == childItemId && x.Unit_ID == unitId);
+
+
+                if (existing != null)
+                {
+                    InwardItems.Remove(existing);
+                }
+
+                var packName = "Case";
+                if (selectedPacking == 0)
+                    packName = "Bottle";
+
+
+
+                InwardItems.Add(new InwardItemList
+                    {
+                        Main_Bar_Item_ID = selectedItem.itemId,
+                        Item_ID = childItemId,
+                        Unit_Type_ID = selectedUnit.unitId,
+                        Unit_ID = unitId,
+                        TR_Qty = itemQuantity ?? 0,
+                        ItemName = childItemName,
+                        UnitName = selectedUnit.unitName,
+                        PackName = packName
+                    });
+
+                selectedItem = null;
+                selectedUnit = null;
+                itemQuantity = null;
+                selectedPacking = null;
             }
-
-
-
-            InwardItems.Add(new InwardItemList
-            {
-                Main_Bar_Item_ID = selectedItem.BarItemId,
-                Unit_ID = selectedUnit.unitId,
-                TR_Qty = itemQuantity??0,
-                ItemName = selectedItem.BarItemName,
-                UnitName=selectedUnit.unitName
-            });
-
-
-
-            selectedItem = null;
-            selectedUnit = null;
-            itemQuantity = null;
-
         }
+        else if (selectedItem == null) focusStage = 1;
+        else if (selectedUnit == null) focusStage = 2;
+        else if (selectedPacking == null) focusStage = 3;
     }
 
 
     async Task HandleReset()
     {
-        StockInward.DocDate = DateTime.Now;
+        listSaved = false;
+        SavedStockInwardList = new();
+        modId = 0;
+
+        selectedItem = null;
+        selectedUnit = null;
+        itemQuantity = null;
+        selectedPacking = null;
+
+        StockInward.DocDate = DateTime.UtcNow;
         StockInward.RefNo = "";
         await GenerateDocNumber();
         selectedVendor = null;
         InwardItems.Clear();
+        focusStage = 10;
+
     }
 
     private bool isLoading = false;
@@ -328,7 +757,15 @@
                    .Where(item => item.MainBarItem == 0)
                    .ToList();
 
+                filteredStockInward=initData.BillItems
+                   .Where(item => item.itemType == 2)
+                   .ToList();
+
+                parentchildrenitem = initData.VWParentItemChilds.ToList();
+
                 await GenerateDocNumber();
+
+
             }
             else
             {
@@ -362,11 +799,21 @@
     {
         if (firstRender)
         {
+            if (passwordRef!=null)
+                await passwordRef.FocusAsync();
+
 
         }
         else
         {
-            if (focusStage == 1)
+            if(focusStage==99)
+            {
+                await refnoRef.FocusAsync();
+
+                focusStage = 0;
+                await InitializeKeyboardListener();
+            }
+            else if (focusStage == 1)
             {
                 itemQuantity = null;
 
@@ -378,17 +825,41 @@
             }
             else if (focusStage == 3)
             {
+                await packingRef.FocusAsync();
+            }
+            else if (focusStage == 4)
+            {
                 await quantityRef.FocusAsync();
             }
-
+            else if (focusStage == 10)
+            {
+                await refnoRef.FocusAsync();
+            }
+            else if (focusStage == 99)
+            {
+                await productRef.CloseMenuAsync();
+                await quantityRef.BlurAsync();
+                await unitRef.CloseMenuAsync();
+                await packingRef.CloseMenuAsync();
+            }
             focusStage = 0;
 
         }
     }
 
 
+
+
     async Task HandleStockInwardSave()
     {
+
+        if(modId>0)
+        {
+            Snackbar.Add("This Stock Inward Cannot Saved again.", Severity.Error);
+            return;
+
+        }
+
         BgService.StopBackgroundTasks();
         Snackbar.Clear();
         var vendorId = 0;
@@ -425,8 +896,8 @@
             StockInwardNotes = "",
             StockInwardDetails = InwardItems.Select(x => new StockInwardDetail
             {
-                BarItemId = x.Main_Bar_Item_ID,
-                UnitId = x.Unit_ID,
+                BarItemId = x.Item_ID,
+                UnitId = x.Unit_ID == 0 ? x.Unit_Type_ID : x.Unit_ID,
                 InwardQty = x.TR_Qty
             }).ToList()
         };
@@ -439,10 +910,17 @@
             {
                 isLoading = true;
 
+
                 var saveResult = await saveService.SaveStockInwardAsync(save);
                 if (saveResult.IsSuccess)
                 {
-                    UploadService.UploadPendingStockInwardsAsync();
+
+                    if (await CheckNetworkConnection())
+                    {
+                        UploadService.UploadPendingStockInwardsAsync();
+                        SyncService.SyncBarItemGodownStock();
+                    }
+
                     Snackbar.Clear();
                     Snackbar.Add("Stock Inward Saved Successfully!!.", Severity.Success);
                     await HandleReset();
@@ -460,6 +938,7 @@
             }
             finally
             {
+                await Task.Delay(100);
                 isLoading = false;
             }
         }
@@ -472,4 +951,248 @@
 
     }
 
+    private string DetectCombo(Services.Interfaces.KeyboardEventData evt)
+    {
+        if (evt.EventType != EventType.KeyPressed) return "";
+
+        return evt.KeyCode switch
+        {
+            KeyCode.VcF1 => "F1",
+            KeyCode.VcF2 => "F2",
+            KeyCode.VcF3 => "F3",
+            KeyCode.VcF4 => "F4",
+            KeyCode.VcF5 => "F5",
+            KeyCode.VcF6 => "F6",
+            KeyCode.VcF7 => "F7",
+            KeyCode.VcF8 => "F8",
+            KeyCode.VcF9 => "F9",
+            KeyCode.VcF10 => "F10",
+            KeyCode.VcF11 => "F11",
+            KeyCode.VcF12 => "F12",
+            KeyCode.VcS when evt.IsCtrlPressed => "Ctrl + S",
+            KeyCode.VcEnter when evt.IsCtrlPressed => "Ctrl + Enter",
+            KeyCode.VcDelete when evt.IsCtrlPressed => "Ctrl + Delete",
+            KeyCode.VcTab when evt.IsCtrlPressed => "TabOrderAndItem",
+            KeyCode.VcEquals => "+",
+            KeyCode.VcMinus => "-",
+            _ => ""
+        };
+    }
+
+    private string lastKey = "";
+    private string combo = "";
+    private string barcode = "";
+    private List<Services.Interfaces.KeyboardEventData> keyEvents = new();
+    private IDisposable? _keyEventSubscription;
+    private bool _keyboardListeningStarted;
+    private async Task InitializeKeyboardListener()
+    {
+        if (_keyboardListeningStarted)
+            return;
+        _keyboardListeningStarted = true;
+        KeyboardListener.StartListening();
+
+        _keyEventSubscription = KeyboardListener.KeyEvents.Subscribe(async evt =>
+        {
+            lastKey = evt.KeyName;
+            keyEvents.Insert(0, evt);
+            combo = DetectCombo(evt);
+
+            switch (combo)
+            {
+                case "Ctrl + S":
+                    Debug.WriteLine("Saved");
+                    break;
+                case "F1":
+                    await HandleStockInwardSave();
+                    await InvokeAsync(StateHasChanged);
+                    break;
+                case "F11":
+                    await HandleReset();
+                    await InvokeAsync(StateHasChanged);
+                    break;
+                case "F4":
+                    await HandleF4Key();
+                    await InvokeAsync(StateHasChanged);
+                    break;
+                default:
+                    Debug.WriteLine("Everything else");
+                    break;
+            }
+
+            // Call StateHasChanged if needed for UI updates
+        });
+
+
+        await InvokeAsync(StateHasChanged);
+
+    }
+    bool infocus = false;
+    private async Task HandleF4Key()
+    {
+
+
+        if (infocus)
+        {
+            infocus = false;
+            focusedRowIndex = -1;
+            focusStage = 1;
+        } 
+        else
+        {
+            focusStage = 99;
+            await elementRef.FocusAsync();
+            focusedRowIndex = 0;
+            infocus = true;
+        }
+    }
+
+
+    public void Dispose()
+    {
+        KeyboardListener.StopListening();
+        _keyEventSubscription?.Dispose();
+    }
+
+
+    private int focusedRowIndex = -1;  // no row selected by default
+
+    private void FocusFirstRow()
+    {
+        if (InwardItems?.Count > 0)
+            focusedRowIndex = 0;
+    }
+
+    private void MoveUp()
+    {
+        if (focusedRowIndex > 0)
+            focusedRowIndex--;
+    }
+
+    private void MoveDown()
+    {
+        if (focusedRowIndex < InwardItems.Count - 1)
+            focusedRowIndex++;
+    }
+
+    private void DeleteRow()
+    {
+        if (focusedRowIndex >= 0 && focusedRowIndex < InwardItems.Count)
+        {
+            var item = InwardItems[focusedRowIndex];
+            RemoveItem(item);
+
+            // adjust index after delete
+            if (focusedRowIndex >= InwardItems.Count)
+                focusedRowIndex = InwardItems.Count - 1;
+        }
+    }
+
+    
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowUp":
+                MoveUp();
+                break;
+            case "ArrowDown":
+                MoveDown();
+                break;
+            case "Delete":
+                DeleteRow();
+                break;
+        }
+    }
+    private void HandleKeyDownMod(KeyboardEventArgs e)
+    {
+        // switch (e.Key)
+        // {
+        //     case "ArrowUp":
+        //         MoveUp();
+        //         break;
+        //     case "ArrowDown":
+        //         MoveDown();
+        //         break;
+        //     case "Delete":
+        //         DeleteRow();
+        //         break;
+        // }
+    }
+
+
+    private string GetRowClass(InwardItemList item, int rowIndex)
+    {
+        return rowIndex == focusedRowIndex ? "focused-row" : "";
+    }
+    private ElementReference elementRef;
+    private ElementReference elementModRef;
+    
+
+    private async Task<bool> CheckNetworkConnection()
+    {
+        try
+        {
+            // Using JavaScript interop to check navigator.onLine
+            return await JSRuntime.InvokeAsync<bool>("eval", "navigator.onLine");
+        }
+        catch 
+        {
+            // Fallback - assume online if JS interop fails
+            return true;
+        }
+    }
+
+
+    private MudTextField<string> passwordRef;
+    private string _enteredPassword = "";
+    private bool _isAuthenticated = false;
+    private bool _errorVisible = false;
+
+    private async Task VerifyAccessAsync()
+    {
+        bool isValid = await PasswordManager.VerifyPasswordAsync(_enteredPassword);
+
+        if (isValid)
+        {
+            _isAuthenticated = true;
+            _errorVisible = false;
+            focusStage = 99;
+            StateHasChanged();
+        }
+        else
+        {
+            _errorVisible = true;
+        }
+
+        _enteredPassword = "";
+    }
+    private async Task HandleKeyUpPassword(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await VerifyAccessAsync();
+        }
+        _errorVisible = false;
+    }
+
 }
+
+<style>
+    .focused-row {
+        background-color: #e0f7fa !important; /* light cyan highlight */
+    }
+
+    .keyboard-wrapper {
+        outline: none; /* remove default outline */
+        border: 2px solid transparent;
+        border-radius: 6px;
+        transition: border-color 0.2s ease;
+    }
+
+        .keyboard-wrapper:focus {
+            border-color: #1976d2; /* MudBlazor primary blue */
+        }
+
+</style>

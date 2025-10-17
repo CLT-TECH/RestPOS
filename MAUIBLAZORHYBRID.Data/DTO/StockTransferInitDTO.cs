@@ -10,6 +10,7 @@ namespace MAUIBLAZORHYBRID.Data.DTO
     public class StockTransferInitDTO
     {
         public List<BillStation> Counters { get; set; } = new();
+        public List<GodownMaster> Godowns { get; set; } = new();
         public List<BillItem> BillItems { get; set; } = new();
         public List<VWItemParentChild> VWParentItemChilds { get; set; } = new();
         public List<BarItem> barItems { get; set; } = new();

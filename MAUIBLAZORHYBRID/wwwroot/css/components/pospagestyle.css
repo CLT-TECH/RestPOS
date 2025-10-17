@@ -491,7 +491,15 @@ order-controls {
 .custom-order-total {
     font-weight: 600;
     color: #222;
+    font-size: 18px;
 }
+.custom-order-qty {
+    font-weight: 600;
+    font-size:18px;
+    color: #222;
+    text-align:left;
+}
+
 
 .custom-empty-order-text {
     color: var(--mint-green-dark);
@@ -545,14 +553,25 @@ order-controls {
     justify-content: flex-end; /* Aligns button to the right */
     align-items: flex-end; /* Aligns button to the bottom */
     flex-shrink: 0; /* Prevents shrinking */
-    padding: 16px; /*
-    }
-
-    .summary-action-button {
-        align-self: flex-end; /* Pushes to bottom-right */
-    margin-top: auto;
-    margin-top: 16px;
+    padding: 16px; 
 }
+
+.summary-action-button {
+    align-self: flex-end; /* Pushes to bottom-right */
+    margin-top: auto;
+    margin-top: 4px;
+    width: 80px;
+}
+
+.right-content-new {
+    display: flex;
+    flex-direction: column; /* stack vertically */
+    justify-content: flex-end; /* align buttons to the bottom */
+    align-items: flex-end; /* align buttons to the right */
+    flex-shrink: 0;
+    padding: 16px;
+}
+
 
 .custom-ordered-list-item {
     display: flex;
@@ -627,15 +646,40 @@ order-controls {
 .pending {
     background-color: #FFF59D;
 }
-.center-panel {
+    .center-panel {
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh; /* full height */
+        width: 33.33vw;
+        padding: 2rem;
+        background-color: #f9f9f9; /* optional background */
+    }
+
+    .center-panel-new {
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh; /* full height */
+        width: 50vw;
+        padding: 2rem;
+        background-color: #f9f9f9; /* optional background */
+    }
+
+.center-panel-full {
     justify-content: center;
     align-items: center;
-    min-height: 100vh; /* full height */
-    width: 33.33vw;
+    min-height: 80vh; /* full height */
+    width: 90vw;
     padding: 2rem;
     background-color: #f9f9f9; /* optional background */
 }
-
+    .center-panel-stock {
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh; /* full height */
+        width: 70vw;
+        padding: 2rem;
+        background-color: #f9f9f9; /* optional background */
+    }
     .center-panel > .content-box {
         width: 100%;
         max-width: 600px;

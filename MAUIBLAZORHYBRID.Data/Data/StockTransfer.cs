@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public string Notes { get; set; } = string.Empty;
         public bool IsSynced { get; set; } = false;
         public virtual ICollection<StockTransferItem> StockTransferDetails { get; set; } = new List<StockTransferItem>();
+        public virtual StockTransferCancel? CancelInfo { get; set; }
 
     }
 }

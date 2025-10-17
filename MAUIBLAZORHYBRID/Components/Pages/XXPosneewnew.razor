@@ -9,7 +9,7 @@
 
 <MudPaper Class="vertical-navbar" Elevation="4" @onmouseenter="() => ShowNav()" @onmouseleave="() => HideNav()"
           Style="@NavBarWidthStyle">
-    <nav aria-label="Main Navigation" class="nav-content">
+    <nav   class="nav-content">
         <MudIconButton Icon="@Icons.Material.Filled.Menu"
                        Color="Color.Primary"
                        Style="margin-bottom:1rem;"
@@ -141,7 +141,7 @@
                     <MudChip T="string" Class="status-chip">Vacant Tables: 8</MudChip>
                 </div>
                 <div class="footer-right">
-                    <MudText Typo="Typo.subtitle2">@DateTime.Now.ToString("hh:mm tt")</MudText>
+                    <MudText Typo="Typo.subtitle2">@DateTime.UtcNow.ToString("hh:mm tt")</MudText>
                 </div>
             </div>
         </div>

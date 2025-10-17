@@ -8,7 +8,7 @@ namespace MAUIBLAZORHYBRID.Infrastructure
 {
     public class StockTransferUploadResponse
     {
-            public int ServerTransferId { get; set; }
+            public int ServerStockTransferId { get; set; }
             public DateTime ProcessedTime { get; set; }
     }
 }

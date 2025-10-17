@@ -15,6 +15,9 @@ namespace MAUIBLAZORHYBRID.Services.Interfaces
         Task<ApiResponse<BillUploadResponse>> PostBillAsync(BillMasterDTO bill);
         Task<ApiResponse<StockTransferUploadResponse>> PostStockTransferAsync(StockTransferDTO dto);
         Task<ApiResponse<StockInwardUploadResponse>> PostStockInwardAsync(StockInwardDTO dto);
-
+        Task<ApiResponse<StkTrCancelResponse>> PostStkTrCancelAsync(StockTransferCancelDTO dto);
+        Task<ApiResponse<BillCashierCancelResponse>> PostBillCashierCancelAsync(BillCashierCancelDTO dto);
+        Task<ApiResponse<HotBillCancelResponse>> PostHotBillCancelAsync(HotBillCancelDTO dto);
+        Task<ApiResponse<List<BillCashierAloneResponse>>> PostBillCashiersAsync(List<BillCashierDTO> dto);
     }
 }

@@ -62,5 +62,7 @@ namespace MAUIBLAZORHYBRID.Data.Data
             public virtual ICollection<HotBillItemDetail> HotBillItemDetails { get; set; } = new List<HotBillItemDetail>();
 
             public virtual ICollection<HotBillTaxDetail> HotBillTaxDetails { get; set; } = new List<HotBillTaxDetail>();
+            public virtual ICollection<BillCashier> BillCashiers { get; set; } = new List<BillCashier>();
+            public virtual HotBillCancel? CancelInfo { get; set; }
     }
 }

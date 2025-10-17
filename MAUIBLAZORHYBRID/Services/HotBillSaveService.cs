@@ -47,6 +47,21 @@ namespace MAUIBLAZORHYBRID.Services
 
                 billMaster.HotBillNo = currentMax + 1;
                 billMaster.HotBillRefNo = $"{billMaster.HotBillPrefix}{billMaster.HotBillNo}";
+
+
+                int currentMaxCashier = await _dbContext.BillCashiers
+                    .AsNoTracking()
+                    .MaxAsync(b => (int?)b.HotBillCashNo) ?? 0;
+
+
+                foreach (var cashier in billMaster.BillCashiers)
+                {
+                    currentMaxCashier++;
+                    cashier.HotBillCashNo = currentMaxCashier;
+                    cashier.HotBillCashPrefix = "";
+                    cashier.HotBillCashRefNo = currentMaxCashier.ToString();
+                }
+
             }
             else
             {

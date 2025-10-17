@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using MAUIBLAZORHYBRID.Data.DTO
+@using MAUIBLAZORHYBRID.Helpers
 @using MAUIBLAZORHYBRID.Infrastructure
 @using MudBlazor
 @using System.Security.Cryptography
@@ -10,8 +11,8 @@
 
 @inject BackgroundDataService bgserviice
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="pa-6">
-
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-6" >
+    <MudTooltip Text="@strBaseAddress"> <p>@strBaseAddress</p></MudTooltip>
     @if (_isRegistrationComplete)
     {
         <MudCard Class="pa-6">
@@ -74,7 +75,7 @@
 
                 <!-- Step 2: Counter Selection -->
                 <MudStep Label="Counter">
-                    <MudText Typo="Typo.h5" Class="mb-4">Billing Desk Activation</MudText>
+                    <MudText Typo="Typo.h5" Class="mb-4">Billing Desk Activation<MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Warning" OnClick="HandleRefress" ></MudIconButton> </MudText>
                     <MudSelect T="BillStationDTO" Label="Bill Station" @bind-Value="_selectedCounter" FullWidth="true">
                         @foreach (var obj in counters)
                         {
@@ -112,8 +113,31 @@
 
     private bool _isRegistrationComplete = false;
 
+    private async Task HandleRefress()
+    {
+        isLoading = true;
+        try{
+            var response = await Http.GetAsync($"api/appsync/login/{BranchId}");
+            var result = await response.Content.ReadFromJsonAsync<DAGetLoginResponse>();
+            if (result != null && result.Success)
+            {
+                counters = result.Counters ?? new();
+            }
+        }
+        catch{
+
+        }
+        finally
+
+        {
+            isLoading = false;
+        }
+    }
+
+    public string strBaseAddress { get; set; }
     protected override async Task OnInitializedAsync()
     {
+        strBaseAddress = Http.BaseAddress.ToString();
         isLoading = true;
         try
         {
@@ -183,7 +207,7 @@
 
                 // Store login state
                 await SecureStorage.SetAsync("IsLoggedIn", "true");
-                await SecureStorage.SetAsync("LastLogin", DateTime.Now.ToString());
+                await SecureStorage.SetAsync("LastLogin", DateTime.UtcNow.ToString());
 
                 // Navigate to homepage after a brief delay
 
@@ -248,7 +272,7 @@
     }
 
 
-
+    
 
     private int _activeStep = 0;
 
@@ -349,6 +373,12 @@
 
             if (result != null && result.Success)
             {
+
+
+                await PasswordManager.SavePasswordAsync(request.Password);
+
+
+
                 ManagerID = result.ManagerId;
                 BranchId = result.BranchId;
                 counters = result.Counters ?? new();
@@ -424,8 +454,8 @@
                 App_Machine_Name = GetOrCreateDeviceId(),
                 App_Machine_Detail = $"{Environment.MachineName} {Environment.OSVersion}",
                 App_Machine_Emp_ID = ManagerID,
-                App_Machine_Set_Date = DateTime.Now.Date,
-                App_Machine_Set_Time = DateTime.Now,
+                App_Machine_Set_Date = DateTime.UtcNow.Date,
+                App_Machine_Set_Time = DateTime.UtcNow,
                 Counter_ID = _selectedCounter.Id
             };
 

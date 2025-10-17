@@ -36,7 +36,7 @@ namespace MAUIBLAZORHYBRID.Services
             {
                 string logFilePath = Path.Combine(GetProjectFolder(), "error.log");
                 await File.AppendAllTextAsync(logFilePath,
-                    $"[{DateTime.Now}] {exception}\n\n");
+                    $"[{DateTime.UtcNow}] {exception}\n\n");
             }
             catch (Exception ex)
             {

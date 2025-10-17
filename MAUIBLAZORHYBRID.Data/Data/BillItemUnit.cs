@@ -13,6 +13,7 @@ namespace MAUIBLAZORHYBRID.Data.Data
         [Key]
         public int itemUnitId { get; set; }
         public int itemId { get; set; }
+        public decimal caseContains { get; set; }
 
         [ForeignKey(nameof(Unit))]
         public int unitId { get; set; }

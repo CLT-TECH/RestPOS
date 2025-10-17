@@ -13,9 +13,11 @@ namespace MAUIBLAZORHYBRID.Data.DTO
 
         public int MachineCounterId { get; set; }
         public int GodownId { get; set; }
-
+        public int BranchGodownId { get; set; }
+        
         public List<BillStationDTO> BillStation { get; set; } = new();
         public List<BranchTaxSettingsDTO> TaxSetting { get; set; } = new();
+        public List<GodownMasterDTO> GodownMasters { get; set; } = new();
     }
 
 

@@ -2,14 +2,17 @@
 @using MudBlazor
 @inject ISnackbar Snackbar
 @layout Components.Layout.FullScreenLayout
+@inject AppState _appstate
+
 
 <MudPaper Class="pos-screen">
 
     <div class="main-layout">
 
         <!-- First part: 75-80% width -->
-        <div class="left-panel">
 
+        <div class="left-panel">
+         
             <!-- Header part of first part -->
             <div class="header-part">
                 <MudTextField @bind-Value="_searchText"
@@ -86,7 +89,7 @@
                     <MudChip  T="string"  Color="Color.Info" Variant="Variant.Outlined">Vacant Tables: 8</MudChip>
                 </div>
                 <div class="footer-right">
-                    <MudText Typo="Typo.subtitle2">@DateTime.Now.ToString("hh:mm tt")</MudText>
+                    <MudText Typo="Typo.subtitle2">@DateTime.UtcNow.ToString("hh:mm tt")</MudText>
                 </div>
             </div>
         </div>

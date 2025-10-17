@@ -16,7 +16,6 @@ namespace MAUIBLAZORHYBRID.Data.Data
         public  string branchName { get; set; }
         public int CounterId { get; set; }
         public int GodownId { get; set; }
-
-
+        public int BranchGodownId { get; set; }
     }
 }

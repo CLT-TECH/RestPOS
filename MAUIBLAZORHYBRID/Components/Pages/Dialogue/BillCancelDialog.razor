@@ -1,0 +1,42 @@
+@inject ISnackbar Snackbar
+<MudDialog>
+    <DialogContent>
+        <MudText>
+            Are you sure you want to cancel this bill ?
+        </MudText>
+
+        <MudTextField @bind-Value="_cancelReason"
+                      Label="Reason for Cancellation"
+                      Placeholder="Enter reason..."
+                      Lines="3"
+                      Variant="Variant.Text"
+                      Margin="Margin.Dense"
+                      Required="true"
+                      Class="mt-3 mb-2" />
+
+        <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+            <MudButton Color="Color.Secondary" Variant="Variant.Text" OnClick="Cancel">No, Close</MudButton>
+            <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Confirm">Yes, Cancel</MudButton>
+        </MudStack>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private string _cancelReason = string.Empty;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm()
+    {
+        if (string.IsNullOrWhiteSpace(_cancelReason))
+        {
+            Snackbar.Add("Please enter a cancellation reason.", Severity.Warning);
+            return;
+
+        }
+
+        MudDialog.Close(DialogResult.Ok(_cancelReason));
+    }
+}

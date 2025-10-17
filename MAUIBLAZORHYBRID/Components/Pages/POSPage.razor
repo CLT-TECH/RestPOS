@@ -5,8 +5,11 @@
 @implements IDisposable
 
 @inject IDataUploadService UploadService
+@inject IDialogService DialogService
+
 
 @using MAUIBLAZORHYBRID.Components.Data
+@using MAUIBLAZORHYBRID.Components.Pages.Dialogue
 @using MAUIBLAZORHYBRID.Data.DTO
 @using MAUIBLAZORHYBRID.Data.Data
 @using MAUIBLAZORHYBRID.Services.Sync
@@ -27,6 +30,9 @@
 @inject KOTBillService KOTService
 @inject BackgroundDataService BgService
 
+@inject IReceiptPrinterService PrinterService
+@inject BillPrintService BillPrinter
+
 <div id="focusDiv"></div>
 
 <MudPaper Class="pos-screen">
@@ -42,9 +48,15 @@
                     <MudItem  sm="4">
                         <div class="header-details">
                             <div class="header-detail-item">
-                                <MudIcon Icon="@Icons.Material.Filled.Countertops" Size="Size.Small" Style="color:#3eb489;" />
-                                <span>Counter: <span id="counter"></span>@countername</span>
+                                <span style="font-size:16px;font-weight:bold;color:saddlebrown">@branchName</span>
+                                <span >--</span>
+                               @*  <MudIcon Icon="@Icons.Material.Filled.Countertops" Size="Size.Small" Style="color:#3eb489;" />
+                                Counter: <span id="counter"></span>@ *@
+                                
+                                <span>@countername</span>
                             </div>
+                            <MudFlexBreak></MudFlexBreak>
+
                             <div class="header-detail-item">
                                 <MudIcon Icon="@Icons.Material.Filled.TableRestaurant" Size="Size.Small" Style="color:#3eb489;" />
                                 <span>Dining Space: <span id="diningspace">@diningspacename</span></span>
@@ -171,7 +183,7 @@
                     <MudChip T="string" Class="status-chip">Vacant Tables: 8</MudChip>
                 </div>
                 <div class="footer-right">
-                    <MudText Typo="Typo.subtitle2">@DateTime.Now.ToString("hh:mm tt")</MudText>
+                    <MudText Typo="Typo.subtitle2">@DateTime.UtcNow.ToLocalTime().ToString("hh:mm tt")</MudText>
                 </div>
             </div>
         </div>
@@ -184,14 +196,18 @@
 
                 <div class="custom-order-header-row">
                     <MudText Typo="Typo.h5" Class="custom-order-header">
-                        Ordered Items
+                        Ordered Items 
                     </MudText>
 
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ShowSaleHistory">
+                        <MudIcon Icon="@Icons.Material.Filled.History" />
+                    </MudButton>
+
                     <MudTextField 
-                    T="string"
-                    @bind-Value="qrCode"
-                    Placeholder="Item qr code..."
-                    Class="custom-order-qrcode" />
+                        T="string"
+                        @bind-Value="qrCode"
+                        Placeholder="Item barcode code..."
+                        Class="custom-order-qrcode" />
                 </div>
 
                 <div id="scrollContainer" class="custom-ordered-items-list">
@@ -226,7 +242,7 @@
                                             Variant="Variant.Text"
                                             OnClick="@(() => MinusItem(orderItem))" />
                                         </div>
-                                        ₹@orderItem.Price.ToString("F2") x @orderItem.Quantity
+                                        <span>₹@orderItem.Price.ToString("F2") x <span class="custom-order-qty">@orderItem.Quantity</span></span>
                                         <span class="custom-order-total">= <span>₹@orderItem.Amount.ToString("F2")</span></span>
                                     </div>
 
@@ -246,9 +262,13 @@
                 <MudCard Class="custom-order-footer" >
                     <MudCardContent Class="pa-0" Style="width:100%">
 
-                        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary">Cash</MudChip>
-                        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Secondary">Card</MudChip>
-                        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Info">Wallet</MudChip>
+                        @if(modId==0)
+                        {
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary">Cash</MudChip>
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Secondary">Card</MudChip>
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Info">Wallet</MudChip>
+                        }
+                       
                         <div class="row-between">
                             <div class="left-content">
                                 <!-- Line 1: Total + Icons -->
@@ -294,12 +314,75 @@
                                     <MudText Typo="Typo.h6" Class="value">₹@bill.TotalAmount.ToString("F2")</MudText>
                                 </div>
                             </div>
-                            <div class="right-content">
-                                <MudButton Variant="Variant.Filled"
-                                Color="Color.Success"
-                                StartIcon="@Icons.Material.Filled.Save"
-                                Class="summary-action-button" OnClick="HandleSave">
-                                </MudButton>
+                            <div class="right-content-new">
+
+
+                                @if (modId>0 && isCashBillCancelled==false)
+                                {
+                                    <MudTooltip Text="Bill Cashier Cancel">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.ReceiptLong"
+                                               Class="summary-action-button" OnClick="CancelBillCashier">F1
+                                    </MudButton>
+                                    </MudTooltip>
+                                    <MudTooltip Text="Print">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Warning"
+                                               StartIcon="@Icons.Material.Filled.Print"
+                                               Class="summary-action-button" OnClick="TestPrint">F10
+                                    </MudButton>
+                                    </MudTooltip>
+                                }
+                                else if (modId > 0&& isCashBillCancelled == true)
+                                {
+                                    <MudTooltip Text="Cancel Bill">
+                                        <MudButton Variant="Variant.Filled"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Cancel"
+                                               Class="summary-action-button" OnClick="CancelBill">&nbsp;F1
+                                    </MudButton>
+                                    </MudTooltip>
+
+                                    <MudTooltip Text="Bill Payment">
+                                        <MudButton Variant="Variant.Filled"
+                                               Color="Color.Info"
+                                               StartIcon="@Icons.Material.Filled.Payments"
+                                               Class="summary-action-button" OnClick="PaymentAgain">F2
+                                    </MudButton>
+                                    </MudTooltip>
+
+                                    <MudTooltip Text="Print">
+                                        <MudButton Variant="Variant.Filled"
+                                               Color="Color.Warning"
+                                               StartIcon="@Icons.Material.Filled.Print"
+                                               Class="summary-action-button" OnClick="TestPrint">F10
+                                        </MudButton>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="Generate Bill">
+                                    <MudButton Variant="Variant.Filled"
+                                    Color="Color.Success"
+                                    StartIcon="@Icons.Material.Filled.Save"
+                                    Class="summary-action-button" OnClick="HandleSave">F1
+                                    </MudButton>
+                                    </MudTooltip>
+
+
+                                    <MudTooltip Text="Clear">
+                                        <MudButton Variant="Variant.Filled"
+                                                   Color="Color.Error"
+                                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                                   Class="summary-action-button" OnClick="ResetData">F11
+                                        </MudButton>
+                                    </MudTooltip>
+                                }
+
+
+
+                               
                             </div>
                         </div>
                     </MudCardContent>
@@ -318,6 +401,9 @@
         </div>
     </div>
 }
+
+
+
 @code {
     [Parameter]
     public int TableId { get; set; }
@@ -340,20 +426,29 @@
 
     [Inject] IHotBillSaveService BillService { get; set; }
 
+    public bool iSSaveComplete { get; set; }
     private async Task HandleSave()
     {
 
+        iSSaveComplete = false;
+        if (modId > 0) return;
+        focusStage = 4;
         if (isLoading) return;
         BgService.StopBackgroundTasks();
         try
         {
 
-            isLoading = true;
             await Task.Delay(250);
 
             if (!OrderedItems.Any())
             {
                 Snackbar.Add("Nothing to order", Severity.Error);
+                return;
+            }
+
+            if (!(appState.LoggedInUserId > 0))
+            {
+                Snackbar.Add("Branch Manager Details Not Available", Severity.Error);
                 return;
             }
 
@@ -405,19 +500,58 @@
             };
 
 
-            // Save
-            var result = await BillService.SaveHotBillAsync(billMaster);
+            var options = new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, CloseButton = true, FullWidth = false };
+            var dialog = DialogService.Show<CashBankDialog>($"Payment Cash/Bank", new DialogParameters { ["Total"] = bill.TotalAmount }, options);
 
-            if (result.IsSuccess)
+
+            var resultdialogue = await dialog.Result;
+
+
+            await Task.Delay(50);
+
+            isLoading = true;
+            await Task.Delay(50);
+
+            if (!resultdialogue.Canceled && resultdialogue.Data != null)
             {
-                Snackbar.Add("Bill generated successfully!", Severity.Success);
-                ResetData();
 
-                _= UploadService.UploadPendingDataAsync();
+                var values = (dynamic)resultdialogue.Data; // anonymous object
+                decimal cash = values.Cash;
+                decimal bank = values.Bank;
+
+                if(cash>0)
+                    billMaster.BillCashiers.Add(new BillCashier { PaymentMode = 0, TotalAmount = cash, BillCashDate = DateTime.UtcNow, BillCashTime = DateTime.UtcNow });
+                if(bank>0)
+                    billMaster.BillCashiers.Add(new BillCashier { PaymentMode = 1, TotalAmount = bank, BillCashDate = DateTime.UtcNow, BillCashTime = DateTime.UtcNow });
+
+                var result = await BillService.SaveHotBillAsync(billMaster);
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Bill generated successfully!", Severity.Success);
+
+
+
+                    _ = UploadService.UploadPendingDataAsync();
+                    _ = SyncService.SyncBarItemCounterStock();
+
+                    ResetData();
+
+                    iSSaveComplete = true;
+                    await Task.Delay(100);
+
+
+
+                }
+                else
+                {
+                    Snackbar.Add($"Error: {result.ErrorMessage}", Severity.Error);
+                }
+
             }
             else
             {
-                Snackbar.Add($"Error: {result.ErrorMessage}", Severity.Error);
+                Snackbar.Add("Payment Cancelled", Severity.Warning);
             }
         }
         catch (Exception ex)
@@ -432,11 +566,26 @@
             BgService.StartBackgroundTasks();
 
         }
+
+        if (iSSaveComplete)
+        {
+            await Task.Delay(50);
+            try
+            {
+                await BillPrinter.PrintLastBillAsync(modId);
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex.Message);
+
+            }
+        }
     }
 
 
     private void ResetData()
     {
+        modId = 0;
         OrderedItems = new();
         kotInitData = new();
         TableId = new();
@@ -484,6 +633,7 @@
     private TaxConfigurationDTO taxconfig = new();
 
     public string diningspacename { get; set; }
+    public string branchName { get; set; }
     public string countername { get; set; }
     public string userName { get; set; } 
 
@@ -499,6 +649,13 @@
     {
         try
         {
+
+            
+
+
+
+            branchName = appState.BranchName.ToUpper();
+
             userName = await SecureStorage.GetAsync("AppUsername") ?? "";
             var counterid = await SecureStorage.GetAsync("AppUsername") ?? "";
 
@@ -559,7 +716,7 @@
                 {
                     kotInitData = result.Data ?? new KOTBillDTO();
 
-                    if(kotInitData.DiningSpaces!=null)
+                    if (kotInitData.DiningSpaces != null)
                     {
                         selectedDiningSpace = kotInitData.DiningSpaces.diningSpaceId;
                         diningspacename = kotInitData.DiningSpaces.diningSpaceName;
@@ -570,18 +727,18 @@
                         diningspacename = "";
                     }
 
-                    foreach(var order in kotInitData.Orders)
+                    foreach (var order in kotInitData.Orders)
                     {
-                        foreach(var item in order.Items)
+                        foreach (var item in order.Items)
                         {
                             int itemid = item.ItemId;
                             int unitid = item.UnitId;
                             var itemname = item.ItemName;
                             int qty = Convert.ToInt16(item.Quantity);
 
-                            var existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == itemid && o.UnitID==unitid);
+                            var existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == itemid && o.UnitID == unitid);
 
-                            if(existingOrder==null)
+                            if (existingOrder == null)
                             {
                                 if (unitid > 0)
                                 {
@@ -653,6 +810,10 @@
         {
             Console.WriteLine($"Initialisatiion failed: {ex.Message}");
         }
+        finally
+        {
+
+        }
         isLoading = false;
     }
 
@@ -668,16 +829,37 @@
             keyEvents.Insert(0, evt);
             combo = DetectCombo(evt);
 
+
             switch (combo)
             {
                 case "Ctrl + S":
                     Debug.WriteLine("Saved");
                     break;
                 case "F1":
-                    await HandleSave();
+                    focusStage = 99;
+                    await InvokeAsync(StateHasChanged);
+                    if (modId > 0 && isCashBillCancelled ==true)
+                    {
+                        await CancelBillCashier();
+                    }
+                    if (modId > 0 && isCashBillCancelled == false)
+                    {
+                        await CancelBill();
+                    }
+                    else { await HandleSave(); }
+                    break;
+                case "F10":
+                    if (modId > 0)
+                    {
+                        await TestPrint();
+                    }
                     break;
                 case "F11":
                     ResetData();
+                    break;
+                case "F2":
+                    if (modId > 0 && isCashBillCancelled == true)
+                    await PaymentAgain();
                     break;
                 case "F4":
                     await HandleF4Key();
@@ -719,29 +901,46 @@
         {
             if (selectedProduct == null)
                 await productRef.FocusAsync();
+
+
         }
         else
         {
+
+
             if (focusStage == 1)
             {
                 itemQuantity = null;
 
                 await productRef.FocusAsync();
+                focusStage = 0;
             }
             else if (focusStage == 2)
             {
                 await unitRef.FocusAsync();
+                focusStage = 0;
+
             }
             else if (focusStage == 3)
             {
                 await quantityRef.FocusAsync();
+                focusStage = 0;
+
+            }
+            else if (focusStage == 4)
+            {
+                await productRef.ClearAsync();
+                focusStage = 0;
             }
             else if (focusIdString!="")
             {
                 await JS.InvokeVoidAsync("focusElementById", focusIdString);
                 focusIdString = "";
             }
-
+            else if(focusStage==99)
+            {
+                await productRef.CloseMenuAsync();
+            }
             focusStage = 0;
 
         }
@@ -1013,6 +1212,9 @@
 
     private void AddToOrderBillItem(BillItem item)
     {
+        if (modId > 0) return;
+
+
         var existingOrder = new ItemOrder();
         if (item.itemType == 1)
         {
@@ -1025,6 +1227,14 @@
                            .ToList();
 
             int unitid = filtered.FirstOrDefault()?.unitId ?? 0;
+
+            if(unitid==0)
+            {
+                Snackbar.Clear();
+                Snackbar.Add("Unit Item Not found",Severity.Error);
+                return;
+            }
+
             int parentItemId = filtered.FirstOrDefault()?.parentItemId ?? 0;
             existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == parentItemId && o.UnitID == unitid);
         }
@@ -1051,6 +1261,14 @@
 
                 decimal rate = item.DiningSpaceItemRates.FirstOrDefault(r => r.diningSpaceId == selectedDiningSpace)?.itemRate ?? 0m;
 
+                if(unitid==0)
+                {
+                    Snackbar.Clear();
+                    Snackbar.Add("Unit Item Not found",Severity.Error);
+                    return;
+                }
+
+
                 OrderedItems.Add(new ItemOrder { ItemId = parentItemId, UnitID = unitid, Name = item.itemName, Price = rate, Quantity = 1,  ItemType = itemType });
                 selectedListItem = "";
 
@@ -1071,6 +1289,7 @@
 
     private void AddToOrderHeader(BillItem item,int Qty,int unitid)
     {
+        if (modId > 0) return;
 
         var existingOrder = OrderedItems.FirstOrDefault(o => o.ItemId == item.itemId);
 
@@ -1135,7 +1354,7 @@
         {
             if (Qty > 0)
             {
-                existingOrder.Quantity = Qty;
+                existingOrder.Quantity += Qty;
             }
             else
             {
@@ -1153,6 +1372,7 @@
 
     private void AddItem(ItemOrder addItem)
     {
+        if (modId > 0) return;
 
         selectedListItem = addItem.Name;
 
@@ -1162,6 +1382,8 @@
     }
     private void MinusItem(ItemOrder minuItem)
     {
+        if (modId > 0) return;
+
         if (minuItem.Quantity != 1)
         {
             minuItem.Quantity--;
@@ -1177,6 +1399,7 @@
     }
     private async Task DeleteItem(ItemOrder deleteItem)
     {
+        if (modId > 0) return;
 
         var focusedId = await JS.InvokeAsync<string>("getFocusedElementId");
         await JS.InvokeVoidAsync("removeFocus", focusedId);
@@ -1384,7 +1607,7 @@
         selectedListItem = item; // Update the bound variable
     }
 
-    
+
 
 
 
@@ -1423,7 +1646,7 @@
 
     private void AddBarCodeItem(string barCode)
     {
-        
+
         var filtered = parentchildrenitem
                              .Where(x => x.BarCode.ToLower() == barCode.ToLower())
                            .ToList();
@@ -1450,7 +1673,298 @@
         _keyEventSubscription?.Dispose();
         _barcodeSubscription?.Dispose();
     }
+
+    private async Task TestPrint()
+    {
+        try
+        {
+            await BillPrinter.PrintLastBillAsync(modId);
+        }
+        catch
+        {
+
+        }
+    }
+
+
+    private async Task ShowSaleHistory()
+    {
+        ResetData();
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = DialogService.Show<BillHistoryDialog>($"Bill History", new DialogParameters(), options);
+        var resultdialogue = await dialog.Result;
+        if (!resultdialogue.Canceled && resultdialogue.Data != null)
+        {
+            var values = (dynamic)resultdialogue.Data; // anonymous object
+
+            ShowBillDetails(values);
+        }
+    }
+    public List<HotBillItemDetail> moddetail { get; set; }
+
+    public int modId { get; set; }
+    private List<BillCashier> cashierList = new();
+    private async void ShowBillDetails(int id)
+    {
+        modId = id;
+        var result = await PosService.GetHotBillDetail(id);
+
+        if (!result.IsSuccess)
+        {
+            Snackbar.Add(result!.ErrorMessage ?? "error fetching data", Severity.Warning);
+            return;
+        }
+
+        moddetail = result!.Data ?? new();
+
+        var result1 = await PosService.GetHotBillCashierDetailsAsync(id);
+
+        if (result1.IsSuccess && result1.Data != null)
+        {
+            cashierList = result1.Data;
+        }
+
+        if(cashierList.Any())
+        {
+            isCashBillCancelled=false;
+        }
+        else
+        {
+            isCashBillCancelled = true; ;
+        }
+        foreach (var obj in moddetail)
+        {
+            var ItemId=obj.ItemId;
+            var UnitId=obj.UnitId;
+
+            var filtered = parentchildrenitem
+                               .Where(x => x.parentItemId == ItemId && x.unitId == UnitId)
+                               .ToList();
+            string ItemName = filtered.FirstOrDefault()?.childItemname ?? "";
+
+            var itemType=1;
+            if(UnitId>0)
+                itemType = 2;
+            OrderedItems.Add(new ItemOrder { ItemId = ItemId, Name = ItemName, Price = obj.DetRate, Quantity = (int)obj.Qty, UnitID = UnitId, ItemType = itemType });
+
+
+
+        }
+        Recalculate();
+
+    }
+
+    public bool isCashBillCancelled { get; set; }
+    private async Task CancelBill()
+    {
+        if(!(modId>0))
+        {
+            Snackbar.Add("No Bill Available To Cancel, Severity.Info", Severity.Info);
+            return;
+        }
+
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = DialogService.Show<BillCancelDialog>("Cancel Bill", options);
+
+        var resultdialog = await dialog.Result;
+
+        if (resultdialog.Canceled) return;
+
+        var _cancelReason = resultdialog?.Data?.ToString() ?? "";
+
+        if (string.IsNullOrWhiteSpace(_cancelReason))
+        {
+            Snackbar.Add("Please enter a cancellation reason.", Severity.Warning);
+            focusStage = 12;
+            return;
+        }
+        var cancelRecord = new HotBillCancel
+        {
+            HotBillId = modId,
+            CancelReason = _cancelReason,
+            CancelledByEmpId = appState.LoggedInUserId,
+            CancelDate = DateTime.UtcNow.Date,
+            CancelTime = DateTime.UtcNow,
+            IsSynced = false
+        };
+
+
+        try
+        {
+            var result = await PosService.SaveHotBillCancelAsync(cancelRecord);
+
+            if (result.IsSuccess)
+            {
+                await InvokeAsync(StateHasChanged);
+
+                await Task.Delay(50);
+
+                Snackbar.Add("Bill Cancelled successfully.", Severity.Success);
+
+                modId = 0;
+
+                StateHasChanged();
+
+                if (await CheckNetworkConnection())
+                {
+                    if (await UploadService.HasPendingHotBillCancelAsync())
+                    {
+                        _ = UploadService.UploadPendingHotBillCancelsAsync();
+
+                    }
+                }
+
+            }
+            else
+            {
+                Snackbar.Add(result.ErrorMessage ?? "Error", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error cancelling transfer: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CancelBillCashier()
+    {
+        if (!(modId > 0))
+        {
+            Snackbar.Add("No Bill Available To Cancel, Severity.Info", Severity.Info);
+            return;
+        }
+
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = DialogService.Show<BillCancelDialog>("Cancel Bill Cashier", options);
+
+        var resultdialog = await dialog.Result;
+
+        if (resultdialog.Canceled) return;
+
+        var _cancelReason = resultdialog?.Data?.ToString() ?? "";
+
+        if (string.IsNullOrWhiteSpace(_cancelReason))
+        {
+            Snackbar.Add("Please enter a cancellation reason.", Severity.Warning);
+            focusStage = 12;
+            return;
+        }
+        var cancelRecord = new HotBillCancel
+        {
+            HotBillId = modId,
+            CancelReason = _cancelReason,
+            CancelledByEmpId = appState.LoggedInUserId,
+            CancelDate = DateTime.UtcNow.Date,
+            CancelTime = DateTime.UtcNow,
+            IsSynced = false
+        };
+
+
+        try
+        {
+            var result = await PosService.SaveHotBillCashierCancelAsync(cancelRecord);
+
+            if (result.IsSuccess)
+            {
+                await InvokeAsync(StateHasChanged);
+
+                await Task.Delay(50);
+
+                Snackbar.Add("Bill Cancelled successfully.", Severity.Success);
+
+                isCashBillCancelled = true;
+
+                StateHasChanged();
+
+                if (await CheckNetworkConnection())
+                {
+                    if (await UploadService.HasPendingBillCashierCancelAsync())
+                    {
+                        _ = UploadService.UploadPendingBillCashierCancelsAsync();
+                    }
+                }
+
+            }
+            else
+            {
+                Snackbar.Add(result.ErrorMessage ?? "Error", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error cancelling transfer: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task PaymentAgain()
+    {
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, CloseButton = true, FullWidth = false };
+        var dialog = DialogService.Show<CashBankDialog>($"Payment Cash/Bank", new DialogParameters { ["Total"] = bill.TotalAmount }, options);
+
+
+        var resultdialogue = await dialog.Result;
+
+        if (!resultdialogue.Canceled && resultdialogue.Data != null)
+        {
+
+            var values = (dynamic)resultdialogue.Data; // anonymous object
+            decimal cash = values.Cash;
+            decimal bank = values.Bank;
+
+
+
+            var newCashiers = new List<BillCashier>();
+
+            if (cash > 0)
+                newCashiers.Add(new BillCashier { PaymentMode = 0, TotalAmount = cash ,BillCashDate=DateTime.UtcNow,BillCashTime=DateTime.UtcNow}); // 0 = cash
+
+            if (bank > 0)
+                newCashiers.Add(new BillCashier { PaymentMode = 1, TotalAmount = bank, BillCashDate = DateTime.UtcNow, BillCashTime = DateTime.UtcNow }); // 1 = bank
+
+            var result = await PosService.AddCashiersToHotBillAsync(modId, newCashiers);
+
+            if (result.IsSuccess)
+            {
+                isCashBillCancelled = false;
+                Snackbar.Add($"Payments added successfully to bill", Severity.Success);
+
+                if (await UploadService.HasPendingHotBillCashierAsync())
+                {
+                    _= UploadService.UploadPendingHotBillCashiersAsync();
+                }
+
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add(result.ErrorMessage, Severity.Error);
+            }
+        }
+
+
+    }
+
+
+    private async Task<bool> CheckNetworkConnection()
+    {
+        try
+        {
+            // Using JavaScript interop to check navigator.onLine
+            return await JS.InvokeAsync<bool>("eval", "navigator.onLine");
+        }
+        catch (Exception ex)
+        {
+            // Fallback - assume online if JS interop fails
+            return true;
+        }
+    }
+
 }
+
 
 
 

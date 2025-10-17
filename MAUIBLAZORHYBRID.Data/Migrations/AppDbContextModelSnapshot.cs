@@ -17,6 +17,37 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.AppRegistrationDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AppMachineName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BranchId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ManagerId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("machineId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppRegistrationDetails");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BarItem", b =>
                 {
                     b.Property<int>("BarItemId")
@@ -93,6 +124,93 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.ToTable("BarItemGodownStocks");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillCashier", b =>
+                {
+                    b.Property<int>("BillCashierId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("BillCashDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("BillCashTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HotBillCashNo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("HotBillCashPrefix")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HotBillCashRefNo")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HotBillId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSynced")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PaymentMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ServerHotBillCashId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("BillCashierId");
+
+                    b.HasIndex("HotBillId");
+
+                    b.ToTable("BillCashiers");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillCashierCancel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BillCashierCancelServerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BillCashierId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BillCashierServerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CancelDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CancelReason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CancelTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CancelledByEmpId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSynced")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BillCashierId")
+                        .IsUnique();
+
+                    b.ToTable("BillCashierCancels");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
                 {
                     b.Property<int>("itemId")
@@ -124,6 +242,9 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Property<int>("itemUnitId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("caseContains")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("itemId")
                         .HasColumnType("INTEGER");
@@ -162,6 +283,9 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BranchMaster", b =>
                 {
                     b.Property<int>("branchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BranchGodownId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("CounterId")
@@ -261,6 +385,20 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.ToTable("DiningSpaceItemRates");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.GodownMaster", b =>
+                {
+                    b.Property<int>("GodownId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("GodownName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("GodownId");
+
+                    b.ToTable("GodownMasters");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HOTKotBilled", b =>
                 {
                     b.Property<int>("id")
@@ -320,6 +458,45 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.HasIndex("HotKotId");
 
                     b.ToTable("HotBillAgainstKots");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillCancel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CancelDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CancelReason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CancelTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CancelledByEmpId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HotBillCancelServerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HotBillId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSynced")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HotBillId")
+                        .IsUnique();
+
+                    b.ToTable("HotBillCancels");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillItemDetail", b =>
@@ -850,6 +1027,45 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.ToTable("StockTransfers");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransferCancel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CancelDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CancelReason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CancelTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CancelledByEmpId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSynced")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StkCancelServerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StockTransferId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StockTransferId")
+                        .IsUnique();
+
+                    b.ToTable("StockTransferCancels");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransferItem", b =>
                 {
                     b.Property<int>("Id")
@@ -1117,6 +1333,28 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("BarItem");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillCashier", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.HotBillMaster", "HotBill")
+                        .WithMany("BillCashiers")
+                        .HasForeignKey("HotBillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HotBill");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillCashierCancel", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.BillCashier", "BillCashier")
+                        .WithOne("CancelInfo")
+                        .HasForeignKey("MAUIBLAZORHYBRID.Data.Data.BillCashierCancel", "BillCashierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BillCashier");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.Category", "category")
@@ -1235,6 +1473,17 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("HotBill");
 
                     b.Navigation("HotKot");
+                });
+
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillCancel", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.HotBillMaster", "HotBill")
+                        .WithOne("CancelInfo")
+                        .HasForeignKey("MAUIBLAZORHYBRID.Data.Data.HotBillCancel", "HotBillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HotBill");
                 });
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillItemDetail", b =>
@@ -1366,6 +1615,17 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("Vendor");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransferCancel", b =>
+                {
+                    b.HasOne("MAUIBLAZORHYBRID.Data.Data.StockTransfer", "StockTransfer")
+                        .WithOne("CancelInfo")
+                        .HasForeignKey("MAUIBLAZORHYBRID.Data.Data.StockTransferCancel", "StockTransferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StockTransfer");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransferItem", b =>
                 {
                     b.HasOne("MAUIBLAZORHYBRID.Data.Data.StockTransfer", "StkTr")
@@ -1414,6 +1674,11 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
                     b.Navigation("BarItemStockCounters");
                 });
 
+            modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillCashier", b =>
+                {
+                    b.Navigation("CancelInfo");
+                });
+
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.BillItem", b =>
                 {
                     b.Navigation("DiningSpaceItemRates");
@@ -1428,6 +1693,10 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.HotBillMaster", b =>
                 {
+                    b.Navigation("BillCashiers");
+
+                    b.Navigation("CancelInfo");
+
                     b.Navigation("HotBillAgainstKots");
 
                     b.Navigation("HotBillItemDetails");
@@ -1459,6 +1728,8 @@ namespace MAUIBLAZORHYBRID.Data.Migrations
 
             modelBuilder.Entity("MAUIBLAZORHYBRID.Data.Data.StockTransfer", b =>
                 {
+                    b.Navigation("CancelInfo");
+
                     b.Navigation("StockTransferDetails");
                 });
 

@@ -61,7 +61,9 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                             itemId = itemunit.itemid,
                             unitId = itemunit.unitid,
                             Unit = unitmaster,
-                            Item = itembyid
+                            Item = itembyid,
+                            caseContains=itemunit.casecontains
+
                         };
 
                         if (itemunitresult.itemUnitId > 0)
@@ -72,6 +74,12 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                                 await db.BillItemUnits.AddAsync(itemunitresult, ct);
 
 
+                            }
+                            else
+                            {
+                                existingitemunit.caseContains = itemunitresult.caseContains;
+
+                                db.BillItemUnits.Update(existingitemunit);
                             }
 
                         }
@@ -166,7 +174,7 @@ namespace MAUIBLAZORHYBRID.Services.Sync
                     var itemchild = await db.ItemParentChilds.FindAsync(item.id, ct);
 
 
-                    if (itemchild != null)
+                    if (itemchild == null)
                     {
                         var itemresult = new VWItemParentChild
                         {

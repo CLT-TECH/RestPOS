@@ -34,6 +34,10 @@ namespace MAUIBLAZORHYBRID.Helpers
                 await dbContext.Database.MigrateAsync();
                 Preferences.Set(DbInitKey, true); // Mark as initialized
             }
+            else
+            {
+                await dbContext.Database.MigrateAsync();
+            }
         }
 
     }

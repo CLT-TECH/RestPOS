@@ -13,6 +13,7 @@ namespace MAUIBLAZORHYBRID.Data.DTO
         public int itemid { get; set; }
 
         public int unitid { get; set; }
+        public decimal casecontains { get; set; }
 
     }
 }
